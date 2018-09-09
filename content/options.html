@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="options.css">
+</head>
+<body>
+
+<section id="options">
+  <label for="update-interval">Check for updates every</label>
+  <span>
+    <input type="number" id="update-interval" min="1"/>
+    minutes
+  </span>
+
+  <label for="phabricator-key">Phabricator API Key</label>
+  <input type="text" id="phabricator-key" data-type="phabricator"/>
+
+  <label for="phabricator-key">Bugzilla API Key</label>
+  <input type="text" id="bugzilla-key" data-type="bugzilla"/>
+</section>
+
+<script src="options.js"></script>
+</html>

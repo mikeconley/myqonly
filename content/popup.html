@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="popup.css">
+</head>
+<body>
+  <h1 id="no-reviews">
+    No reviews to do! \o/
+  </h1>
+
+  <h1 id="has-reviews">
+    <span id="total-reviews"></span> review(s) to do
+  </h1>
+
+  <section id="phabricator-reviews">
+    <a href="https://phabricator.services.mozilla.com/"><span id="phabricator-review-num"></span> reviews on Phabricator</a>
+  </section>
+
+  <section id="bugzilla-reviews">
+    <a href="https://bugzilla.mozilla.org/page.cgi?id=mydashboard.html"><span id="bugzilla-review-num"></span> reviews on Bugzilla</a>
+  </section>
+</body>
+
+<script src="popup.js"></script>
+</html>
