@@ -112,8 +112,9 @@ const MyQOnly = {
       let req = new Request([PHAB_ROOT, PHAB_REVISIONS].join("/"), {
         method: "POST",
         body: bodyParams,
-        redirect: 'follow',
-        referrer: 'client'
+        credentials: "omit",
+        redirect: "follow",
+        referrer: "client"
       });
       let resp = await window.fetch(req);
       let conduitData = await resp.json();
@@ -140,8 +141,9 @@ const MyQOnly = {
           "Content-Type": "application/json",
         },
         body,
-        redirect: 'follow',
-        referrer: 'client'
+        credentials: "omit",
+        redirect: "follow",
+        referrer: "client"
       });
       let resp = await window.fetch(req);
       let bugzillaData = await resp.json();
@@ -169,8 +171,9 @@ const MyQOnly = {
       headers: {
         "Accept": "application/json",
       },
-      redirect: 'follow',
-      referrer: 'client'
+      redirect: "follow",
+      referrer: "client",
+      credentials: "omit",
     });
 
     let resp = await fetch(req);
