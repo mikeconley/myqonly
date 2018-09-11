@@ -1,5 +1,7 @@
 # MyQOnly
 
+[Install from AMO here.](https://addons.mozilla.org/en-US/firefox/addon/myqonly/)
+
 Suggestions for a better name welcome!
 
 This WebExtension attempts to provide a reasonably accurate count of how many reviews a Mozillian might have in their queue. It knows how to talk to Phabricator and Bugzilla. It displays a badge in the toolbar showing how many reviews are in the queue, and the popup takes you to the dashboards for those two review tools.
