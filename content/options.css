@@ -4,3 +4,11 @@
   column-gap: 2em;
   row-gap: 1em;
 }
+
+.note {
+  font-weight: bold;
+}
+
+section:not(:first-child) {
+  margin-block-start: 2em;
+}

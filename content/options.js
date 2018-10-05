@@ -1,6 +1,5 @@
 const Options = {
   KEYS: [
-    "phabricator",
     "bugzilla",
   ],
 

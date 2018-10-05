@@ -1,6 +1,3 @@
-const PHAB_ROOT = "https://phabricator.services.mozilla.com/api";
-const PHAB_REVISIONS = "differential.revision.search";
-const PHAB_WHOAMI = "user.whoami"
 const BUGZILLA_API = "https://bugzilla.mozilla.org/jsonrpc.cgi";
 const DEFAULT_UPDATE_INTERVAL = 5; // minutes
 const ALARM_NAME = "check-for-updates";
@@ -29,12 +26,22 @@ const MyQOnly = {
     let { userKeys } = await browser.storage.local.get("userKeys");
     this.userKeys = userKeys || {};
 
+    // Delete the Phabricator API key if the user still has it around,
+    // since we don't use this anymore in more recent versions.
+    if (this.userKeys.phabricator) {
+      console.log("Found an old Phabricator API key - clearing it.");
+      delete this.userKeys.phabricator;
+      await browser.storage.local.set({
+        userKeys: this.userKeys,
+      });
+      console.log("Old Phabricator API key is cleared.");
+    }
+
     this.reviewTotals = {
       bugzilla: 0,
       phabricator: 0,
     };
 
-    await this.keysUpdated();
     await this.resetAlarm();
     await this.updateBadge();
   },
@@ -57,26 +64,7 @@ const MyQOnly = {
       if (changes.userKeys) {
         this.userKeys = changes.userKeys.newValue;
         console.log("background.js saw change to userKeys");
-        await this.keysUpdated();
         await this.updateBadge();
-      }
-    }
-  },
-
-  /**
-   * Handles updating any internal state if the user updates
-   * their API keys.
-   */
-  async keysUpdated() {
-    if (this.userKeys.phabricator) {
-      // At least in Phabricators case, this means that our
-      // Phabricator user ID might no longer be the right one,
-      // so let's wipe out that state.
-      this.phabricatorID = null;
-      // Now we need to get our Phabricator ID...
-      this.phabricatorID = await this.getPhabricatorID();
-      if (!this.phabricatorID) {
-        console.error("Phailed to get Phabricator ID... :(");
       }
     }
   },
@@ -126,53 +114,7 @@ const MyQOnly = {
     let reviews = 0;
 
     // First, let's get Phabricator...
-    if (this.userKeys.phabricator) {
-      // Believe it or not, this is how we need to get the reviews list via
-      // the Conduit API. This was trickier to figure out than you'd think -
-      // I ended up sniffing packets from the arc command line client to figure
-      // out exactly what to send and how.
-      let bodyParams = new URLSearchParams();
-      bodyParams.append("__conduit__",
-                        `{"token": "${this.userKeys.phabricator}"}`);
-      let params = {
-        "__conduit__": {
-          token: this.userKeys.phabricator,
-        },
-        queryKey: "active",
-        constraints: {
-          reviewerPHIDs: [
-            this.phabricatorID,
-          ],
-          statuses: [
-            "needs-review",
-          ]
-        }
-      };
-      bodyParams.append("params", JSON.stringify(params));
-      bodyParams.append("output", "json");
-      bodyParams.append("__conduit__", true);
-
-      let req = new Request([PHAB_ROOT, PHAB_REVISIONS].join("/"), {
-        method: "POST",
-        body: bodyParams,
-        credentials: "omit",
-        redirect: "follow",
-        referrer: "client"
-      });
-
-      let resp = await window.fetch(req);
-      let conduitData = await resp.json();
-
-      if (conduitData.error_code) {
-        console.error("Failed to get Phabricator reviews: ",
-                      conduitData.error_info);
-      } else {
-        this.reviewTotals.phabricator = conduitData.result.data.length;
-        console.log(`Found ${this.reviewTotals.phabricator} ` +
-                    "Phabricator reviews to do");
-        reviews += this.reviewTotals.phabricator;
-      }
-    }
+    // TODO
 
     // Okay, now Bugzilla's turn...
     if (this.userKeys.bugzilla) {
@@ -223,36 +165,6 @@ const MyQOnly = {
       browser.browserAction.setBadgeText({ text: String(reviews) });
     }
   },
-
-  /**
-   * Gets and returns the Phabricator user ID for the user associated with the
-   * Phabricator API token.
-   */
-  async getPhabricatorID() {
-    let params = new URLSearchParams();
-    params.append("api.token", this.userKeys.phabricator);
-
-    let url = [PHAB_ROOT, PHAB_WHOAMI].join("/") + "?" + params.toString();
-    let req = new Request(url, {
-      method: "POST",
-      headers: {
-        "Accept": "application/json",
-      },
-      redirect: "follow",
-      referrer: "client",
-      credentials: "omit",
-    });
-
-    let resp = await fetch(req);
-    let data = await resp.json();
-
-    if (data.error_code) {
-      console.error("Phabricator API error:", data.error_info);
-    } else {
-      console.log(`Got Phabricator ID: ${data.result.phid}`);
-      return data.result.phid;
-    }
-  }
 };
 
 MyQOnly.init();
