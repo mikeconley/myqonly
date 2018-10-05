@@ -1,3 +1,9 @@
+const PHABRICATOR_ROOT = "https://phabricator.services.mozilla.com";
+const PHABRICATOR_DASHBOARD = "differential/query/active/"
+const PHABRICATOR_REVIEW_HEADERS = [
+  "Must Review",
+  "Ready to Review",
+];
 const BUGZILLA_API = "https://bugzilla.mozilla.org/jsonrpc.cgi";
 const DEFAULT_UPDATE_INTERVAL = 5; // minutes
 const ALARM_NAME = "check-for-updates";
@@ -114,7 +120,46 @@ const MyQOnly = {
     let reviews = 0;
 
     // First, let's get Phabricator...
-    // TODO
+    // We'll start by seeing if we have any cookies.
+    let phabCookie = await browser.cookies.get({
+      url: PHABRICATOR_ROOT,
+      name: "phsid",
+    });
+
+    if (phabCookie) {
+      console.log("Phabricator session found! Attempting to get dashboard page.");
+      let url = [PHABRICATOR_ROOT, PHABRICATOR_DASHBOARD].join("/");
+      let req = new Request(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "text/html",
+        },
+        redirect: "follow",
+      });
+
+      let resp = await window.fetch(req);
+      let pageBody = await resp.text();
+      let parser = new DOMParser();
+      let doc = parser.parseFromString(pageBody, "text/html");
+
+      let headers = doc.querySelectorAll(".phui-header-header");
+
+      this.reviewTotals.phabricator = 0;
+
+      for (let header of headers) {
+        if (PHABRICATOR_REVIEW_HEADERS.includes(header.textContent)) {
+          let box = header.closest(".phui-box");
+          let rows = box.querySelectorAll(".phui-oi-table-row");
+          this.reviewTotals.phabricator += rows.length;
+        }
+      }
+
+      console.log(`Found ${this.reviewTotals.phabricator} Phabricator reviews to do`);
+
+      reviews += this.reviewTotals.phabricator;
+    } else {
+      console.log("No Phabricator session found. I won't try to fetch anything for it.");
+    }
 
     // Okay, now Bugzilla's turn...
     if (this.userKeys.bugzilla) {
