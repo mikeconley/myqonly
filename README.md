@@ -8,12 +8,10 @@ This WebExtension attempts to provide a reasonably accurate count of how many re
 
 # Usage
 
-You'll need to generate API keys for Phabricator and Bugzilla.
+For Phabricator, MyQOnly will use any pre-existing browser session to get at your Phabricator data, so just login to Phabricator, and stay logged in.
 
-For [Phabricator](https://phabricator.services.mozilla.com/), you can do this by visiting your `Settings` page, and clicking on `Conduit API Tokens`. From there, you can generate a new key.
+For Bugzilla, you'll need to generate an API key. Visit [the API keys](https://bugzilla.mozilla.org/userprefs.cgi?tab=apikey) section of Bugzilla Preferences to generate a new key.
 
-For Bugzilla, visit [the API keys](https://bugzilla.mozilla.org/userprefs.cgi?tab=apikey) section of Bugzilla Preferences and generate a new key.
-
-Once you have those API keys, go to about:addons and visit the Preferences for MyQOnly. Paste in the API keys, and set the update interval to your liking.
+Once you have that API key, go to about:addons and visit the Preferences for MyQOnly. Paste in the API key, and set the update interval to your liking.
 
 This is still very much a WIP, so it might not work perfectly. Please file bugs!
