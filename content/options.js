@@ -1,6 +1,7 @@
 const Options = {
   KEYS: [
     "bugzilla",
+    "ghuser"
   ],
 
   async init() {

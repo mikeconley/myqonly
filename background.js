@@ -5,6 +5,8 @@ const PHABRICATOR_REVIEW_HEADERS = [
   "Ready to Review",
 ];
 const BUGZILLA_API = "https://bugzilla.mozilla.org/jsonrpc.cgi";
+const GITHUB_API = "https://api.github.com/search/issues";
+
 const DEFAULT_UPDATE_INTERVAL = 5; // minutes
 const ALARM_NAME = "check-for-updates";
 
@@ -46,6 +48,7 @@ const MyQOnly = {
     this.reviewTotals = {
       bugzilla: 0,
       phabricator: 0,
+      github: 0,
     };
 
     await this.resetAlarm();
@@ -112,8 +115,30 @@ const MyQOnly = {
     }
   },
 
+  async githubReviewRequests(username) {
+    // We don't seem to need authentication for this request, for whatever reason.
+    let url = new URL(GITHUB_API);
+    url.searchParams.set("q", `review-requested:${username} type:pr is:open`);
+    // Note: we might need to paginate if we care about fetching more than the
+    // first 100.
+    let response = await window.fetch(url, {
+      method: "GET",
+      headers: {
+        Accept: "application/vnd.github.v3+json"
+      },
+      // Probably doesn't matter.
+      credentials: "omit",
+    });
+    if (!response.ok) {
+      console.error("Failed to request from github", response);
+      throw new Error(`Github request failed (${response.status}): ${await response.text()}`);
+    }
+    const data = await response.json();
+    return data.total_count;
+  },
+
   /**
-   * Contacts Phabricator and Bugzilla (if the API keys for them exist),
+   * Contacts Phabricator, Bugzilla, and Github (if the API keys for them exist),
    * and attempts to get a review count for each.
    */
   async updateBadge() {
@@ -200,6 +225,19 @@ const MyQOnly = {
         console.log(`Found ${this.reviewTotals.bugzilla} ` +
                     "Bugzilla reviews to do");
         reviews += this.reviewTotals.bugzilla;
+      }
+    }
+
+    // Now, check github.
+    if (this.userKeys.ghuser) {
+      try {
+        this.reviewTotals.github =
+          await this.githubReviewRequests(this.userKeys.ghuser);
+        reviews += this.reviewTotals.github;
+        console.log(`Found ${this.reviewTotals.github} Github reviews to do`);
+      } catch (e) {
+        // It would be nice to surface this to the user more directly.
+        console.error("Error when fetching github issues:", e);
       }
     }
 

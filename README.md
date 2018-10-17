@@ -14,4 +14,6 @@ For Bugzilla, you'll need to generate an API key. Visit [the API keys](https://b
 
 Once you have that API key, go to about:addons and visit the Preferences for MyQOnly. Paste in the API key, and set the update interval to your liking.
 
+For Github, you just need to enter your username into the about:addons preferences in MyQOnly.
+
 This is still very much a WIP, so it might not work perfectly. Please file bugs!
