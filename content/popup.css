@@ -6,6 +6,7 @@ html, body {
 body:not([total-reviews="0"]) > #no-reviews,
 body[total-reviews="0"] > #has-reviews,
 body[total-phabricator-reviews="0"] > #phabricator-reviews,
-body[total-bugzilla-reviews="0"] > #bugzilla-reviews {
+body[total-bugzilla-reviews="0"] > #bugzilla-reviews,
+body[total-github-reviews="0"] > #github-reviews {
   display: none;
 }
