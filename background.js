@@ -138,10 +138,83 @@ const MyQOnly = {
   },
 
   /**
+   * Is the current time within the user's working hours (if enabled)?
+   */
+  async isWorkingHours() {
+    console.log(`Checking working hours.`);
+
+    let { workingHours } = await browser.storage.local.get("workingHours");
+
+    if (typeof workingHours === 'undefined' || !workingHours.enabled) {
+      console.log(`Working hours are not enabled`);
+      return true;
+    }
+
+    let currentTime = new Date();
+
+    // It's possible for the start or end time to be an empty string, if the
+    // html5 time input had one empty field when a date checkbox was changed.
+    // The time input is kind of tricky to use; it's easy to overlook the
+    // am/pm chooser. Also, some people may just want to set days of the week,
+    // not times of day. In these cases, just skip the missing time check.
+    if (!workingHours.startTime) {
+      console.log(`Start time not set. Skipping start time check.`);
+    } else {
+      let startTime = new Date();
+      let [startHours, startMinutes] = workingHours.startTime.split(":");
+      startTime.setHours(startHours, startMinutes);
+      if (currentTime < startTime) {
+        console.log(`Current time (${currentTime.toLocaleTimeString()}) is earlier than start time (${startTime.toLocaleTimeString()})`);
+        return false;
+      }
+    }
+
+    if (!workingHours.endTime) {
+      console.log(`End time not set. Skipping end time check.`);
+    } else {
+      let endTime = new Date();
+      let [endHours, endMinutes] = workingHours.endTime.split(":");
+      endTime.setHours(endHours, endMinutes);
+      if (currentTime > endTime) {
+        console.log(`Current time (${currentTime.toLocaleTimeString()}) is later than end time (${endTime.toLocaleTimeString()})`);
+        return false;
+      }
+    }
+
+    // Unlike the times, workingHours.days should never be falsy: the days are
+    // set via checkboxes, and if they are all unchecked, it'll be an empty
+    // array (which is truthy).
+    const days = {
+      0: 'sunday',
+      1: 'monday',
+      2: 'tuesday',
+      3: 'wednesday',
+      4: 'thursday',
+      5: 'friday',
+      6: 'saturday'
+    };
+    let currentDay = days[currentTime.getDay()];
+    if (!workingHours.days.includes(currentDay)) {
+      console.log(`Current day (${currentDay}) is not one of the working days (${workingHours.days.join(", ")})`);
+      return false;
+    }
+
+    console.log(`Current time is within the working hours`);
+    return true;
+  },
+
+  /**
    * Contacts Phabricator, Bugzilla, and Github (if the API keys for them exist),
    * and attempts to get a review count for each.
    */
   async updateBadge() {
+    let workingHours = await this.isWorkingHours();
+    if (!workingHours) {
+      console.log(`Current time is outside working hours. Hiding reviews.`);
+      browser.browserAction.setBadgeText({ text: null });
+      return;
+    }
+
     let reviews = 0;
 
     // First, let's get Phabricator...
