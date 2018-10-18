@@ -118,7 +118,7 @@ const MyQOnly = {
   async githubReviewRequests(username) {
     // We don't seem to need authentication for this request, for whatever reason.
     let url = new URL(GITHUB_API);
-    url.searchParams.set("q", `review-requested:${username} type:pr is:open`);
+    url.searchParams.set("q", `review-requested:${username} type:pr is:open archived:false`);
     // Note: we might need to paginate if we care about fetching more than the
     // first 100.
     let response = await window.fetch(url, {
