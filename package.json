@@ -9,7 +9,7 @@
   },
   "repository": "git@github.com:mikeconley/myqonly.git",
   "author": "Mike Conley <mike.d.conley@gmail.com>",
-  "license": "MPL2",
+  "license": "MPL-2.0",
   "devDependencies": {
     "sinon-chrome": "^2.3.2",
     "web-ext": "^2.9.1"
