@@ -1,0 +1,9 @@
+{
+  "name": "myqonly",
+  "version": "0.4",
+  "description": "A tool for Mozillians who want to know how many reviews are in their queue in their browser.",
+  "main": "index.js",
+  "repository": "git@github.com:mikeconley/myqonly.git",
+  "author": "Mike Conley <mike.d.conley@gmail.com>",
+  "license": "MPL2"
+}
