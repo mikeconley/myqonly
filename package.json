@@ -4,8 +4,9 @@
   "description": "A tool for Mozillians who want to know how many reviews are in their queue in their browser.",
   "main": "index.js",
   "scripts": {
-    "test:manual": "web-ext run",
-    "build": "web-ext build"
+    "test": "karma start",
+    "test:manual": "web-ext run -s ./addon",
+    "build": "web-ext build -s ./addon"
   },
   "repository": "git@github.com:mikeconley/myqonly.git",
   "author": "Mike Conley <mike.d.conley@gmail.com>",
@@ -14,6 +15,7 @@
     "chai": "^4.2.0",
     "expect.js": "^0.3.1",
     "karma": "^3.1.1",
+    "karma-chai": "^0.1.0",
     "karma-firefox-launcher": "^1.1.0",
     "karma-mocha": "^1.3.0",
     "mocha": "^5.2.0",
