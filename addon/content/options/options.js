@@ -80,18 +80,18 @@ const Options = {
   },
 
   onChange(event) {
-    if (e.target.id == "update-interval") {
-      let updateInterval = parseInt(e.target.value, 10);
+    if (event.target.id == "update-interval") {
+      let updateInterval = parseInt(event.target.value, 10);
       browser.storage.local.set({ "updateInterval": updateInterval }).then(() => {
         console.log(`Saved update interval as ${updateInterval} minutes`);
       });
-    } else if (e.target.type == "text") {
-      let keyType = e.target.dataset.type;
-      this.userKeys[keyType] = e.target.value;
+    } else if (event.target.type == "text") {
+      let keyType = event.target.dataset.type;
+      this.userKeys[keyType] = event.target.value;
       browser.storage.local.set({ "userKeys": this.userKeys }).then(() => {
         console.log(`Saved update to key type ${keyType}`);;
       });
-    } else if (e.target.id == "working-hours-checkbox" || e.target.closest("#working-hours")) {
+    } else if (event.target.id == "working-hours-checkbox" || event.target.closest("#working-hours")) {
       this.onWorkingHoursChanged();
     }
   },
