@@ -3,3 +3,4 @@ web-ext-artifacts/
 node_modules/
 yarn_error.log
 *.swp
+*.sublime-*
