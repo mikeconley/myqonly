@@ -99,9 +99,16 @@ const MyQOnly = {
    * Handles messages from the popup.
    */
   onMessage(message, sender, sendReply) {
-    if (message.name == "get-reviews") {
-      // The popup wants to know how many reviews there are to do.
-      sendReply(this.reviewTotals);
+    switch (message.name) {
+      case "get-reviews": {
+        // The popup wants to know how many reviews there are to do.
+        sendReply(this.reviewTotals);
+        break;
+      }
+      case "refresh": {
+        this.updateBadge();
+        break;
+      }
     }
   },
 

@@ -12,3 +12,14 @@
 section:not(:first-child) {
   margin-block-start: 2em;
 }
+
+#debug {
+  display: inline-block;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+}
+
+#debug:not(:hover) {
+  opacity: 0;
+}

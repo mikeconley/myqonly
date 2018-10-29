@@ -21,6 +21,9 @@ const Options = {
     let options = document.getElementById("options");
     options.addEventListener("change", this);
 
+    let debug = document.getElementById("debug");
+    debug.addEventListener("click", this);
+
     this.initWorkingHours();
   },
 
@@ -50,7 +53,33 @@ const Options = {
     document.querySelector("#saturday").checked  = workingHours.days.includes("saturday");
   },
 
-  handleEvent(e) {
+  handleEvent(event) {
+    switch (event.type) {
+      case "click": {
+        return this.onClick(event);
+        break;
+      }
+      case "change": {
+        return this.onChange(event);
+        break;
+      }
+    }
+  },
+
+  onClick(event) {
+    switch (event.target.id) {
+      case "debug": {
+        browser.tabs.create({
+          url: event.target.href,
+        });
+        event.preventDefault();
+        return false;
+        break;
+      }
+    }
+  },
+
+  onChange(event) {
     if (e.target.id == "update-interval") {
       let updateInterval = parseInt(e.target.value, 10);
       browser.storage.local.set({ "updateInterval": updateInterval }).then(() => {
