@@ -1,3 +1,9 @@
+// If we're running in the sinon-chrome test framework, we need to alias
+// the chrome namespace to browser.
+if (typeof(browser) == "undefined") {
+  var browser = chrome;
+}
+
 const PHABRICATOR_ROOT = "https://phabricator.services.mozilla.com";
 const PHABRICATOR_DASHBOARD = "differential/query/active/"
 const PHABRICATOR_REVIEW_HEADERS = [
@@ -330,4 +336,8 @@ const MyQOnly = {
   },
 };
 
-MyQOnly.init();
+// Hackily detect the sinon-chrome test framework. If we're inside it,
+// don't run init automatically.
+if (!browser.flush) {
+  MyQOnly.init();
+}

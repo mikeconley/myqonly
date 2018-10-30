@@ -14,11 +14,13 @@ module.exports = function(config) {
       'node_modules/expect.js/index.js',
       'node_modules/sinon-chrome/bundle/sinon-chrome-webextensions.min.js',
 
-      // Source
+      // Source to test
       'addon/*.js',
+      { pattern: 'addon/content/*/*.*', served: true, included: false },
 
       // Tests
-      'tests/*.js'
+      'tests/*.js',
+      'tests/content/**.js',
     ],
 
     client: {
