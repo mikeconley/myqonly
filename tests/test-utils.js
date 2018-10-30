@@ -27,7 +27,7 @@
  *
  */
 async function loadPage({ url, setup, waitForInitted = true, test }) {
-  let iframe = document.createElement('iframe');
+  let iframe = document.createElement("iframe");
   // Karma hosts these files at http://localhost/base/ + file path.
   // See http://karma-runner.github.io/3.0/config/files.html
   iframe.src = "base" + url;
@@ -41,6 +41,7 @@ async function loadPage({ url, setup, waitForInitted = true, test }) {
   }
 
   iframe.contentWindow.browser = chrome;
+  iframe.contentWindow.console = console;
 
   await new Promise(resolve => {
     let event = waitForInitted ? "initted" : "load";
@@ -50,4 +51,12 @@ async function loadPage({ url, setup, waitForInitted = true, test }) {
   await test(iframe.contentWindow, iframe.contentDocument);
 
   iframe.remove();
+}
+
+function changeFieldValue(field, value) {
+  field.value = value;
+  let win = field.ownerDocument.defaultView;
+  field.dispatchEvent(new win.Event("change", {
+    bubbles: true,
+  }));
 }
