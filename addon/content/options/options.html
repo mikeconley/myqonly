@@ -7,30 +7,40 @@
 </head>
 <body>
 
-<section>
-  <span class="note">Note:</span> You don't need an API key anymore for Phabricator - just make sure you're logged in.
-</section>
+<h1>MyQOnly Options</h1>
 
-<section id="options">
+<section id="general">
+  <h2>General</h2>
   <label for="update-interval">Check for updates every</label>
   <span>
     <input type="number" id="update-interval" min="1"/>
     minutes
   </span>
+</section>
 
-  <label for="bugzilla-key">Bugzilla API Key</label>
-  <input type="text" id="bugzilla-key" data-type="bugzilla"/>
+<section id="services">
+  <h2>Services</h2>
 
-  <label for="github-username">Github Username</label>
-  <input type="text" id="github-username" data-type="ghuser">
+  <div class="note">
+    You don't need an API key anymore for Phabricator - just make sure you're logged in.
+  </div>
 
-  <h1>Working Hours</h1>
-  <br>
+  <div class="keys">
+    <label for="bugzilla-key">Bugzilla API Key</label>
+    <input type="text" id="bugzilla-key" data-type="bugzilla"/>
+
+    <label for="github-username">Github Username</label>
+    <input type="text" id="github-username" data-type="ghuser">
+  </div>
+</section>
+
+<section id="working-hours">
+  <h2>Working hours</h2>
 
   <label for="working-hours-checkbox">Only show review count during working hours</label>
   <input type="checkbox" id="working-hours-checkbox">
 
-  <fieldset id="working-hours" disabled>
+  <fieldset id="working-hours-fields" disabled>
     <label for="start-time">Start time</label>
     <input type="time" id="start-time" value="09:00">
     <br>

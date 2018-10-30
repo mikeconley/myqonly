@@ -1,4 +1,4 @@
-#options {
+.keys {
   display: grid;
   grid-template-columns: max-content 1fr;
   column-gap: 2em;
@@ -6,7 +6,7 @@
 }
 
 .note {
-  font-weight: bold;
+  margin-block-bottom: 2em;
 }
 
 section:not(:first-child) {

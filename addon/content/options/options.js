@@ -6,12 +6,16 @@ const Options = {
 
   async init() {
     console.log("Initting Options page");
+
+    console.debug("Getting update interval");
     let { updateInterval } = await browser.storage.local.get("updateInterval");
     let interval = document.getElementById("update-interval");
     interval.value = updateInterval;
 
+    console.debug("Getting userKeys");
     let { userKeys } = await browser.storage.local.get("userKeys");
     this.userKeys = userKeys || {};
+    console.debug("Updating keys in form");
     for (let keyType of this.KEYS) {
       if (this.userKeys[keyType]) {
         let el = document.querySelector(`[data-type=${keyType}]`);
@@ -19,11 +23,9 @@ const Options = {
       }
     }
 
-    let options = document.getElementById("options");
-    options.addEventListener("change", this);
-
-    let debug = document.getElementById("debug");
-    debug.addEventListener("click", this);
+    console.debug("Adding change event listener");
+    window.addEventListener("change", this);
+    window.addEventListener("click", this);
 
     this.initWorkingHours();
     let initted = new CustomEvent("initted", { bubbles: true });
@@ -79,6 +81,10 @@ const Options = {
         return false;
         break;
       }
+      case "working-hours-checkbox": {
+        this.onWorkingHoursChanged();
+        break;
+      }
     }
   },
 
@@ -94,7 +100,7 @@ const Options = {
       browser.storage.local.set({ "userKeys": this.userKeys }).then(() => {
         console.log(`Saved update to key type ${keyType}`);;
       });
-    } else if (event.target.id == "working-hours-checkbox" || event.target.closest("#working-hours")) {
+    } else if (event.target.closest("#working-hours-fields")) {
       this.onWorkingHoursChanged();
     }
   },
@@ -104,9 +110,9 @@ const Options = {
 
     let enabled = document.querySelector("#working-hours-checkbox").checked;
     if (enabled) {
-      document.querySelector("#working-hours").removeAttribute("disabled");
+      document.querySelector("#working-hours-fields").removeAttribute("disabled");
     } else {
-      document.querySelector("#working-hours").setAttribute("disabled", "disabled");
+      document.querySelector("#working-hours-fields").setAttribute("disabled", "disabled");
     }
 
     // Times are strings of the form "HH:MM" in 24-hour format (or empty string)
