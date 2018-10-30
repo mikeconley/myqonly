@@ -14,12 +14,19 @@
  *           sinon-chrome WebExtension API mockery that can be prepared
  *           with values.
  *
+ *         waitForInitted (bool, optional):
+ *           Defaults to true. Waits for a page to fire an "initted" event
+ *           on the document before running the test.
+ *
  *         test (async function(content)):
- *           The test function that accepts a single argument, which is
- *           the content window for the loaded iframe. When this function
- *           is called, the load event has already fired in the document.
+ *           The test function that accepts two arguments: the content
+ *           window for the loaded iframe, and the content document. When
+ *           this function is called, the load event has already fired in
+ *           the document. If waitForInitted is true, the document has also
+ *           fired a custom "initted" event.
+ *
  */
-async function loadPage({ url, setup, test }) {
+async function loadPage({ url, setup, waitForInitted = true, test }) {
   let iframe = document.createElement('iframe');
   // Karma hosts these files at http://localhost/base/ + file path.
   // See http://karma-runner.github.io/3.0/config/files.html
@@ -36,10 +43,11 @@ async function loadPage({ url, setup, test }) {
   iframe.contentWindow.browser = chrome;
 
   await new Promise(resolve => {
-    iframe.addEventListener("load", resolve, { once: true });
+    let event = waitForInitted ? "initted" : "load";
+    iframe.contentWindow.addEventListener(event, resolve, { once: true });
   });
 
-  await test(iframe.contentWindow);
+  await test(iframe.contentWindow, iframe.contentDocument);
 
   iframe.remove();
 }

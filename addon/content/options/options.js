@@ -5,6 +5,7 @@ const Options = {
   ],
 
   async init() {
+    console.log("Initting Options page");
     let { updateInterval } = await browser.storage.local.get("updateInterval");
     let interval = document.getElementById("update-interval");
     interval.value = updateInterval;
@@ -25,6 +26,8 @@ const Options = {
     debug.addEventListener("click", this);
 
     this.initWorkingHours();
+    let initted = new CustomEvent("initted", { bubbles: true });
+    document.dispatchEvent(initted);
   },
 
   async initWorkingHours() {
