@@ -29,3 +29,64 @@ describe('Options page', function() {
     });
   });
 });
+
+const WEEKENDS = [
+  "saturday",
+  "sunday",
+];
+
+const WEEKDAYS = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+];
+
+describe('Options page', function() {
+  it('should be able to set working hours from default state', async function() {
+    await loadPage({
+      url: '/addon/content/options/options.html',
+      setup: async(browser) => {
+        browser.storage.local.get.withArgs('updateInterval').returns(
+          Promise.resolve({ updateInterval: DEFAULT_UPDATE_INTERVAL })
+        );
+        browser.storage.local.get.withArgs('userKeys').returns(
+          Promise.resolve({})
+        );
+        // Default to no working hours
+        browser.storage.local.get.withArgs({ workingHours: {} }).returns(
+          Promise.resolve({})
+        );
+      },
+      test: async(content, document) => {
+        // By default, the working hours fields should be disabled.
+        let fieldset = document.getElementById("working-hours-fields");
+        assert.ok(fieldset.disabled);
+
+        // Default workday is 9-5, in HH:MM.
+        let startTime = document.getElementById("start-time").value;
+        assert.equal(startTime, "09:00");
+        let endTime = document.getElementById("end-time").value;
+        assert.equal(endTime, "17:00");
+
+        // Monday-Friday should be checked by default, weekends not checked.
+        let boxes = fieldset.querySelectorAll("input[type='checkbox']");
+        assert.equal(boxes.length, WEEKDAYS.length + WEEKENDS.length);
+        for (let box of boxes) {
+          if (WEEKDAYS.includes(box.id)) {
+            assert.ok(box.checked);
+          } else if (WEEKENDS.includes(box.id)) {
+            assert.ok(!box.checked);
+          } else {
+            assert.ok(false, "Did not expect a checkbox with id: " + box.id);
+          }
+        }
+
+        let checkbox = document.getElementById("working-hours-checkbox");
+        checkbox.click();
+        assert.ok(!fieldset.hasAttribute("disabled"));
+      },
+    });
+  });
+});
