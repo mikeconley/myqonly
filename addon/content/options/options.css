@@ -1,8 +1,18 @@
-.keys {
+.keys,
+.field-rows {
   display: grid;
-  grid-template-columns: max-content 1fr;
+}
+
+.keys {
   column-gap: 2em;
   row-gap: 1em;
+  grid-template-columns: max-content 1fr;
+}
+
+.field-rows {
+  column-gap: 0.5em;
+  row-gap: 0.5em;
+  grid-template-columns: max-content max-content;
 }
 
 .note {

@@ -37,38 +37,40 @@
 <section id="working-hours">
   <h2>Working hours</h2>
 
-  <label for="working-hours-checkbox">Only show review count during working hours</label>
-  <input type="checkbox" id="working-hours-checkbox">
+  <input type="checkbox" id="working-hours-checkbox"><label for="working-hours-checkbox">Only show review count during working hours</label>
 
   <fieldset id="working-hours-fields" disabled>
-    <label for="start-time">Start time</label>
-    <input type="time" id="start-time" value="09:00">
-    <br>
-    <label for="end-time">End time</label>
-    <input type="time" id="end-time" value="17:00">
-
-    <div id="days">
-      <p>Working Days:</p>
-      <label for="sunday">Sunday</label>
+    <h3>Days</h3>
+    <div class="field-rows">
       <input type="checkbox" id="sunday">
-      <br>
-      <label for="monday">Monday</label>
+      <label for="sunday">Sunday</label>
+
       <input type="checkbox" id="monday" checked>
-      <br>
-      <label for="tuesday">Tuesday</label>
+      <label for="monday">Monday</label>
+
       <input type="checkbox" id="tuesday" checked>
-      <br>
-      <label for="wednesday">Wednesday</label>
+      <label for="tuesday">Tuesday</label>
+
       <input type="checkbox" id="wednesday" checked>
-      <br>
-      <label for="thursday">Thursday</label>
+      <label for="wednesday">Wednesday</label>
+
       <input type="checkbox" id="thursday" checked>
-      <br>
-      <label for="friday">Friday</label>
+      <label for="thursday">Thursday</label>
+
       <input type="checkbox" id="friday" checked>
-      <br>
-      <label for="saturday">Saturday</label>
+      <label for="friday">Friday</label>
+
       <input type="checkbox" id="saturday">
+      <label for="saturday">Saturday</label>
+    </div>
+
+    <h3>Hours</h3>
+    <div class="field-rows">
+      <label for="start-time">Start time</label>
+      <input type="time" id="start-time" value="09:00">
+
+      <label for="end-time">End time</label>
+      <input type="time" id="end-time" value="17:00">
     </div>
   </fieldset>
 </section>

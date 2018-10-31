@@ -41,21 +41,24 @@ const Options = {
       days: ["monday","tuesday","wednesday","thursday","friday"]
     }});
 
-    document.querySelector("#working-hours-checkbox").checked = workingHours.enabled;
+    let workingHoursSection = document.querySelector("#working-hours");
+    let fields = workingHoursSection.querySelector("#working-hours-fields");
+    workingHoursSection.querySelector("#working-hours-checkbox").checked =
+      workingHours.enabled;
+
     if (workingHours.enabled) {
-      document.querySelector("#working-hours").removeAttribute("disabled");
+      fields.removeAttribute("disabled");
     } else {
-      document.querySelector("#working-hours").setAttribute("disabled", "disabled");
+      fields.setAttribute("disabled", "disabled");
     }
+
     document.querySelector("#start-time").value  = workingHours.startTime;
     document.querySelector("#end-time").value    = workingHours.endTime;
-    document.querySelector("#sunday").checked    = workingHours.days.includes("sunday");
-    document.querySelector("#monday").checked    = workingHours.days.includes("monday");
-    document.querySelector("#tuesday").checked   = workingHours.days.includes("tuesday");
-    document.querySelector("#wednesday").checked = workingHours.days.includes("wednesday");
-    document.querySelector("#thursday").checked  = workingHours.days.includes("thursday");
-    document.querySelector("#friday").checked    = workingHours.days.includes("friday");
-    document.querySelector("#saturday").checked  = workingHours.days.includes("saturday");
+
+    let dayEls = fields.querySelectorAll(".days > input[type='checkbox']");
+    for (let dayEl of dayEls) {
+      dayEl.checked = workingHours.days.includes(dayEl.id);
+    }
   },
 
   handleEvent(event) {

@@ -194,7 +194,7 @@ const MyQOnly = {
       }
     }
 
-    // Unlike the times, workingHours.days should never be falsy: the days are
+    // Unlike the times, workingHours.days should never be false-y: the days are
     // set via checkboxes, and if they are all unchecked, it'll be an empty
     // array (which is truthy).
     const days = {
