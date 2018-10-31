@@ -1,3 +1,7 @@
+body {
+  font: message-box;
+}
+
 .keys,
 .field-rows {
   display: grid;
@@ -16,7 +20,15 @@
 }
 
 .note {
-  margin-block-bottom: 2em;
+  margin-bottom: 2em;
+}
+
+#update-interval {
+  max-width: 6ch;
+}
+
+#working-hours-fields[disabled] {
+  opacity: 0.6;
 }
 
 section:not(:first-child) {
