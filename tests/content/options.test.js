@@ -86,6 +86,16 @@ describe('Options page', function() {
         let checkbox = document.getElementById("working-hours-checkbox");
         checkbox.click();
         assert.ok(!fieldset.hasAttribute("disabled"));
+
+        assert.ok(browser.storage.local.set.calledOnce);
+        assert.ok(browser.storage.local.set.calledWith({
+          workingHours: {
+            enabled: true,
+            days: WEEKDAYS,
+            startTime: "09:00",
+            endTime: "17:00",
+          },
+        }));
       },
     });
   });

@@ -123,10 +123,10 @@ const Options = {
     let endTime = document.querySelector("#end-time").value;
 
     // `days` is an array containing en-US day strings: ['sunday', 'monday', ...]
-    let days = [].slice.call(document.querySelectorAll("#days input:checked"))
+    let days = [].slice.call(document.querySelectorAll(".days > input:checked"))
                  .map(el => { return el.getAttribute("id")});
 
-    browser.storage.local.set({"workingHours": {enabled, days, startTime, endTime}}).then(() => {
+    browser.storage.local.set({ workingHours: {enabled, days, startTime, endTime}}).then(() => {
       console.log(`Saved update to working hours: enabled: ${enabled}, days: ${days.join(',')}, start time: ${startTime}, end time: ${endTime}`);
     }).catch((err) => {
       console.error(`Error updating working hours: ${err}`)
