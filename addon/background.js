@@ -16,7 +16,13 @@ const GITHUB_API = "https://api.github.com/search/issues";
 const DEFAULT_UPDATE_INTERVAL = 5; // minutes
 const ALARM_NAME = "check-for-updates";
 
-const MyQOnly = {
+// Anytime we want to alert the user about changes in the changelog, we should
+// bump the revision number here.
+const FEATURE_ALERT_REV = 1;
+const FEATURE_ALERT_BG_COLOR = "#EC9329";
+const FEATURE_ALERT_STRING = "New";
+
+var MyQOnly = {
   /**
    * Main entry. After set-up, attempts to update the badge right
    * away.
@@ -28,6 +34,18 @@ const MyQOnly = {
     browser.alarms.onAlarm.addListener(this.onAlarm.bind(this));
     // Add a listener for the popup if it asks for review totals.
     browser.runtime.onMessage.addListener(this.onMessage.bind(this));
+
+    console.debug("Looking for feature rev");
+    let { featureRev } = await browser.storage.local.get("featureRev");
+    if (!featureRev) {
+      console.debug("No feature rev - this is a first timer.");
+      featureRev = FEATURE_ALERT_REV;
+      await browser.storage.local.set({ featureRev });
+    } else {
+      console.debug("Got feature rev ", featureRev);
+    }
+
+    this.featureRev = featureRev;
 
     let { updateInterval } = await browser.storage.local.get("updateInterval");
     if (!updateInterval) {
@@ -111,12 +129,28 @@ const MyQOnly = {
         sendReply(this.reviewTotals);
         break;
       }
-      case "refresh": {
+
+      case "get-feature-rev": {
+        sendReply({
+          newFeatures: this.featureRev < FEATURE_ALERT_REV,
+          featureRev: this.featureRev + 1,
+        });
+        break;
+      }
+
+      case "opened-release-notes": {
+        this.featureRev = FEATURE_ALERT_REV;
+        browser.storage.local.set({ featureRev: this.featureRev });
         this.updateBadge();
         break;
       }
 
       // Debug stuff
+      case "refresh": {
+        this.updateBadge();
+        break;
+      }
+
       case "get-phabricator-html": {
         console.debug("Getting Phabricator dashboard body");
         return this._phabricatorDocumentBody();
@@ -352,8 +386,22 @@ const MyQOnly = {
 
     console.log(`Found a total of ${reviews} reviews to do`)
     if (!reviews) {
-      browser.browserAction.setBadgeText({ text: null });
+      // Check to see if there are new features to notify the user about.
+      // We intentionally only do this if there are new reviews to do.
+      if (this.featureRev < FEATURE_ALERT_REV) {
+        browser.browserAction.setBadgeBackgroundColor({
+          color: FEATURE_ALERT_BG_COLOR,
+        });
+        browser.browserAction.setBadgeText({ text: FEATURE_ALERT_STRING });
+      } else {
+        browser.browserAction.setBadgeText({ text: null });
+      }
     } else {
+      // If we happened to set the background colour when alerting about
+      // new features, clear that out now.
+      browser.browserAction.setBadgeBackgroundColor({
+        color: null,
+      });
       browser.browserAction.setBadgeText({ text: String(reviews) });
     }
   },

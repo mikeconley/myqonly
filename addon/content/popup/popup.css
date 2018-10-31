@@ -1,12 +1,29 @@
 html, body {
   font: message-box;
   width: 250px;
+  margin: 0;
 }
 
 body:not([total-reviews="0"]) > #no-reviews,
 body[total-reviews="0"] > #has-reviews,
 body[total-phabricator-reviews="0"] > #phabricator-reviews,
 body[total-bugzilla-reviews="0"] > #bugzilla-reviews,
-body[total-github-reviews="0"] > #github-reviews {
+body[total-github-reviews="0"] > #github-reviews,
+body:not([has-new-features]) > #has-new-features {
   display: none;
+}
+
+body > section,
+body > h1 {
+  margin: 15px;
+}
+
+#has-new-features {
+  display: block;
+  padding: 5px;
+  background-color: #DB8218;
+  border-top: #BD7621;
+  color: #FFFFFF;
+  text-align: center;
+  text-decoration: none;
 }
