@@ -20,7 +20,11 @@ module.exports = function(config) {
 
       // Tests
       'tests/*.js',
-      'tests/content/**.js',
+      'tests/content/*.js',
+      'tests/services/**/*.js',
+
+      // Service test files
+      { pattern: 'tests/services/**/*.html', served: true, included: false },
     ],
 
     client: {

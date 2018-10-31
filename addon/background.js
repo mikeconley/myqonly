@@ -128,6 +128,36 @@ const MyQOnly = {
     }
   },
 
+  async phabricatorReviewRequests({ testingURL }) {
+    let url = testingURL || [PHABRICATOR_ROOT, PHABRICATOR_DASHBOARD].join("/");
+
+    let req = new Request(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "text/html",
+      },
+      redirect: "follow",
+    });
+
+    let resp = await window.fetch(req);
+    let pageBody = await resp.text();
+    let parser = new DOMParser();
+    let doc = parser.parseFromString(pageBody, "text/html");
+
+    let headers = doc.querySelectorAll(".phui-header-header");
+    let total = 0;
+
+    for (let header of headers) {
+      if (PHABRICATOR_REVIEW_HEADERS.includes(header.textContent)) {
+        let box = header.closest(".phui-box");
+        let rows = box.querySelectorAll(".phui-oi-table-row");
+        total += rows.length;
+      }
+    }
+
+    return total;
+  },
+
   async githubReviewRequests(username) {
     // We don't seem to need authentication for this request, for whatever reason.
     let url = new URL(GITHUB_API);
@@ -239,35 +269,16 @@ const MyQOnly = {
 
     if (phabCookie) {
       console.log("Phabricator session found! Attempting to get dashboard page.");
-      let url = [PHABRICATOR_ROOT, PHABRICATOR_DASHBOARD].join("/");
-      let req = new Request(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "text/html",
-        },
-        redirect: "follow",
-      });
 
-      let resp = await window.fetch(req);
-      let pageBody = await resp.text();
-      let parser = new DOMParser();
-      let doc = parser.parseFromString(pageBody, "text/html");
-
-      let headers = doc.querySelectorAll(".phui-header-header");
-
-      this.reviewTotals.phabricator = 0;
-
-      for (let header of headers) {
-        if (PHABRICATOR_REVIEW_HEADERS.includes(header.textContent)) {
-          let box = header.closest(".phui-box");
-          let rows = box.querySelectorAll(".phui-oi-table-row");
-          this.reviewTotals.phabricator += rows.length;
-        }
+      try {
+        this.reviewTotals.phabricator =
+          await this.phabricatorReviewRequests();
+        reviews += this.reviewTotals.phabricator;
+        console.log(`Found ${this.reviewTotals.phabricator} Phabricator reviews to do`);
+      } catch (e) {
+        // It would be nice to surface this to the user more directly.
+        console.error("Error when fetching phabricator issues:", e);
       }
-
-      console.log(`Found ${this.reviewTotals.phabricator} Phabricator reviews to do`);
-
-      reviews += this.reviewTotals.phabricator;
     } else {
       console.log("No Phabricator session found. I won't try to fetch anything for it.");
     }
