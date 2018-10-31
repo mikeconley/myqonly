@@ -5,8 +5,7 @@ const Debug = {
   ],
 
   async init() {
-    let update = document.getElementById("update");
-    update.addEventListener("click", this);
+    window.addEventListener("click", this);
   },
 
   handleEvent(event) {
@@ -24,7 +23,36 @@ const Debug = {
         browser.runtime.sendMessage({ name: "refresh" });
         break;
       }
+      case "generate-phabricator-testcase": {
+        console.log("Generating Phabricator testcase...");
+        this.generatePhabricatorTestcase();
+        break;
+      }
     }
+  },
+
+  async generatePhabricatorTestcase() {
+    let pageBody = await browser.runtime.sendMessage({ name: "get-phabricator-html" });
+    let parser = new DOMParser();
+    let doc = parser.parseFromString(pageBody, "text/html");
+
+    let activeRevisions = doc.querySelector(".phabricator-nav-content");
+
+    // Clear out any of the titles and links for the revisions, to avoid security-sensitive
+    // things getting captured.
+    let links = activeRevisions.querySelectorAll(".phui-oi-link");
+    for (let link of links) {
+      link.title = link.textContent = "Bug 123456 - This is some bug";
+      link.href = "#";
+    }
+
+    let hiddenInputs = activeRevisions.querySelectorAll("input[type='hidden']");
+    for (let input of hiddenInputs) {
+      input.remove();
+    }
+
+    let outputEl = document.getElementById("phabricator-testcase");
+    outputEl.textContent = activeRevisions.innerHTML;
   },
 }
 

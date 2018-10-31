@@ -115,6 +115,13 @@ const MyQOnly = {
         this.updateBadge();
         break;
       }
+
+      // Debug stuff
+      case "get-phabricator-html": {
+        console.debug("Getting Phabricator dashboard body");
+        return this._phabricatorDocumentBody();
+        break;
+      }
     }
   },
 
@@ -128,7 +135,7 @@ const MyQOnly = {
     }
   },
 
-  async phabricatorReviewRequests({ testingURL }) {
+  async _phabricatorDocumentBody({ testingURL = null } = {}) {
     let url = testingURL || [PHABRICATOR_ROOT, PHABRICATOR_DASHBOARD].join("/");
 
     let req = new Request(url, {
@@ -141,6 +148,11 @@ const MyQOnly = {
 
     let resp = await window.fetch(req);
     let pageBody = await resp.text();
+    return pageBody;
+  },
+
+  async phabricatorReviewRequests({ testingURL = null } = {}) {
+    let pageBody = await this._phabricatorDocumentBody({ testingURL });
     let parser = new DOMParser();
     let doc = parser.parseFromString(pageBody, "text/html");
 
