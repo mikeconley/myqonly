@@ -1,19 +1,19 @@
 const Options = {
   KEYS: [
     "bugzilla",
-    "ghuser"
+    "ghuser",
   ],
 
   async init() {
     console.log("Initting Options page");
 
     console.debug("Getting update interval");
-    let { updateInterval } = await browser.storage.local.get("updateInterval");
+    let { updateInterval, } = await browser.storage.local.get("updateInterval");
     let interval = document.getElementById("update-interval");
     interval.value = updateInterval;
 
     console.debug("Getting userKeys");
-    let { userKeys } = await browser.storage.local.get("userKeys");
+    let { userKeys, } = await browser.storage.local.get("userKeys");
     this.userKeys = userKeys || {};
     console.debug("Updating keys in form");
     for (let keyType of this.KEYS) {
@@ -28,18 +28,18 @@ const Options = {
     window.addEventListener("click", this);
 
     this.initWorkingHours();
-    let initted = new CustomEvent("initted", { bubbles: true });
+    let initted = new CustomEvent("initted", { bubbles: true, });
     document.dispatchEvent(initted);
   },
 
   async initWorkingHours() {
     // Specify reasonable defaults for the first-run case.
-    let { workingHours } = await browser.storage.local.get({workingHours: {
+    let { workingHours, } = await browser.storage.local.get({workingHours: {
       enabled: false,
       startTime: "09:00",
       endTime: "17:00",
-      days: ["monday","tuesday","wednesday","thursday","friday"]
-    }});
+      days: ["monday","tuesday","wednesday","thursday","friday",],
+    },});
 
     let workingHoursSection = document.querySelector("#working-hours");
     let fields = workingHoursSection.querySelector("#working-hours-fields");
@@ -63,45 +63,42 @@ const Options = {
 
   handleEvent(event) {
     switch (event.type) {
-      case "click": {
-        return this.onClick(event);
-        break;
-      }
-      case "change": {
-        return this.onChange(event);
-        break;
-      }
+    case "click": {
+      return this.onClick(event);
+    }
+    case "change": {
+      return this.onChange(event);
+    }
     }
   },
 
   onClick(event) {
     switch (event.target.id) {
-      case "debug": {
-        browser.tabs.create({
-          url: event.target.href,
-        });
-        event.preventDefault();
-        return false;
-        break;
-      }
-      case "working-hours-checkbox": {
-        this.onWorkingHoursChanged();
-        break;
-      }
+    case "debug": {
+      browser.tabs.create({
+        url: event.target.href,
+      });
+      event.preventDefault();
+      return false;
+    }
+    case "working-hours-checkbox": {
+      this.onWorkingHoursChanged();
+      break;
+    }
     }
   },
 
   onChange(event) {
     if (event.target.id == "update-interval") {
       let updateInterval = parseInt(event.target.value, 10);
-      browser.storage.local.set({ "updateInterval": updateInterval }).then(() => {
+      browser.storage.local.set({ "updateInterval": updateInterval, }).then(() => {
         console.log(`Saved update interval as ${updateInterval} minutes`);
       });
     } else if (event.target.type == "text") {
       let keyType = event.target.dataset.type;
       this.userKeys[keyType] = event.target.value;
-      browser.storage.local.set({ "userKeys": this.userKeys }).then(() => {
-        console.log(`Saved update to key type ${keyType}`);;
+      browser.storage.local.set({ "userKeys": this.userKeys, }).then(() => {
+        console.log(`Saved update to key type ${keyType}`);
       });
     } else if (event.target.closest("#working-hours-fields")) {
       this.onWorkingHoursChanged();
@@ -109,7 +106,7 @@ const Options = {
   },
 
   onWorkingHoursChanged() {
-    console.log(`Working hours changed`);
+    console.log("Working hours changed");
 
     let enabled = document.querySelector("#working-hours-checkbox").checked;
     if (enabled) {
@@ -124,16 +121,16 @@ const Options = {
 
     // `days` is an array containing en-US day strings: ['sunday', 'monday', ...]
     let days = [].slice.call(document.querySelectorAll(".days > input:checked"))
-                 .map(el => { return el.getAttribute("id")});
+      .map(el => { return el.getAttribute("id");});
 
-    browser.storage.local.set({ workingHours: {enabled, days, startTime, endTime}}).then(() => {
-      console.log(`Saved update to working hours: enabled: ${enabled}, days: ${days.join(',')}, start time: ${startTime}, end time: ${endTime}`);
+    browser.storage.local.set({ workingHours: {enabled, days, startTime, endTime,},}).then(() => {
+      console.log(`Saved update to working hours: enabled: ${enabled}, days: ${days.join(",")}, start time: ${startTime}, end time: ${endTime}`);
     }).catch((err) => {
-      console.error(`Error updating working hours: ${err}`)
+      console.error(`Error updating working hours: ${err}`);
     });
-  }
-}
+  },
+};
 
 addEventListener("DOMContentLoaded", () => {
   Options.init();
-}, { once: true });
+}, { once: true, });

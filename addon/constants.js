@@ -1,5 +1,7 @@
+/* eslint-disable no-unused-vars */
+
 const PHABRICATOR_ROOT = "https://phabricator.services.mozilla.com";
-const PHABRICATOR_DASHBOARD = "differential/query/active/"
+const PHABRICATOR_DASHBOARD = "differential/query/active/";
 const PHABRICATOR_REVIEW_HEADERS = [
   "Must Review",
   "Ready to Review",

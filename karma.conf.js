@@ -1,36 +1,37 @@
+// eslint-disable-next-line no-undef
 module.exports = function(config) {
   config.set({
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
-    basePath: '',
+    basePath: "",
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['mocha', 'chai'],
+    frameworks: ["mocha", "chai",],
 
     // list of files / patterns to load in the browser
     files: [
       // Test dependencies
-      'node_modules/expect.js/index.js',
-      'node_modules/sinon-chrome/bundle/sinon-chrome-webextensions.min.js',
+      "node_modules/expect.js/index.js",
+      "node_modules/sinon-chrome/bundle/sinon-chrome-webextensions.min.js",
 
       // Source to test
-      'addon/*.js',
-      { pattern: 'addon/content/*/*.*', served: true, included: false },
+      "addon/*.js",
+      { pattern: "addon/content/*/*.*", served: true, included: false, },
 
       // Tests
-      'tests/*.js',
-      'tests/content/*.js',
-      'tests/services/**/*.js',
+      "tests/*.js",
+      "tests/content/*.js",
+      "tests/services/**/*.js",
 
       // Service test files
-      { pattern: 'tests/services/**/*.html', served: true, included: false },
+      { pattern: "tests/services/**/*.html", served: true, included: false, },
     ],
 
     client: {
       mocha: {
         // change Karma's debug.html to the mocha web reporter
-        reporter: 'html',
+        reporter: "html",
       },
     },
 
@@ -42,7 +43,7 @@ module.exports = function(config) {
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['dots'],
+    reporters: ["dots",],
 
     // web server port
     port: 9876,
@@ -60,7 +61,7 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['Firefox'],
+    browsers: ["Firefox",],
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits

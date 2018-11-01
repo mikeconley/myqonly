@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+
 /**
  * Runs some optional setup script to prepare sinon-chrome with
  * some values, and then loads a url in an iframe in the main document
@@ -26,7 +28,7 @@
  *           fired a custom "initted" event.
  *
  */
-async function loadPage({ url, setup, waitForInitted = true, test } = {}) {
+async function loadPage({ url, setup, waitForInitted = true, test, } = {}) {
   let iframe = document.createElement("iframe");
   // Karma hosts these files at http://localhost/base/ + file path.
   // See http://karma-runner.github.io/3.0/config/files.html
@@ -45,7 +47,7 @@ async function loadPage({ url, setup, waitForInitted = true, test } = {}) {
 
   await new Promise(resolve => {
     let event = waitForInitted ? "initted" : "load";
-    iframe.contentWindow.addEventListener(event, resolve, { once: true });
+    iframe.contentWindow.addEventListener(event, resolve, { once: true, });
   });
 
   await test(iframe.contentWindow, iframe.contentDocument);

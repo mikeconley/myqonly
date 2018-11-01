@@ -9,7 +9,7 @@ var MyQOnly = {
    * Main entry. After set-up, attempts to update the badge right
    * away.
    */
-  async init({ alertRev = FEATURE_ALERT_REV } = {}) {
+  async init({ alertRev = FEATURE_ALERT_REV, } = {}) {
     // Add a listener so that if our options change, we react to it.
     browser.storage.onChanged.addListener(this.onStorageChanged.bind(this));
     // Hook up our timer
@@ -18,18 +18,18 @@ var MyQOnly = {
     browser.runtime.onMessage.addListener(this.onMessage.bind(this));
 
     console.debug("Looking for feature rev");
-    let { featureRev } = await browser.storage.local.get("featureRev");
+    let { featureRev, } = await browser.storage.local.get("featureRev");
     if (!featureRev) {
       console.debug("No feature rev - this is a first timer.");
       featureRev = alertRev;
-      await browser.storage.local.set({ featureRev });
+      await browser.storage.local.set({ featureRev, });
     } else {
       console.debug("Got feature rev ", featureRev);
     }
 
     this.featureRev = featureRev;
 
-    let { updateInterval } = await browser.storage.local.get("updateInterval");
+    let { updateInterval, } = await browser.storage.local.get("updateInterval");
     if (!updateInterval) {
       updateInterval = DEFAULT_UPDATE_INTERVAL;
       await browser.storage.local.set({
@@ -38,7 +38,7 @@ var MyQOnly = {
     }
     this.updateInterval = updateInterval;
 
-    let { userKeys } = await browser.storage.local.get("userKeys");
+    let { userKeys, } = await browser.storage.local.get("userKeys");
     this.userKeys = userKeys || {};
 
     // Delete the Phabricator API key if the user still has it around,
@@ -114,38 +114,37 @@ var MyQOnly = {
    */
   onMessage(message, sender, sendReply) {
     switch (message.name) {
-      case "get-reviews": {
-        // The popup wants to know how many reviews there are to do.
-        sendReply(this.reviewTotals);
-        break;
-      }
+    case "get-reviews": {
+      // The popup wants to know how many reviews there are to do.
+      sendReply(this.reviewTotals);
+      break;
+    }
 
-      case "get-feature-rev": {
-        sendReply({
-          newFeatures: this.featureRev < FEATURE_ALERT_REV,
-          featureRev: this.featureRev + 1,
-        });
-        break;
-      }
+    case "get-feature-rev": {
+      sendReply({
+        newFeatures: this.featureRev < FEATURE_ALERT_REV,
+        featureRev: this.featureRev + 1,
+      });
+      break;
+    }
 
-      case "opened-release-notes": {
-        this.featureRev = FEATURE_ALERT_REV;
-        browser.storage.local.set({ featureRev: this.featureRev });
-        this.updateBadge();
-        break;
-      }
+    case "opened-release-notes": {
+      this.featureRev = FEATURE_ALERT_REV;
+      browser.storage.local.set({ featureRev: this.featureRev, });
+      this.updateBadge();
+      break;
+    }
 
-      // Debug stuff
-      case "refresh": {
-        this.updateBadge();
-        break;
-      }
+    // Debug stuff
+    case "refresh": {
+      this.updateBadge();
+      break;
+    }
 
-      case "get-phabricator-html": {
-        console.debug("Getting Phabricator dashboard body");
-        return this._phabricatorDocumentBody();
-        break;
-      }
+    case "get-phabricator-html": {
+      console.debug("Getting Phabricator dashboard body");
+      return this._phabricatorDocumentBody();
+    }
     }
   },
 
@@ -159,8 +158,8 @@ var MyQOnly = {
     }
   },
 
-  async _phabricatorDocumentBody({ testingURL = null } = {}) {
-    let url = testingURL || [PHABRICATOR_ROOT, PHABRICATOR_DASHBOARD].join("/");
+  async _phabricatorDocumentBody({ testingURL = null, } = {}) {
+    let url = testingURL || [PHABRICATOR_ROOT, PHABRICATOR_DASHBOARD,].join("/");
 
     let req = new Request(url, {
       method: "GET",
@@ -175,8 +174,8 @@ var MyQOnly = {
     return pageBody;
   },
 
-  async phabricatorReviewRequests({ testingURL = null } = {}) {
-    let pageBody = await this._phabricatorDocumentBody({ testingURL });
+  async phabricatorReviewRequests({ testingURL = null, } = {}) {
+    let pageBody = await this._phabricatorDocumentBody({ testingURL, });
     let parser = new DOMParser();
     let doc = parser.parseFromString(pageBody, "text/html");
 
@@ -203,7 +202,7 @@ var MyQOnly = {
     let response = await window.fetch(url, {
       method: "GET",
       headers: {
-        Accept: "application/vnd.github.v3+json"
+        Accept: "application/vnd.github.v3+json",
       },
       // Probably doesn't matter.
       credentials: "omit",
@@ -220,12 +219,12 @@ var MyQOnly = {
    * Is the current time within the user's working hours (if enabled)?
    */
   async isWorkingHours() {
-    console.log(`Checking working hours.`);
+    console.log("Checking working hours.");
 
-    let { workingHours } = await browser.storage.local.get("workingHours");
+    let { workingHours, } = await browser.storage.local.get("workingHours");
 
-    if (typeof workingHours === 'undefined' || !workingHours.enabled) {
-      console.log(`Working hours are not enabled`);
+    if (typeof workingHours === "undefined" || !workingHours.enabled) {
+      console.log("Working hours are not enabled");
       return true;
     }
 
@@ -237,10 +236,10 @@ var MyQOnly = {
     // am/pm chooser. Also, some people may just want to set days of the week,
     // not times of day. In these cases, just skip the missing time check.
     if (!workingHours.startTime) {
-      console.log(`Start time not set. Skipping start time check.`);
+      console.log("Start time not set. Skipping start time check.");
     } else {
       let startTime = new Date();
-      let [startHours, startMinutes] = workingHours.startTime.split(":");
+      let [startHours, startMinutes,] = workingHours.startTime.split(":");
       startTime.setHours(startHours, startMinutes);
       if (currentTime < startTime) {
         console.log(`Current time (${currentTime.toLocaleTimeString()}) is earlier than start time (${startTime.toLocaleTimeString()})`);
@@ -249,10 +248,10 @@ var MyQOnly = {
     }
 
     if (!workingHours.endTime) {
-      console.log(`End time not set. Skipping end time check.`);
+      console.log("End time not set. Skipping end time check.");
     } else {
       let endTime = new Date();
-      let [endHours, endMinutes] = workingHours.endTime.split(":");
+      let [endHours, endMinutes,] = workingHours.endTime.split(":");
       endTime.setHours(endHours, endMinutes);
       if (currentTime > endTime) {
         console.log(`Current time (${currentTime.toLocaleTimeString()}) is later than end time (${endTime.toLocaleTimeString()})`);
@@ -264,13 +263,13 @@ var MyQOnly = {
     // set via checkboxes, and if they are all unchecked, it'll be an empty
     // array (which is truthy).
     const days = {
-      0: 'sunday',
-      1: 'monday',
-      2: 'tuesday',
-      3: 'wednesday',
-      4: 'thursday',
-      5: 'friday',
-      6: 'saturday'
+      0: "sunday",
+      1: "monday",
+      2: "tuesday",
+      3: "wednesday",
+      4: "thursday",
+      5: "friday",
+      6: "saturday",
     };
     let currentDay = days[currentTime.getDay()];
     if (!workingHours.days.includes(currentDay)) {
@@ -278,7 +277,7 @@ var MyQOnly = {
       return false;
     }
 
-    console.log(`Current time is within the working hours`);
+    console.log("Current time is within the working hours");
     return true;
   },
 
@@ -289,8 +288,8 @@ var MyQOnly = {
   async updateBadge() {
     let workingHours = await this.isWorkingHours();
     if (!workingHours) {
-      console.log(`Current time is outside working hours. Hiding reviews.`);
-      browser.browserAction.setBadgeText({ text: null });
+      console.log("Current time is outside working hours. Hiding reviews.");
+      browser.browserAction.setBadgeText({ text: null, });
       return;
     }
 
@@ -342,18 +341,18 @@ var MyQOnly = {
         body,
         credentials: "omit",
         redirect: "follow",
-        referrer: "client"
+        referrer: "client",
       });
 
       let resp = await window.fetch(req);
       let bugzillaData = await resp.json();
       if (bugzillaData.error) {
         console.error("Failed to get Bugzilla reviews: ",
-                      bugzillaData.error.message);
+          bugzillaData.error.message);
       } else {
         this.reviewTotals.bugzilla =
           bugzillaData.result.result.requestee.filter(f => {
-            return f.type == "review"
+            return f.type == "review";
           }).length;
         console.log(`Found ${this.reviewTotals.bugzilla} ` +
                     "Bugzilla reviews to do");
@@ -374,7 +373,7 @@ var MyQOnly = {
       }
     }
 
-    console.log(`Found a total of ${reviews} reviews to do`)
+    console.log(`Found a total of ${reviews} reviews to do`);
     if (!reviews) {
       // Check to see if there are new features to notify the user about.
       // We intentionally only do this if there are new reviews to do.
@@ -382,9 +381,9 @@ var MyQOnly = {
         browser.browserAction.setBadgeBackgroundColor({
           color: FEATURE_ALERT_BG_COLOR,
         });
-        browser.browserAction.setBadgeText({ text: FEATURE_ALERT_STRING });
+        browser.browserAction.setBadgeText({ text: FEATURE_ALERT_STRING, });
       } else {
-        browser.browserAction.setBadgeText({ text: null });
+        browser.browserAction.setBadgeText({ text: null, });
       }
     } else {
       // If we happened to set the background colour when alerting about
@@ -392,7 +391,7 @@ var MyQOnly = {
       browser.browserAction.setBadgeBackgroundColor({
         color: null,
       });
-      browser.browserAction.setBadgeText({ text: String(reviews) });
+      browser.browserAction.setBadgeText({ text: String(reviews), });
     }
   },
 };
