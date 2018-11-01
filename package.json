@@ -6,13 +6,16 @@
   "scripts": {
     "test": "karma start",
     "test:manual": "web-ext run -s ./addon",
-    "build": "web-ext build -s ./addon"
+    "build": "web-ext build -s ./addon",
+    "lint": "./node_modules/eslint/bin/eslint.js .",
+    "lint-file": "./node_modules/eslint/bin/eslint.js"
   },
   "repository": "git@github.com:mikeconley/myqonly.git",
   "author": "Mike Conley <mike.d.conley@gmail.com>",
   "license": "MPL-2.0",
   "devDependencies": {
     "chai": "^4.2.0",
+    "eslint": "^5.8.0",
     "expect.js": "^0.3.1",
     "karma": "^3.1.1",
     "karma-chai": "^0.1.0",
