@@ -4,7 +4,10 @@
   "name": "MyQOnly",
   "version": "0.4",
   "background": {
-    "scripts": ["background.js"]
+    "scripts": [
+      "constants.js",
+      "background.js"
+    ]
   },
   "browser_action": {
     "default_popup": "content/popup/popup.html",

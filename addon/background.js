@@ -4,30 +4,12 @@ if (typeof(browser) == "undefined") {
   var browser = chrome;
 }
 
-const PHABRICATOR_ROOT = "https://phabricator.services.mozilla.com";
-const PHABRICATOR_DASHBOARD = "differential/query/active/"
-const PHABRICATOR_REVIEW_HEADERS = [
-  "Must Review",
-  "Ready to Review",
-];
-const BUGZILLA_API = "https://bugzilla.mozilla.org/jsonrpc.cgi";
-const GITHUB_API = "https://api.github.com/search/issues";
-
-const DEFAULT_UPDATE_INTERVAL = 5; // minutes
-const ALARM_NAME = "check-for-updates";
-
-// Anytime we want to alert the user about changes in the changelog, we should
-// bump the revision number here.
-const FEATURE_ALERT_REV = 1;
-const FEATURE_ALERT_BG_COLOR = "#EC9329";
-const FEATURE_ALERT_STRING = "New";
-
 var MyQOnly = {
   /**
    * Main entry. After set-up, attempts to update the badge right
    * away.
    */
-  async init() {
+  async init({ alertRev = FEATURE_ALERT_REV } = {}) {
     // Add a listener so that if our options change, we react to it.
     browser.storage.onChanged.addListener(this.onStorageChanged.bind(this));
     // Hook up our timer
@@ -39,7 +21,7 @@ var MyQOnly = {
     let { featureRev } = await browser.storage.local.get("featureRev");
     if (!featureRev) {
       console.debug("No feature rev - this is a first timer.");
-      featureRev = FEATURE_ALERT_REV;
+      featureRev = alertRev;
       await browser.storage.local.set({ featureRev });
     } else {
       console.debug("Got feature rev ", featureRev);
@@ -49,8 +31,9 @@ var MyQOnly = {
 
     let { updateInterval } = await browser.storage.local.get("updateInterval");
     if (!updateInterval) {
+      updateInterval = DEFAULT_UPDATE_INTERVAL;
       await browser.storage.local.set({
-        updateInterval: DEFAULT_UPDATE_INTERVAL
+        updateInterval,
       });
     }
     this.updateInterval = updateInterval;
@@ -77,6 +60,13 @@ var MyQOnly = {
 
     await this.resetAlarm();
     await this.updateBadge();
+  },
+
+  uninit() {
+    delete this.reviewTotals;
+    delete this.userKeys;
+    delete this.updateInterval;
+    delete this.featureRev;
   },
 
   /**
