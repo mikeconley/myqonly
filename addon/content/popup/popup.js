@@ -39,6 +39,7 @@ const Panel = {
     case "options": {
       browser.runtime.openOptionsPage();
       event.preventDefault();
+      window.close();
       return false;
     }
     }
