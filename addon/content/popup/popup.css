@@ -4,7 +4,41 @@ html, body {
   margin: 0;
 }
 
-body:not([total-reviews="0"]) > #no-reviews,
+header {
+  display: grid;
+  grid-template-columns: min-content 1fr min-content;
+  height: 32px;
+  border-bottom: 1px solid #444444;
+  background-color: #777777;
+  color: #FFFFFF;
+}
+
+.icon {
+  height: 23px;
+  width: 23px;
+  margin: 5px;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-size: 23px;
+}
+
+#status {
+  text-align: center;
+  vertical-align: text-bottom;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+#refresh {
+  background-image: url('/icons/refresh.svg');
+  border: none;
+  background-color: transparent;
+}
+
+#options {
+  background-image: url('/icons/gear.svg');
+}
+
 body[total-reviews="0"] > #has-reviews,
 body[total-phabricator-reviews="0"] > #phabricator-reviews,
 body[total-bugzilla-reviews="0"] > #bugzilla-reviews,

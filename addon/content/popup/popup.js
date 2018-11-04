@@ -6,20 +6,10 @@ const Panel = {
       document.body.setAttribute("has-new-features", featureRev);
       let link = document.getElementById("has-new-features");
       link.href = link.href + "#featureRev-" + featureRev;
-      link.addEventListener("click", this);
     }
 
-    let reviews = await browser.runtime.sendMessage({ name: "get-reviews", });
-    let total = reviews.phabricator + reviews.bugzilla + reviews.github;
-    document.body.setAttribute("total-reviews", total);
-    document.body.setAttribute("total-phabricator-reviews", reviews.phabricator);
-    document.body.setAttribute("total-bugzilla-reviews", reviews.bugzilla);
-    document.body.setAttribute("total-github-reviews", reviews.github);
-
-    document.getElementById("total-reviews").textContent = total;
-    document.getElementById("phabricator-review-num").textContent = reviews.phabricator;
-    document.getElementById("bugzilla-review-num").textContent = reviews.bugzilla;
-    document.getElementById("github-review-num").textContent = reviews.github;
+    window.addEventListener("click", this);
+    await this.refresh();
   },
 
   handleEvent(event) {
@@ -42,6 +32,40 @@ const Panel = {
       window.close();
       return false;
     }
+    case "refresh": {
+      this.refresh();
+      return false;
+    }
+    case "options": {
+      browser.runtime.openOptionsPage();
+      event.preventDefault();
+      return false;
+    }
+    }
+  },
+
+  async refresh() {
+    let status = document.getElementById("status");
+    status.textContent = "Refreshing...";
+
+    await new Promise(resolve => window.requestAnimationFrame(resolve));
+
+    let reviews = await browser.runtime.sendMessage({ name: "get-reviews", });
+    let total = reviews.phabricator + reviews.bugzilla + reviews.github;
+    document.body.setAttribute("total-reviews", total);
+    document.body.setAttribute("total-phabricator-reviews", reviews.phabricator);
+    document.body.setAttribute("total-bugzilla-reviews", reviews.bugzilla);
+    document.body.setAttribute("total-github-reviews", reviews.github);
+
+    document.getElementById("total-reviews").textContent = total;
+    document.getElementById("phabricator-review-num").textContent = reviews.phabricator;
+    document.getElementById("bugzilla-review-num").textContent = reviews.bugzilla;
+    document.getElementById("github-review-num").textContent = reviews.github;
+
+    if (total) {
+      status.textContent = `Found ${total} things to do`;
+    } else {
+      status.textContent = "No reviews to do! \\o/";
     }
   },
 };
