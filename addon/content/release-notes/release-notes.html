@@ -9,11 +9,27 @@
 <body>
   <h1>MyQOnly Release Notes</h1>
 
-  <section id="featureRev-2" data-version="0.5">
+  <section id="featureRev-1" data-version="0.5">
     <h2>0.5</h2>
     <h3>New features</h3>
     <ul>
-      <li>Added working hours support. Choose which windows of time you want to be informed about your review queue.</li>
+      <li>Redesigned the panel. The panel now has a button to refresh the review count, as well as a shortcut to the add-on options page.
+        <img src="0.5/panel.png"/>
+      </li>
+      <li>Added working hours support. Choose which windows of time you want to be informed about your review queue. Thanks to jhirsch for the initial implementation!
+        <img src="0.5/working-hours.png"/>
+      </li>
+    </ul>
+    <h3>Bug fixes</h3>
+    <ul>
+      <li>Made the Bugzilla API key input a password field</li>
+      <li>Added a simple, and hopefully unobtrusive new feature notification system. To be used sparingly.</li>
+      <li>Added a very simple debugging tool for generating Phabricator test cases (hover your mouse over the bottom-right part of the options page).</li>
+    </ul>
+    <h3>Known issues</h3>
+    <ul>
+      <li><a href="https://github.com/mikeconley/myqonly/issues/19">No warnings if you're signed out from Phabricator</a></li>
+      <li><a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a> <a href="https://github.com/mikeconley/myqonly/issues/18">support</a> for Containers</li>
     </ul>
   </section>
 </body>
