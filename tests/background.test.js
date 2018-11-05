@@ -30,7 +30,16 @@ describe("MyQOnly initting fresh", function() {
     assert.ok(browser.alarms.onAlarm.addListener.calledOnce);
     assert.ok(browser.runtime.onMessage.addListener.calledOnce);
 
-    assert.equal(MyQOnly.featureRev, FEATURE_ALERT_REV);
+    // For the first release with featureRev, we actually want to alert
+    // the first timer users about new features.
+    let firstTime = FEATURE_ALERT_REV == FIRST_FEATURE_ALERT_REV;
+
+    if (firstTime) {
+      assert.equal(MyQOnly.featureRev, 0);
+    } else {
+      assert.equal(MyQOnly.featureRev, FEATURE_ALERT_REV);
+    }
+
     assert.equal(MyQOnly.updateInterval, DEFAULT_UPDATE_INTERVAL);
     assert.isEmpty(MyQOnly.userKeys);
 
@@ -38,9 +47,16 @@ describe("MyQOnly initting fresh", function() {
       assert.equal(MyQOnly.reviewTotals[service], 0);
     }
 
-    assert.ok(browser.storage.local.set.calledWith({
-      featureRev: FEATURE_ALERT_REV,
-    }));
+    if (firstTime) {
+      assert.ok(browser.storage.local.set.calledWith({
+        featureRev: 0,
+      }));
+    } else {
+      assert.ok(browser.storage.local.set.calledWith({
+        featureRev: FEATURE_ALERT_REV,
+      }));
+    }
+
     assert.ok(browser.storage.local.set.calledWith({
       updateInterval: DEFAULT_UPDATE_INTERVAL,
     }));

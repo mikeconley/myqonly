@@ -29,8 +29,9 @@ var MyQOnly = {
       } else {
         console.debug("Updating first timer to latest featureRev");
         featureRev = alertRev;
-        await browser.storage.local.set({ featureRev, });
       }
+      await browser.storage.local.set({ featureRev, });
+
     } else {
       console.debug("Got feature rev ", featureRev);
     }
