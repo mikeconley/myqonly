@@ -49,7 +49,7 @@ const Panel = {
     let status = document.getElementById("status");
     status.textContent = "Refreshing...";
 
-    await new Promise(resolve => window.requestAnimationFrame(resolve));
+    await new Promise(resolve => window.setTimeout(resolve, 250));
 
     let reviews = await browser.runtime.sendMessage({ name: "get-reviews", });
     let total = reviews.phabricator + reviews.bugzilla + reviews.github;
