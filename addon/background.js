@@ -21,17 +21,8 @@ var MyQOnly = {
     let { featureRev, } = await browser.storage.local.get("featureRev");
     if (!featureRev) {
       console.debug("No feature rev - this is a first timer.");
-      // For the folks who are upgrading to the very first version that
-      // has the featureRev thing, let them see the feature notification.
-      if (alertRev == FIRST_FEATURE_ALERT_REV) {
-        console.debug("Hit the first feature alert rev!");
-        featureRev = 0;
-      } else {
-        console.debug("Updating first timer to latest featureRev");
-        featureRev = alertRev;
-      }
+      featureRev = alertRev;
       await browser.storage.local.set({ featureRev, });
-
     } else {
       console.debug("Got feature rev ", featureRev);
     }
