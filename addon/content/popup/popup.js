@@ -9,7 +9,7 @@ const Panel = {
     }
 
     window.addEventListener("click", this);
-    await this.refresh();
+    await this.updatePanel();
   },
 
   handleEvent(event) {
@@ -49,8 +49,15 @@ const Panel = {
     let status = document.getElementById("status");
     status.textContent = "Refreshing...";
 
-    await new Promise(resolve => window.setTimeout(resolve, 250));
+    let refreshPromise = browser.runtime.sendMessage({ name: "refresh" });
+    let visualDelayPromise = new Promise(resolve => setTimeout(resolve, 250));
+    await Promise.all([refreshPromise, visualDelayPromise]);
 
+    await this.updatePanel();
+  },
+
+  async updatePanel() {
+    let status = document.getElementById("status");
     let reviews = await browser.runtime.sendMessage({ name: "get-reviews", });
     let total = reviews.phabricator + reviews.bugzilla + reviews.github;
     document.body.setAttribute("total-phabricator-reviews", reviews.phabricator);

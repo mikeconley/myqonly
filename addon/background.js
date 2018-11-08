@@ -129,6 +129,11 @@ var MyQOnly = {
       break;
     }
 
+    case "refresh": {
+      this.updateBadge();
+      break;
+    }
+
     case "get-feature-rev": {
       sendReply({
         newFeatures: this.featureRev < FEATURE_ALERT_REV,
@@ -145,11 +150,6 @@ var MyQOnly = {
     }
 
     // Debug stuff
-    case "refresh": {
-      this.updateBadge();
-      break;
-    }
-
     case "get-phabricator-html": {
       console.debug("Getting Phabricator dashboard body");
       return this._phabricatorDocumentBody();
