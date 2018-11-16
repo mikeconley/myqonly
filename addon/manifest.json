@@ -2,7 +2,7 @@
   "description": "A tool for Mozillians who want to know how many reviews are in their queue in their browser.",
   "manifest_version": 2,
   "name": "MyQOnly",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "background": {
     "scripts": [
       "constants.js",
