@@ -32,6 +32,39 @@ describe("Options page", function() {
   });
 });
 
+describe("Options page", function() {
+  it("should be able to update the Bugzilla API token", async function() {
+    await loadPage({
+      url: "/addon/content/options/options.html",
+      setup: async(browser) => {
+        browser.storage.local.get.withArgs("updateInterval").returns(
+          Promise.resolve({ updateInterval: DEFAULT_UPDATE_INTERVAL, })
+        );
+        browser.storage.local.get.withArgs("userKeys").returns(
+          Promise.resolve({})
+        );
+        browser.storage.local.get.withArgs({ workingHours: {}, }).returns(
+          Promise.resolve({})
+        );
+      },
+      test: async(content, document) => {
+        const NEW_KEY = "abc123";
+        let field = document.getElementById("bugzilla-key");
+        field.value.should.equal("");
+
+        // Now update the value
+        changeFieldValue(field, NEW_KEY);
+        browser.storage.local.set.withArgs({ userKeys: undefined, }).returns(
+          Promise.resolve()
+        );
+
+        assert.ok(browser.storage.local.set.calledOnce);
+        assert.ok(browser.storage.local.set.calledWith({ userKeys: { "bugzilla": NEW_KEY}, }));
+      },
+    });
+  });
+});
+
 const WEEKENDS = [
   "saturday",
   "sunday",

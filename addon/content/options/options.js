@@ -94,7 +94,7 @@ const Options = {
       browser.storage.local.set({ "updateInterval": updateInterval, }).then(() => {
         console.log(`Saved update interval as ${updateInterval} minutes`);
       });
-    } else if (event.target.type == "text") {
+    } else if (event.target.type == "text" || event.target.type == "password") {
       let keyType = event.target.dataset.type;
       this.userKeys[keyType] = event.target.value;
       browser.storage.local.set({ "userKeys": this.userKeys, }).then(() => {
