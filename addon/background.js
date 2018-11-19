@@ -41,8 +41,10 @@ var MyQOnly = {
     // Version 0.5.2 and earlier used a simpler schema for storing service
     // information. If we find the old storage schema, migrate it to the
     // new one.
+    console.debug("Looking for old userKeys");
     let { userKeys, } = await browser.storage.local.get("userKeys");
     if (userKeys) {
+      console.debug("Found old userKeys - attempting to migrate");
       await this.migrateUserKeysToServicesSchema(userKeys);
     }
 

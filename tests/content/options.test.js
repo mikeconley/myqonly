@@ -60,10 +60,39 @@ describe("Options page", function() {
         assert.ok(browser.storage.local.set.calledOnce);
         assert.ok(browser.storage.local.set.calledWith({
           services: [{
-            "id": 0,
+            "id": 1,
             "type": "bugzilla",
             "settings": {
               "apiKey": NEW_KEY,
+            },
+          },],
+        }));
+      },
+    });
+  });
+
+  it("should be able to update the GitHub username", async () => {
+    await loadPage({
+      url: "/addon/content/options/options.html",
+      setup: setupBlank,
+      test: async(content, document) => {
+        const NEW_USERNAME = "mikeconley";
+        let field = document.getElementById("github-username");
+        field.value.should.equal("");
+
+        // Now update the value
+        changeFieldValue(field, NEW_USERNAME);
+        browser.storage.local.set.withArgs({ services: undefined, }).returns(
+          Promise.resolve()
+        );
+
+        assert.ok(browser.storage.local.set.calledOnce);
+        assert.ok(browser.storage.local.set.calledWith({
+          services: [{
+            "id": 1,
+            "type": "github",
+            "settings": {
+              "username": NEW_USERNAME,
             },
           },],
         }));

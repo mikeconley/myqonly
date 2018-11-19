@@ -26,7 +26,7 @@ describe("MyQOnly initting fresh", function() {
     browser.flush();
   });
 
-  it("should exist, and be able to init with defaults", async function() {
+  it("should exist, and be able to init with defaults", async () => {
     should.exist(MyQOnly);
     await MyQOnly.init();
     // Should have set up listeners and alarms
@@ -50,6 +50,92 @@ describe("MyQOnly initting fresh", function() {
     }));
     assert.ok(browser.alarms.create.calledWith(ALARM_NAME, {
       periodInMinutes: DEFAULT_UPDATE_INTERVAL,
+    }));
+  });
+
+  it("should migrate old userKeys to the new services schema", async () => {
+    browser.storage.local.get.withArgs("userKeys").returns(
+      Promise.resolve({
+        userKeys: {
+          bugzilla: "abc123",
+          ghuser: "mikeconley",
+        },
+      })
+    );
+
+    await MyQOnly.init();
+
+    assert.ok(browser.storage.local.set.calledWith({
+      services: [{
+        id: 1,
+        type: "bugzilla",
+        settings: {
+          apiKey: "abc123",
+        }
+      }, {
+        id: 2,
+        type: "github",
+        settings: {
+          username: "mikeconley",
+        },
+      }],
+      userKeys: null,
+      oldUserKeys: {
+        bugzilla: "abc123",
+        ghuser: "mikeconley",
+      },
+    }));
+  });
+
+  it("should migrate bugzilla userKeys to the new services schema", async () => {
+    browser.storage.local.get.withArgs("userKeys").returns(
+      Promise.resolve({
+        userKeys: {
+          bugzilla: "abc123",
+        },
+      })
+    );
+
+    await MyQOnly.init();
+
+    assert.ok(browser.storage.local.set.calledWith({
+      services: [{
+        id: 1,
+        type: "bugzilla",
+        settings: {
+          apiKey: "abc123",
+        }
+      }],
+      userKeys: null,
+      oldUserKeys: {
+        bugzilla: "abc123",
+      },
+    }));
+  });
+
+  it("should migrate GitHub userKeys to the new services schema", async () => {
+    browser.storage.local.get.withArgs("userKeys").returns(
+      Promise.resolve({
+        userKeys: {
+          ghuser: "mikeconley",
+        },
+      })
+    );
+
+    await MyQOnly.init();
+
+    assert.ok(browser.storage.local.set.calledWith({
+      services: [{
+        id: 1,
+        type: "github",
+        settings: {
+          username: "mikeconley",
+        }
+      }],
+      userKeys: null,
+      oldUserKeys: {
+        ghuser: "mikeconley",
+      },
     }));
   });
 });

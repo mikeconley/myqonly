@@ -25,8 +25,10 @@ const Options = {
         break;
       }
       }
-      this._nextID++;
+      this._nextID = Math.max(this._nextID, service.id);
     }
+
+    this._nextID++;
 
     console.debug("Adding change event listener");
     window.addEventListener("change", this);
