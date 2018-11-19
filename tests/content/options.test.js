@@ -1,20 +1,25 @@
 /* globals loadPage, changeFieldValue */
 
+/**
+ * Prepares the Options UI so that it's in the default empty state.
+ */
+async function setupBlank(browser) {
+  browser.storage.local.get.withArgs("updateInterval").returns(
+    Promise.resolve({ updateInterval: DEFAULT_UPDATE_INTERVAL, })
+  );
+  browser.storage.local.get.withArgs("userKeys").returns(
+    Promise.resolve({})
+  );
+  browser.storage.local.get.withArgs({ workingHours: {}, }).returns(
+    Promise.resolve({})
+  );
+}
+
 describe("Options page", function() {
   it("should show stored interval time, and be able to update", async function() {
     await loadPage({
       url: "/addon/content/options/options.html",
-      setup: async(browser) => {
-        browser.storage.local.get.withArgs("updateInterval").returns(
-          Promise.resolve({ updateInterval: DEFAULT_UPDATE_INTERVAL, })
-        );
-        browser.storage.local.get.withArgs("userKeys").returns(
-          Promise.resolve({})
-        );
-        browser.storage.local.get.withArgs({ workingHours: {}, }).returns(
-          Promise.resolve({})
-        );
-      },
+      setup: setupBlank,
       test: async(content, document) => {
         let field = document.getElementById("update-interval");
         parseInt(field.value, 10).should.equal(DEFAULT_UPDATE_INTERVAL);
@@ -36,17 +41,7 @@ describe("Options page", function() {
   it("should be able to update the Bugzilla API token", async function() {
     await loadPage({
       url: "/addon/content/options/options.html",
-      setup: async(browser) => {
-        browser.storage.local.get.withArgs("updateInterval").returns(
-          Promise.resolve({ updateInterval: DEFAULT_UPDATE_INTERVAL, })
-        );
-        browser.storage.local.get.withArgs("userKeys").returns(
-          Promise.resolve({})
-        );
-        browser.storage.local.get.withArgs({ workingHours: {}, }).returns(
-          Promise.resolve({})
-        );
-      },
+      setup: setupBlank,
       test: async(content, document) => {
         const NEW_KEY = "abc123";
         let field = document.getElementById("bugzilla-key");
@@ -82,18 +77,7 @@ describe("Options page", function() {
   it("should be able to set working hours from default state", async function() {
     await loadPage({
       url: "/addon/content/options/options.html",
-      setup: async(browser) => {
-        browser.storage.local.get.withArgs("updateInterval").returns(
-          Promise.resolve({ updateInterval: DEFAULT_UPDATE_INTERVAL, })
-        );
-        browser.storage.local.get.withArgs("userKeys").returns(
-          Promise.resolve({})
-        );
-        // Default to no working hours
-        browser.storage.local.get.withArgs({ workingHours: {}, }).returns(
-          Promise.resolve({})
-        );
-      },
+      setup: setupBlank,
       test: async(content, document) => {
         // By default, the working hours fields should be disabled.
         let fieldset = document.getElementById("working-hours-fields");
