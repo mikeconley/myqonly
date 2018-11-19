@@ -12,6 +12,10 @@ module.exports = {
       2,
       "unix"
     ],
+    "max-len": [
+      "error",
+      80
+    ],
     "semi": [
       2,
       "always"

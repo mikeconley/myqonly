@@ -149,7 +149,7 @@ const Options = {
 
     if (event.target.id == "update-interval") {
       let updateInterval = parseInt(event.target.value, 10);
-      browser.storage.local.set({ "updateInterval": updateInterval, }).then(() => {
+      browser.storage.local.set({ updateInterval, }).then(() => {
         console.log(`Saved update interval as ${updateInterval} minutes`);
       });
     } else if (event.target.closest("#working-hours-fields")) {
@@ -162,21 +162,33 @@ const Options = {
 
     let enabled = document.querySelector("#working-hours-checkbox").checked;
     if (enabled) {
-      document.querySelector("#working-hours-fields").removeAttribute("disabled");
+      document.querySelector("#working-hours-fields")
+        .removeAttribute("disabled");
     } else {
-      document.querySelector("#working-hours-fields").setAttribute("disabled", "disabled");
+      document.querySelector("#working-hours-fields")
+        .setAttribute("disabled", "disabled");
     }
 
     // Times are strings of the form "HH:MM" in 24-hour format (or empty string)
     let startTime = document.querySelector("#start-time").value;
     let endTime = document.querySelector("#end-time").value;
 
-    // `days` is an array containing en-US day strings: ['sunday', 'monday', ...]
+    // `days` is an array containing en-US day strings:
+    // ['sunday', 'monday', ...]
     let days = [].slice.call(document.querySelectorAll(".days > input:checked"))
       .map(el => { return el.getAttribute("id");});
 
-    browser.storage.local.set({ workingHours: {enabled, days, startTime, endTime,},}).then(() => {
-      console.log(`Saved update to working hours: enabled: ${enabled}, days: ${days.join(",")}, start time: ${startTime}, end time: ${endTime}`);
+    browser.storage.local.set({
+      workingHours: {
+        enabled,
+        days,
+        startTime,
+        endTime,
+      },
+    }).then(() => {
+      console.log(`Saved update to working hours: enabled: ${enabled}, ` +
+                  `days: ${days.join(",")}, start time: ${startTime}, ` +
+                  `end time: ${endTime}`);
     }).catch((err) => {
       console.error(`Error updating working hours: ${err}`);
     });

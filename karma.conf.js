@@ -36,7 +36,8 @@ module.exports = function(config) {
     },
 
     // preprocess matching files before serving them to the browser
-    // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
+    // available preprocessors:
+    // https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
     },
 
@@ -60,7 +61,8 @@ module.exports = function(config) {
     autoWatch: false,
 
     // start these browsers
-    // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
+    // available browser launchers:
+    // https://npmjs.org/browse/keyword/karma-launcher
     browsers: ["Firefox",],
 
     // Continuous Integration mode

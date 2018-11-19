@@ -16,7 +16,7 @@ async function setupBlank(browser) {
 }
 
 describe("Options page", function() {
-  it("should show stored interval time, and be able to update", async function() {
+  it("should show stored interval time, and be able to update", async () => {
     await loadPage({
       url: "/addon/content/options/options.html",
       setup: setupBlank,
@@ -26,19 +26,23 @@ describe("Options page", function() {
 
         // Now update the value
         let newInterval = DEFAULT_UPDATE_INTERVAL + 1;
-        browser.storage.local.set.withArgs({ updateInterval: undefined, }).returns(
+        browser.storage.local.set.withArgs({
+          updateInterval: undefined,
+        }).returns(
           Promise.resolve()
         );
         changeFieldValue(field, newInterval);
         assert.ok(browser.storage.local.set.calledOnce);
-        assert.ok(browser.storage.local.set.calledWith({ updateInterval: newInterval, }));
+        assert.ok(browser.storage.local.set.calledWith({
+          updateInterval: newInterval,
+        }));
       },
     });
   });
 });
 
 describe("Options page", function() {
-  it("should be able to update the Bugzilla API token", async function() {
+  it("should be able to update the Bugzilla API token", async () => {
     await loadPage({
       url: "/addon/content/options/options.html",
       setup: setupBlank,
@@ -82,7 +86,7 @@ const WEEKDAYS = [
 ];
 
 describe("Options page", function() {
-  it("should be able to set working hours from default state", async function() {
+  it("should be able to set working hours from default state", async () => {
     await loadPage({
       url: "/addon/content/options/options.html",
       setup: setupBlank,

@@ -88,7 +88,8 @@ var MyQOnly = {
    *  "id" -> int
    *    A unique ID for the service instance.
    *  "type" -> string
-   *    A string describing the type of service. Example: "phabricator", "bugzilla"
+   *    A string describing the type of service. Example: "phabricator",
+   *    "bugzilla"
    *  "settings" -> Object
    *    A set of service-specific options.
    */
@@ -222,7 +223,8 @@ var MyQOnly = {
   },
 
   async _phabricatorDocumentBody({ testingURL = null, } = {}) {
-    let url = testingURL || [PHABRICATOR_ROOT, PHABRICATOR_DASHBOARD,].join("/");
+    let url = testingURL ||
+              [PHABRICATOR_ROOT, PHABRICATOR_DASHBOARD,].join("/");
 
     let req = new Request(url, {
       method: "GET",
@@ -296,9 +298,11 @@ var MyQOnly = {
 
   async updateGitHub(settings) {
     let username = settings.username;
-    // We don't seem to need authentication for this request, for whatever reason.
+    // We don't seem to need authentication for this request, for whatever
+    // reason.
     let url = new URL(GITHUB_API);
-    url.searchParams.set("q", `review-requested:${username} type:pr is:open archived:false`);
+    let query = `review-requested:${username} type:pr is:open archived:false`;
+    url.searchParams.set("q", query);
     // Note: we might need to paginate if we care about fetching more than the
     // first 100.
     let response = await window.fetch(url, {
@@ -311,7 +315,8 @@ var MyQOnly = {
     });
     if (!response.ok) {
       console.error("Failed to request from github", response);
-      throw new Error(`Github request failed (${response.status}): ${await response.text()}`);
+      throw new Error(`Github request failed (${response.status}): ` +
+                      `${await response.text()}`);
     }
     const data = await response.json();
     return data.total_count;
@@ -344,7 +349,9 @@ var MyQOnly = {
       let [startHours, startMinutes,] = workingHours.startTime.split(":");
       startTime.setHours(startHours, startMinutes);
       if (currentTime < startTime) {
-        console.log(`Current time (${currentTime.toLocaleTimeString()}) is earlier than start time (${startTime.toLocaleTimeString()})`);
+        console.log(`Current time (${currentTime.toLocaleTimeString()}) is ` +
+                    "earlier than start time " +
+                    `(${startTime.toLocaleTimeString()})`);
         return false;
       }
     }
@@ -356,7 +363,9 @@ var MyQOnly = {
       let [endHours, endMinutes,] = workingHours.endTime.split(":");
       endTime.setHours(endHours, endMinutes);
       if (currentTime > endTime) {
-        console.log(`Current time (${currentTime.toLocaleTimeString()}) is later than end time (${endTime.toLocaleTimeString()})`);
+        console.log(`Current time (${currentTime.toLocaleTimeString()}) is ` +
+                    "later than end time " +
+                    `(${endTime.toLocaleTimeString()})`);
         return false;
       }
     }
@@ -375,7 +384,8 @@ var MyQOnly = {
     };
     let currentDay = days[currentTime.getDay()];
     if (!workingHours.days.includes(currentDay)) {
-      console.log(`Current day (${currentDay}) is not one of the working days (${workingHours.days.join(", ")})`);
+      console.log(`Current day (${currentDay}) is not one of the working ` +
+                  `days (${workingHours.days.join(", ")})`);
       return false;
     }
 
@@ -384,8 +394,8 @@ var MyQOnly = {
   },
 
   /**
-   * Contacts Phabricator, Bugzilla, and Github (if the API keys for them exist),
-   * and attempts to get a review count for each.
+   * Contacts Phabricator, Bugzilla, and Github (if the API keys for them
+   * exist), and attempts to get a review count for each.
    */
   async updateBadge() {
     let workingHours = await this.isWorkingHours();
@@ -403,26 +413,31 @@ var MyQOnly = {
     });
 
     if (phabCookie) {
-      console.log("Phabricator session found! Attempting to get dashboard page.");
+      console.log("Phabricator session found! Attempting to get dashboard " +
+                  "page.");
 
       try {
         this.reviewTotals.phabricator =
           await this.phabricatorReviewRequests();
-        console.log(`Found ${this.reviewTotals.phabricator} Phabricator reviews to do`);
+        console.log(`Found ${this.reviewTotals.phabricator} Phabricator ` +
+                    "reviews to do");
       } catch (e) {
         // It would be nice to surface this to the user more directly.
         console.error("Error when fetching phabricator issues:", e);
       }
     } else {
-      console.log("No Phabricator session found. I won't try to fetch anything for it.");
+      console.log("No Phabricator session found. I won't try to fetch " +
+                  "anything for it.");
     }
 
     for (let service of this.services) {
       try {
         switch (service.type) {
         case "bugzilla": {
-          this.reviewTotals.bugzilla = await this.updateBugzilla(service.settings);
-          console.log(`Found ${this.reviewTotals.bugzilla} Bugzilla reviews to do`);
+          this.reviewTotals.bugzilla =
+            await this.updateBugzilla(service.settings);
+          console.log(`Found ${this.reviewTotals.bugzilla} Bugzilla reviews ` +
+                      "to do");
           break;
         }
         case "github": {

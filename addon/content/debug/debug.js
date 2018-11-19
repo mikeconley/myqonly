@@ -31,14 +31,15 @@ const Debug = {
   },
 
   async generatePhabricatorTestcase() {
-    let pageBody = await browser.runtime.sendMessage({ name: "get-phabricator-html", });
+    let pageBody =
+      await browser.runtime.sendMessage({ name: "get-phabricator-html", });
     let parser = new DOMParser();
     let doc = parser.parseFromString(pageBody, "text/html");
 
     let activeRevisions = doc.querySelector(".phabricator-nav-content");
 
-    // Clear out any of the titles and links for the revisions, to avoid security-sensitive
-    // things getting captured.
+    // Clear out any of the titles and links for the revisions, to avoid
+    // security-sensitive things getting captured.
     let links = activeRevisions.querySelectorAll(".phui-oi-link");
     for (let link of links) {
       link.title = link.textContent = "Bug 123456 - This is some bug";
