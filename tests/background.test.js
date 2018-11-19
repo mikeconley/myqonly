@@ -9,7 +9,11 @@ describe("MyQOnly initting fresh", function() {
     browser.storage.local.get.withArgs("updateInterval").returns(
       Promise.resolve({})
     );
+    // Keeping userKeys around for the migration step.
     browser.storage.local.get.withArgs("userKeys").returns(
+      Promise.resolve({})
+    );
+    browser.storage.local.get.withArgs("services").returns(
       Promise.resolve({})
     );
     browser.storage.local.get.withArgs("workingHours").returns(
@@ -32,7 +36,7 @@ describe("MyQOnly initting fresh", function() {
 
     assert.equal(MyQOnly.featureRev, FEATURE_ALERT_REV);
     assert.equal(MyQOnly.updateInterval, DEFAULT_UPDATE_INTERVAL);
-    assert.isEmpty(MyQOnly.userKeys);
+    assert.isEmpty(MyQOnly.services);
 
     for (let service in MyQOnly.reviewTotals) {
       assert.equal(MyQOnly.reviewTotals[service], 0);

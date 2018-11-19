@@ -7,7 +7,7 @@ async function setupBlank(browser) {
   browser.storage.local.get.withArgs("updateInterval").returns(
     Promise.resolve({ updateInterval: DEFAULT_UPDATE_INTERVAL, })
   );
-  browser.storage.local.get.withArgs("userKeys").returns(
+  browser.storage.local.get.withArgs("services").returns(
     Promise.resolve({})
   );
   browser.storage.local.get.withArgs({ workingHours: {}, }).returns(
@@ -44,17 +44,25 @@ describe("Options page", function() {
       setup: setupBlank,
       test: async(content, document) => {
         const NEW_KEY = "abc123";
-        let field = document.getElementById("bugzilla-key");
+        let field = document.getElementById("bugzilla-apiKey");
         field.value.should.equal("");
 
         // Now update the value
         changeFieldValue(field, NEW_KEY);
-        browser.storage.local.set.withArgs({ userKeys: undefined, }).returns(
+        browser.storage.local.set.withArgs({ services: undefined, }).returns(
           Promise.resolve()
         );
 
         assert.ok(browser.storage.local.set.calledOnce);
-        assert.ok(browser.storage.local.set.calledWith({ userKeys: { "bugzilla": NEW_KEY}, }));
+        assert.ok(browser.storage.local.set.calledWith({
+          services: [{
+            "id": 0,
+            "type": "bugzilla",
+            "settings": {
+              "apiKey": NEW_KEY,
+            },
+          },],
+        }));
       },
     });
   });

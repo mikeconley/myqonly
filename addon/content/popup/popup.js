@@ -49,9 +49,9 @@ const Panel = {
     let status = document.getElementById("status");
     status.textContent = "Refreshing...";
 
-    let refreshPromise = browser.runtime.sendMessage({ name: "refresh" });
+    let refreshPromise = browser.runtime.sendMessage({ name: "refresh", });
     let visualDelayPromise = new Promise(resolve => setTimeout(resolve, 250));
-    await Promise.all([refreshPromise, visualDelayPromise]);
+    await Promise.all([refreshPromise, visualDelayPromise,]);
 
     await this.updatePanel();
   },

@@ -38,19 +38,16 @@ var MyQOnly = {
     }
     this.updateInterval = updateInterval;
 
+    // Version 0.5.2 and earlier used a simpler schema for storing service
+    // information. If we find the old storage schema, migrate it to the
+    // new one.
     let { userKeys, } = await browser.storage.local.get("userKeys");
-    this.userKeys = userKeys || {};
-
-    // Delete the Phabricator API key if the user still has it around,
-    // since we don't use this anymore in more recent versions.
-    if (this.userKeys.phabricator) {
-      console.log("Found an old Phabricator API key - clearing it.");
-      delete this.userKeys.phabricator;
-      await browser.storage.local.set({
-        userKeys: this.userKeys,
-      });
-      console.log("Old Phabricator API key is cleared.");
+    if (userKeys) {
+      await this.migrateUserKeysToServicesSchema(userKeys);
     }
+
+    let { services, } = await browser.storage.local.get("services");
+    this.services = services || [];
 
     this.reviewTotals = {
       bugzilla: 0,
@@ -64,9 +61,75 @@ var MyQOnly = {
 
   uninit() {
     delete this.reviewTotals;
-    delete this.userKeys;
+    delete this.services;
     delete this.updateInterval;
     delete this.featureRev;
+  },
+
+  /**
+   * Migrates the service storage schema from userKeys (from v0.5.2 and
+   * earlier) to the service schema.
+   *
+   * The userKeys schema was a simple Object with the following optional
+   * keys:
+   *
+   *  "phabricator" -> string:
+   *    This was only stored at one time, very early on in MyQOnly's lifetime,
+   *    before it started using page scraping, and used the Conduit API instead.
+   *    The value was the Phabricator API key.
+   *  "bugzilla" -> string:
+   *    The Bugzilla API token for the user for querying for review flags.
+   *  "ghuser" -> string:
+   *    The GitHub username for the user for querying for open pull requests.
+   *
+   * The new services schema is an Array, where each element in the Array is
+   * an Object with the following keys:
+   *
+   *  "id" -> int
+   *    A unique ID for the service instance.
+   *  "type" -> string
+   *    A string describing the type of service. Example: "phabricator", "bugzilla"
+   *  "settings" -> Object
+   *    A set of service-specific options.
+   */
+  async migrateUserKeysToServicesSchema(userKeys) {
+    let services = [];
+    let id = 1;
+
+    for (let oldKey in userKeys) {
+      let oldValue = userKeys[oldKey];
+      switch (oldKey) {
+      case "bugzilla": {
+        services.push({
+          id,
+          type: "bugzilla",
+          settings: {
+            apiKey: oldValue,
+          },
+        });
+        break;
+      }
+      case "ghuser": {
+        services.push({
+          id,
+          type: "github",
+          settings: {
+            username: oldValue,
+          },
+        });
+        break;
+      }
+      }
+      id++;
+    }
+
+    // Save the new schema, and move the userKeys object into temporary
+    // storage. We'll remove it in a later version.
+    await browser.storage.local.set({
+      services,
+      userKeys: null,
+      oldUserKeys: userKeys,
+    });
   },
 
   /**
@@ -84,9 +147,9 @@ var MyQOnly = {
       }
 
       // The user updated their API keys, so let's go update the badge.
-      if (changes.userKeys) {
-        this.userKeys = changes.userKeys.newValue;
-        console.log("background.js saw change to userKeys");
+      if (changes.services) {
+        this.services = changes.services.newValue;
+        console.log("background.js saw change to services");
         await this.updateBadge();
       }
     }
@@ -193,7 +256,46 @@ var MyQOnly = {
     return total;
   },
 
-  async githubReviewRequests(username) {
+  async updateBugzilla(settings) {
+    let apiKey = settings.apiKey;
+    // I'm not sure how much of this is necessary - I just looked at what
+    // the Bugzilla My Dashboard thing does in the network inspector, and
+    // I'm more or less mimicking that here.
+    let body = JSON.stringify({
+      id: 4,
+      method: "MyDashboard.run_flag_query",
+      params: {
+        Bugzilla_api_key: apiKey,
+        type: "requestee",
+      },
+      version: "1.1",
+    });
+
+    let req = new Request(BUGZILLA_API, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body,
+      credentials: "omit",
+      redirect: "follow",
+      referrer: "client",
+    });
+
+    let resp = await window.fetch(req);
+    let bugzillaData = await resp.json();
+    if (bugzillaData.error) {
+      throw new Error(`Bugzilla request failed: ${bugzillaData.error.message}`);
+    }
+    let total =
+      bugzillaData.result.result.requestee.filter(f => {
+        return f.type == "review";
+      }).length;
+    return total;
+  },
+
+  async updateGitHub(settings) {
+    let username = settings.username;
     // We don't seem to need authentication for this request, for whatever reason.
     let url = new URL(GITHUB_API);
     url.searchParams.set("q", `review-requested:${username} type:pr is:open archived:false`);
@@ -293,8 +395,6 @@ var MyQOnly = {
       return;
     }
 
-    let reviews = 0;
-
     // First, let's get Phabricator...
     // We'll start by seeing if we have any cookies.
     let phabCookie = await browser.cookies.get({
@@ -308,7 +408,6 @@ var MyQOnly = {
       try {
         this.reviewTotals.phabricator =
           await this.phabricatorReviewRequests();
-        reviews += this.reviewTotals.phabricator;
         console.log(`Found ${this.reviewTotals.phabricator} Phabricator reviews to do`);
       } catch (e) {
         // It would be nice to surface this to the user more directly.
@@ -318,59 +417,28 @@ var MyQOnly = {
       console.log("No Phabricator session found. I won't try to fetch anything for it.");
     }
 
-    // Okay, now Bugzilla's turn...
-    if (this.userKeys.bugzilla) {
-      // I'm not sure how much of this is necessary - I just looked at what
-      // the Bugzilla My Dashboard thing does in the network inspector, and
-      // I'm more or less mimicking that here.
-      let body = JSON.stringify({
-        id: 4,
-        method: "MyDashboard.run_flag_query",
-        params: {
-          Bugzilla_api_key: this.userKeys.bugzilla,
-          type: "requestee",
-        },
-        version: "1.1",
-      });
-
-      let req = new Request(BUGZILLA_API, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body,
-        credentials: "omit",
-        redirect: "follow",
-        referrer: "client",
-      });
-
-      let resp = await window.fetch(req);
-      let bugzillaData = await resp.json();
-      if (bugzillaData.error) {
-        console.error("Failed to get Bugzilla reviews: ",
-          bugzillaData.error.message);
-      } else {
-        this.reviewTotals.bugzilla =
-          bugzillaData.result.result.requestee.filter(f => {
-            return f.type == "review";
-          }).length;
-        console.log(`Found ${this.reviewTotals.bugzilla} ` +
-                    "Bugzilla reviews to do");
-        reviews += this.reviewTotals.bugzilla;
+    for (let service of this.services) {
+      try {
+        switch (service.type) {
+        case "bugzilla": {
+          this.reviewTotals.bugzilla = await this.updateBugzilla(service.settings);
+          console.log(`Found ${this.reviewTotals.bugzilla} Bugzilla reviews to do`);
+          break;
+        }
+        case "github": {
+          this.reviewTotals.github = await this.updateGitHub(service.settings);
+          console.log(`Found ${this.reviewTotals.github} GitHub reviews to do`);
+          break;
+        }
+        }
+      } catch (e) {
+        console.error(`Error when updating ${service.type}: `, e);
       }
     }
 
-    // Now, check github.
-    if (this.userKeys.ghuser) {
-      try {
-        this.reviewTotals.github =
-          await this.githubReviewRequests(this.userKeys.ghuser);
-        reviews += this.reviewTotals.github;
-        console.log(`Found ${this.reviewTotals.github} Github reviews to do`);
-      } catch (e) {
-        // It would be nice to surface this to the user more directly.
-        console.error("Error when fetching github issues:", e);
-      }
+    let reviews = 0;
+    for (let serviceReviewCount in this.reviewTotals) {
+      reviews += this.reviewTotals[serviceReviewCount];
     }
 
     console.log(`Found a total of ${reviews} reviews to do`);

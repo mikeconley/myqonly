@@ -22,16 +22,21 @@
 <section id="services">
   <h2>Services</h2>
 
+  <h3>Phabricator</h3>
   <div class="note">
     You don't need an API key anymore for Phabricator - just make sure you're logged in.
   </div>
 
-  <div class="keys">
-    <label for="bugzilla-key">Bugzilla API Key</label>
-    <input type="password" id="bugzilla-key" data-type="bugzilla"/>
+  <h3>Bugzilla</h3>
+  <div class="service-settings" data-type="bugzilla">
+    <label for="bugzilla-apiKey">Bugzilla API Key</label>
+    <input type="password" id="bugzilla-apiKey" data-setting="apiKey"/>
+  </div>
 
+  <h3>GitHub</h3>
+  <div class="service-settings" data-type="github">
     <label for="github-username">Github Username</label>
-    <input type="text" id="github-username" data-type="ghuser">
+    <input type="text" id="github-username" data-setting="username">
   </div>
 </section>
 

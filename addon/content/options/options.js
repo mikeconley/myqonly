@@ -1,8 +1,5 @@
 const Options = {
-  KEYS: [
-    "bugzilla",
-    "ghuser",
-  ],
+  _nextID: 0,
 
   async init() {
     console.log("Initting Options page");
@@ -12,15 +9,23 @@ const Options = {
     let interval = document.getElementById("update-interval");
     interval.value = updateInterval;
 
-    console.debug("Getting userKeys");
-    let { userKeys, } = await browser.storage.local.get("userKeys");
-    this.userKeys = userKeys || {};
-    console.debug("Updating keys in form");
-    for (let keyType of this.KEYS) {
-      if (this.userKeys[keyType]) {
-        let el = document.querySelector(`[data-type=${keyType}]`);
-        el.value = this.userKeys[keyType];
+    console.debug("Getting services");
+    let { services, } = await browser.storage.local.get("services");
+    this.services = services || [];
+
+    console.debug("Populating form");
+    for (let service of this.services) {
+      switch (service.type) {
+      case "bugzilla": {
+        this.populateBugzilla(service);
+        break;
       }
+      case "github": {
+        this.populateGitHub(service);
+        break;
+      }
+      }
+      this._nextID++;
     }
 
     console.debug("Adding change event listener");
@@ -30,6 +35,53 @@ const Options = {
     this.initWorkingHours();
     let initted = new CustomEvent("initted", { bubbles: true, });
     document.dispatchEvent(initted);
+  },
+
+  populateBugzilla(service) {
+    let bugzillaSettings =
+      document.querySelector(".service-settings[data-type='bugzilla']");
+
+    let apiKey = bugzillaSettings.querySelector("[data-type='apiKey']");
+    apiKey.value = service.settings.apiKey;
+  },
+
+  populateGitHub(service) {
+    let githubSettings =
+      document.querySelector(".service-settings[data-type='github']");
+
+    let username = githubSettings.querySelector("[data-type='username']");
+    username.value = service.settings.username;
+  },
+
+  onUpdateService(event, serviceType) {
+    let changedSetting = event.target.dataset.setting;
+    let newValue = event.target.value;
+
+    // For now, there's only a single service instance per type.
+    let settings = this.getServiceSettings(serviceType);
+    settings[changedSetting] = newValue;
+
+    browser.storage.local.set({ "services": this.services, }).then(() => {
+      console.log(`Saved update to ${serviceType} setting ${changedSetting}`);
+    });
+  },
+
+  getServiceSettings(serviceType) {
+    for (let instance of this.services) {
+      if (instance.type == serviceType) {
+        return instance.settings;
+      }
+    }
+
+    let settings = {};
+    // We've never saved a value here before. Let's create a new one.
+    this.services.push({
+      id: this._nextID++,
+      type: serviceType,
+      settings,
+    });
+
+    return settings;
   },
 
   async initWorkingHours() {
@@ -89,16 +141,16 @@ const Options = {
   },
 
   onChange(event) {
+    // Are we updating a service?
+    let serviceSettings = event.target.closest(".service-settings");
+    if (serviceSettings) {
+      return this.onUpdateService(event, serviceSettings.dataset.type);
+    }
+
     if (event.target.id == "update-interval") {
       let updateInterval = parseInt(event.target.value, 10);
       browser.storage.local.set({ "updateInterval": updateInterval, }).then(() => {
         console.log(`Saved update interval as ${updateInterval} minutes`);
-      });
-    } else if (event.target.type == "text" || event.target.type == "password") {
-      let keyType = event.target.dataset.type;
-      this.userKeys[keyType] = event.target.value;
-      browser.storage.local.set({ "userKeys": this.userKeys, }).then(() => {
-        console.log(`Saved update to key type ${keyType}`);
       });
     } else if (event.target.closest("#working-hours-fields")) {
       this.onWorkingHoursChanged();
