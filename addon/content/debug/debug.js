@@ -22,6 +22,14 @@ const Debug = {
       this.generatePhabricatorTestcase();
       break;
     }
+    case "show-old-userKeys": {
+      this.showOldUserKeys();
+      break;
+    }
+    case "revert-userKeys": {
+      this.revertToUserKeys();
+      break;
+    }
     }
   },
 
@@ -48,6 +56,28 @@ const Debug = {
 
     let outputEl = document.getElementById("phabricator-testcase");
     outputEl.textContent = activeRevisions.innerHTML;
+  },
+
+  async showOldUserKeys() {
+    let { oldUserKeys, } = await browser.storage.local.get("oldUserKeys");
+    let outputEl = document.getElementById("old-userKeys");
+    if (!oldUserKeys) {
+      outputEl.textContent = "Couldn't find any old userKeys";
+    } else {
+      if (oldUserKeys.bugzilla) {
+        oldUserKeys.bugzilla = "<Bugzilla API key>";
+      }
+      outputEl.textContent = JSON.stringify(oldUserKeys);
+    }
+  },
+
+  async revertToUserKeys() {
+    let { oldUserKeys, } = await browser.storage.local.get("oldUserKeys");
+    await browser.storage.local.set({
+      userKeys: oldUserKeys,
+      services: null,
+      oldUserKeys: null,
+    });
   },
 };
 
