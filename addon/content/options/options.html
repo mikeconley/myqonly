@@ -23,19 +23,24 @@
   <h2>Services</h2>
 
   <h3>Phabricator</h3>
-  <div class="note">
-    You don't need an API key anymore for Phabricator - just make sure you're logged in.
+  <div class="service-settings" data-type="phabricator">
+    <input type="checkbox" id="phabricator-enabled" data-setting="container" value="0">
+    <label for="phabricator-enabled">Use pre-existing Phabricator session in default container</label>
+    <p id="phabricator-session-status">
+      <span class="yes-session">Found a Phabricator session cookie in the default container</span>
+      <span class="no-session">Did not find a Phabricator session cookie. Are you logged in to Phabricator in the default container?</span>
+    </p>
   </div>
 
   <h3>Bugzilla</h3>
   <div class="service-settings" data-type="bugzilla">
-    <label for="bugzilla-apiKey">Bugzilla API Key</label>
+    <label for="bugzilla-apiKey">API Key</label>
     <input type="password" id="bugzilla-apiKey" data-setting="apiKey"/>
   </div>
 
   <h3>GitHub</h3>
   <div class="service-settings" data-type="github">
-    <label for="github-username">Github Username</label>
+    <label for="github-username">Username</label>
     <input type="text" id="github-username" data-setting="username">
   </div>
 </section>

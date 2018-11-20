@@ -36,7 +36,10 @@ describe("MyQOnly initting fresh", function() {
 
     assert.equal(MyQOnly.featureRev, FEATURE_ALERT_REV);
     assert.equal(MyQOnly.updateInterval, DEFAULT_UPDATE_INTERVAL);
-    assert.isEmpty(MyQOnly.services);
+
+    // We should default with the Phabricator service enabled
+    assert.equal(MyQOnly.services.length, 1);
+    assert.equal(MyQOnly.services[0].type, "phabricator");
 
     for (let service in MyQOnly.reviewTotals) {
       assert.equal(MyQOnly.reviewTotals[service], 0);

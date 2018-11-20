@@ -16,6 +16,10 @@ const Options = {
     console.debug("Populating form");
     for (let service of this.services) {
       switch (service.type) {
+      case "phabricator": {
+        this.populatePhabricator(service);
+        break;
+      }
       case "bugzilla": {
         this.populateBugzilla(service);
         break;
@@ -39,6 +43,22 @@ const Options = {
     document.dispatchEvent(initted);
   },
 
+  populatePhabricator(service) {
+    let phabricatorSettings =
+      document.querySelector(".service-settings[data-type='phabricator']");
+
+    let container =
+      phabricatorSettings.querySelector("[data-setting='container']");
+    container.checked = service.settings.container !== undefined;
+
+    let sessionPromise =
+      browser.runtime.sendMessage({ name: "check-for-phabricator-session", });
+    sessionPromise.then(hasSession => {
+      let status = document.getElementById("phabricator-session-status");
+      status.setAttribute("has-session", hasSession);
+    });
+  },
+
   populateBugzilla(service) {
     let bugzillaSettings =
       document.querySelector(".service-settings[data-type='bugzilla']");
@@ -57,11 +77,28 @@ const Options = {
 
   onUpdateService(event, serviceType) {
     let changedSetting = event.target.dataset.setting;
-    let newValue = event.target.value;
+    let newValue;
+    switch (event.target.type) {
+    case "text":
+    case "password":
+      newValue = event.target.value;
+      break;
+    case "checkbox":
+      if (event.target.checked) {
+        newValue = event.target.value;
+      } else {
+        newValue = null;
+      }
+      break;
+    }
 
     // For now, there's only a single service instance per type.
     let settings = this.getServiceSettings(serviceType);
-    settings[changedSetting] = newValue;
+    if (newValue !== null) {
+      settings[changedSetting] = newValue;
+    } else {
+      delete settings[changedSetting];
+    }
 
     browser.storage.local.set({ "services": this.services, }).then(() => {
       console.log(`Saved update to ${serviceType} setting ${changedSetting}`);

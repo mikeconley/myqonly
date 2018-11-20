@@ -19,12 +19,14 @@ body {
   grid-template-columns: max-content max-content;
 }
 
-.note {
-  margin-bottom: 2em;
-}
-
 #update-interval {
   max-width: 6ch;
+}
+
+#phabricator-session-status:not([has-session]) > span,
+#phabricator-session-status[has-session="true"] > span.no-session,
+#phabricator-session-status[has-session="false"] > span.yes-session {
+  display: none;
 }
 
 #working-hours-fields[disabled] {

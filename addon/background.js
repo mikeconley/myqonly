@@ -50,6 +50,7 @@ var MyQOnly = {
 
     let { services, } = await browser.storage.local.get("services");
     this.services = services || [];
+    await this._initServices();
 
     this.reviewTotals = {
       bugzilla: 0,
@@ -66,6 +67,7 @@ var MyQOnly = {
     delete this.services;
     delete this.updateInterval;
     delete this.featureRev;
+    this._nextServiceID = 0;
   },
 
   /**
@@ -133,6 +135,53 @@ var MyQOnly = {
       userKeys: null,
       oldUserKeys: userKeys,
     });
+  },
+
+  /**
+   * The following functions for manipulating services are for adding
+   * defaults at initialization. Most service manipulation should really
+   * be done by the user in the Options interface.
+   */
+  _nextServiceID: 0,
+  async _initServices() {
+    let maxServiceID = this._nextServiceID;
+    for (let service of this.services) {
+      maxServiceID = Math.max(service.id, maxServiceID);
+    }
+    this._nextServiceID = maxServiceID++;
+
+    // Introduce a new default service configuration for Phabricator.
+    if (!this._serviceExists("phabricator")) {
+      await this._addService("phabricator", {
+        container: 0,
+      });
+    }
+  },
+
+  /**
+   * Returns true if a particular service type exists.
+   */
+  _serviceExists(serviceType) {
+    for (let service of this.services) {
+      if (service.type == serviceType) {
+        return true;
+      }
+    }
+    return false;
+  },
+
+  /**
+   * Puts a service of serviceType into the services list with
+   * the provided settings, and saves the services to storage.
+   */
+  async _addService(serviceType, settings) {
+    this.services.push({
+      id: this._nextServiceID++,
+      type: serviceType,
+      settings,
+    });
+
+    await browser.storage.local.set({ services: this.services, });
   },
 
   /**
@@ -206,6 +255,10 @@ var MyQOnly = {
       break;
     }
 
+    case "check-for-phabricator-session": {
+      return this._hasPhabricatorSession();
+    }
+
     // Debug stuff
     case "get-phabricator-html": {
       console.debug("Getting Phabricator dashboard body");
@@ -222,6 +275,33 @@ var MyQOnly = {
       console.log("Updating the badge now...");
       this.updateBadge();
     }
+  },
+
+  async updatePhabricator(settings) {
+    if (settings.container === undefined) {
+      // Phabricator is disabled.
+      console.log("Phabricator service is disabled.");
+      return 0;
+    }
+
+    if (await this._hasPhabricatorSession()) {
+      console.log("Phabricator session found! Attempting to get dashboard " +
+                  "page.");
+
+      return await this.phabricatorReviewRequests();
+    } else {
+      console.log("No Phabricator session found. I won't try to fetch " +
+                  "anything for it.");
+      return 0;
+    }
+  },
+
+  async _hasPhabricatorSession() {
+    let phabCookie = await browser.cookies.get({
+      url: PHABRICATOR_ROOT,
+      name: "phsid",
+    });
+    return !!phabCookie;
   },
 
   async _phabricatorDocumentBody({ testingURL = null, } = {}) {
@@ -407,34 +487,16 @@ var MyQOnly = {
       return;
     }
 
-    // First, let's get Phabricator...
-    // We'll start by seeing if we have any cookies.
-    let phabCookie = await browser.cookies.get({
-      url: PHABRICATOR_ROOT,
-      name: "phsid",
-    });
-
-    if (phabCookie) {
-      console.log("Phabricator session found! Attempting to get dashboard " +
-                  "page.");
-
-      try {
-        this.reviewTotals.phabricator =
-          await this.phabricatorReviewRequests();
-        console.log(`Found ${this.reviewTotals.phabricator} Phabricator ` +
-                    "reviews to do");
-      } catch (e) {
-        // It would be nice to surface this to the user more directly.
-        console.error("Error when fetching phabricator issues:", e);
-      }
-    } else {
-      console.log("No Phabricator session found. I won't try to fetch " +
-                  "anything for it.");
-    }
-
     for (let service of this.services) {
       try {
         switch (service.type) {
+        case "phabricator": {
+          this.reviewTotals.phabricator =
+            await this.updatePhabricator(service.settings);
+          console.log(`Found ${this.reviewTotals.phabricator} Phabricator ` +
+                      "reviews to do");
+          break;
+        }
         case "bugzilla": {
           this.reviewTotals.bugzilla =
             await this.updateBugzilla(service.settings);

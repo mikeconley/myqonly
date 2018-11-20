@@ -8,10 +8,23 @@ async function setupBlank(browser) {
     Promise.resolve({ updateInterval: DEFAULT_UPDATE_INTERVAL, })
   );
   browser.storage.local.get.withArgs("services").returns(
-    Promise.resolve({})
+    Promise.resolve({
+      services: [{
+        id: 1,
+        type: "phabricator",
+        settings: {
+          container: 0,
+        },
+      },],
+    })
   );
   browser.storage.local.get.withArgs({ workingHours: {}, }).returns(
     Promise.resolve({})
+  );
+  browser.runtime.sendMessage.withArgs({
+    name: "check-for-phabricator-session",
+  }).returns(
+    Promise.resolve(false)
   );
 }
 
@@ -33,11 +46,22 @@ async function setupWithServices(browser) {
         settings: {
           username: "mikeconley",
         },
+      },{
+        id: 3,
+        type: "phabricator",
+        settings: {
+          container: 0,
+        },
       },],
     })
   );
   browser.storage.local.get.withArgs({ workingHours: {}, }).returns(
     Promise.resolve({})
+  );
+  browser.runtime.sendMessage.withArgs({
+    name: "check-for-phabricator-session",
+  }).returns(
+    Promise.resolve(false)
   );
 }
 
@@ -98,6 +122,12 @@ describe("Options page", function() {
             settings: {
               username: "mikeconley",
             },
+          }, {
+            id: 3,
+            type: "phabricator",
+            settings: {
+              container: 0,
+            },
           },],
         }));
       },
@@ -133,11 +163,17 @@ describe("Options page", function() {
             settings: {
               username: "hoobastank",
             },
+          }, {
+            id: 3,
+            type: "phabricator",
+            settings: {
+              container: 0,
+            },
           },],
         }));
       },
     });
-  }).timeout(50000);
+  });
 });
 
 const WEEKENDS = [
