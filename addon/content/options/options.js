@@ -43,7 +43,7 @@ const Options = {
     let bugzillaSettings =
       document.querySelector(".service-settings[data-type='bugzilla']");
 
-    let apiKey = bugzillaSettings.querySelector("[data-type='apiKey']");
+    let apiKey = bugzillaSettings.querySelector("[data-setting='apiKey']");
     apiKey.value = service.settings.apiKey;
   },
 
@@ -51,7 +51,7 @@ const Options = {
     let githubSettings =
       document.querySelector(".service-settings[data-type='github']");
 
-    let username = githubSettings.querySelector("[data-type='username']");
+    let username = githubSettings.querySelector("[data-setting='username']");
     username.value = service.settings.username;
   },
 

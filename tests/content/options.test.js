@@ -15,6 +15,33 @@ async function setupBlank(browser) {
   );
 }
 
+async function setupWithServices(browser) {
+  browser.storage.local.get.withArgs("updateInterval").returns(
+    Promise.resolve({ updateInterval: DEFAULT_UPDATE_INTERVAL, })
+  );
+  browser.storage.local.get.withArgs("services").returns(
+    Promise.resolve({
+      services: [{
+        id: 1,
+        type: "bugzilla",
+        settings: {
+          apiKey: "abc123",
+        },
+      }, {
+        id: 2,
+        type: "github",
+        settings: {
+          username: "mikeconley",
+        },
+      }]
+    })
+  );
+  browser.storage.local.get.withArgs({ workingHours: {}, }).returns(
+    Promise.resolve({})
+  );
+}
+
+
 describe("Options page", function() {
   it("should show stored interval time, and be able to update", async () => {
     await loadPage({
@@ -42,14 +69,14 @@ describe("Options page", function() {
 });
 
 describe("Options page", function() {
-  it("should be able to update the Bugzilla API token", async () => {
+  it("should show and be able to update the Bugzilla API token", async () => {
     await loadPage({
       url: "/addon/content/options/options.html",
-      setup: setupBlank,
+      setup: setupWithServices,
       test: async(content, document) => {
-        const NEW_KEY = "abc123";
+        const NEW_KEY = "xyz54321";
         let field = document.getElementById("bugzilla-apiKey");
-        field.value.should.equal("");
+        field.value.should.equal("abc123");
 
         // Now update the value
         changeFieldValue(field, NEW_KEY);
@@ -60,25 +87,31 @@ describe("Options page", function() {
         assert.ok(browser.storage.local.set.calledOnce);
         assert.ok(browser.storage.local.set.calledWith({
           services: [{
-            "id": 1,
-            "type": "bugzilla",
-            "settings": {
-              "apiKey": NEW_KEY,
+            id: 1,
+            type: "bugzilla",
+            settings: {
+              apiKey: NEW_KEY,
             },
-          },],
+          }, {
+            id: 2,
+            type: "github",
+            settings: {
+              username: "mikeconley",
+            },
+          }],
         }));
       },
     });
   });
 
-  it("should be able to update the GitHub username", async () => {
+  it("should show and be able to update the GitHub username", async () => {
     await loadPage({
       url: "/addon/content/options/options.html",
-      setup: setupBlank,
+      setup: setupWithServices,
       test: async(content, document) => {
-        const NEW_USERNAME = "mikeconley";
+        const NEW_USERNAME = "hoobastank";
         let field = document.getElementById("github-username");
-        field.value.should.equal("");
+        field.value.should.equal("mikeconley");
 
         // Now update the value
         changeFieldValue(field, NEW_USERNAME);
@@ -89,16 +122,22 @@ describe("Options page", function() {
         assert.ok(browser.storage.local.set.calledOnce);
         assert.ok(browser.storage.local.set.calledWith({
           services: [{
-            "id": 1,
-            "type": "github",
-            "settings": {
-              "username": NEW_USERNAME,
+            id: 1,
+            type: "bugzilla",
+            settings: {
+              apiKey: "abc123",
             },
-          },],
+          }, {
+            id: 2,
+            type: "github",
+            settings: {
+              username: "hoobastank",
+            },
+          }],
         }));
       },
     });
-  });
+  }).timeout(50000);
 });
 
 const WEEKENDS = [
