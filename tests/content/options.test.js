@@ -33,7 +33,7 @@ async function setupWithServices(browser) {
         settings: {
           username: "mikeconley",
         },
-      }]
+      },],
     })
   );
   browser.storage.local.get.withArgs({ workingHours: {}, }).returns(
@@ -98,7 +98,7 @@ describe("Options page", function() {
             settings: {
               username: "mikeconley",
             },
-          }],
+          },],
         }));
       },
     });
@@ -133,7 +133,7 @@ describe("Options page", function() {
             settings: {
               username: "hoobastank",
             },
-          }],
+          },],
         }));
       },
     });

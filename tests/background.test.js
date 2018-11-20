@@ -71,14 +71,14 @@ describe("MyQOnly initting fresh", function() {
         type: "bugzilla",
         settings: {
           apiKey: "abc123",
-        }
+        },
       }, {
         id: 2,
         type: "github",
         settings: {
           username: "mikeconley",
         },
-      }],
+      },],
       userKeys: null,
       oldUserKeys: {
         bugzilla: "abc123",
@@ -87,7 +87,7 @@ describe("MyQOnly initting fresh", function() {
     }));
   });
 
-  it("should migrate bugzilla userKeys to the new services schema", async () => {
+  it("should migrate bugzilla userKeys to the new schema", async () => {
     browser.storage.local.get.withArgs("userKeys").returns(
       Promise.resolve({
         userKeys: {
@@ -104,8 +104,8 @@ describe("MyQOnly initting fresh", function() {
         type: "bugzilla",
         settings: {
           apiKey: "abc123",
-        }
-      }],
+        },
+      },],
       userKeys: null,
       oldUserKeys: {
         bugzilla: "abc123",
@@ -113,7 +113,7 @@ describe("MyQOnly initting fresh", function() {
     }));
   });
 
-  it("should migrate GitHub userKeys to the new services schema", async () => {
+  it("should migrate GitHub userKeys to the new schema", async () => {
     browser.storage.local.get.withArgs("userKeys").returns(
       Promise.resolve({
         userKeys: {
@@ -130,8 +130,8 @@ describe("MyQOnly initting fresh", function() {
         type: "github",
         settings: {
           username: "mikeconley",
-        }
-      }],
+        },
+      },],
       userKeys: null,
       oldUserKeys: {
         ghuser: "mikeconley",
