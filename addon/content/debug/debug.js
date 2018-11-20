@@ -1,9 +1,4 @@
 const Debug = {
-  KEYS: [
-    "bugzilla",
-    "ghuser",
-  ],
-
   async init() {
     window.addEventListener("click", this);
   },
