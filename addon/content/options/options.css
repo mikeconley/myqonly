@@ -2,15 +2,19 @@ body {
   font: message-box;
 }
 
+h3 {
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+}
+
+input[type="password"],
+input[type="text"] {
+  width: 50ch;
+}
+
 .service-settings,
 .field-rows {
   display: grid;
-}
-
-.service-settings {
-  column-gap: 2em;
-  row-gap: 1em;
-  grid-template-columns: max-content 1fr;
 }
 
 .field-rows {

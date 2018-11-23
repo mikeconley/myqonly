@@ -24,8 +24,10 @@
 
   <h3>Phabricator</h3>
   <div class="service-settings" data-type="phabricator">
-    <input type="checkbox" id="phabricator-enabled" data-setting="container" value="0">
-    <label for="phabricator-enabled">Use pre-existing Phabricator session in default container</label>
+    <div class="form-rows">
+      <input type="checkbox" id="phabricator-enabled" data-setting="container" value="0">
+      <label for="phabricator-enabled">Use pre-existing Phabricator session in default container</label>
+    </div>
     <p id="phabricator-session-status">
       <span class="yes-session">Found a Phabricator session cookie in the default container</span>
       <span class="no-session">Did not find a Phabricator session cookie. Are you logged in to Phabricator in the default container?</span>
