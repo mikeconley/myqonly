@@ -118,10 +118,10 @@ const Panel = {
     }
 
     if (total) {
-      let noun = total > 1 ? "reviews" : "review";
+      let noun = total > 1 ? "things" : "thing";
       status.textContent = `Found ${total} ${noun} to do`;
     } else {
-      status.textContent = "No reviews to do! \\o/";
+      status.textContent = "Nothing to do! \\o/";
     }
   },
 };
