@@ -389,11 +389,19 @@ var MyQOnly = {
     if (bugzillaData.error) {
       throw new Error(`Bugzilla request failed: ${bugzillaData.error.message}`);
     }
-    let total =
+    let reviewTotal =
       bugzillaData.result.result.requestee.filter(f => {
         return f.type == "review";
       }).length;
-    return { reviewTotal: total, };
+
+    let needinfoTotal = 0;
+    if (settings.needinfos) {
+      needinfoTotal =bugzillaData.result.result.requestee.filter(f => {
+        return f.type == "needinfo";
+      }).length;
+    }
+
+    return { reviewTotal, needinfoTotal, };
   },
 
   async updateGitHub(settings) {
@@ -496,10 +504,11 @@ var MyQOnly = {
   _calculateBadgeTotal(states) {
     let total = 0;
     for (let [, state,] of states) {
-      // Eventually, each service type might have slightly
-      // different state characteristics, but for now, they all
-      // supply reviewTotals.
       total += state.data.reviewTotal;
+
+      if (state.type == "bugzilla") {
+        total += state.data.needinfoTotal;
+      }
     }
 
     return total;
@@ -525,6 +534,8 @@ var MyQOnly = {
         case "bugzilla": {
           data = await this.updateBugzilla(service.settings);
           console.log(`Found ${data.reviewTotal} Bugzilla reviews ` +
+                      "to do");
+          console.log(`Found ${data.needinfoTotal} Bugzilla needinfos ` +
                       "to do");
           break;
         }

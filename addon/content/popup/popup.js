@@ -63,10 +63,22 @@ const Panel = {
     for (let [, state,] of states) {
       switch (state.type) {
       case "bugzilla": {
-        let serviceTotal = state.data.reviewTotal || 0;
-        document.body.setAttribute("total-bugzilla-reviews", serviceTotal);
+        let serviceTotal = 0;
+        if (state.data.reviewTotal) {
+          serviceTotal += state.data.reviewTotal;
+        }
+        if (state.data.needinfoTotal) {
+          serviceTotal += state.data.needinfoTotal;
+        }
+
+        document.body.setAttribute("total-bugzilla-reviews",
+          state.data.reviewTotal);
+        document.body.setAttribute("total-bugzilla-needinfos",
+          state.data.needinfoTotal);
         document.getElementById("bugzilla-review-num").textContent =
-          serviceTotal;
+          state.data.reviewTotal;
+        document.getElementById("bugzilla-needinfo-num").textContent =
+          state.data.needinfoTotal;
 
         total += serviceTotal;
         break;
