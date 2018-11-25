@@ -13,6 +13,14 @@ header {
   color: #FFFFFF;
 }
 
+#phabricator-disconnected {
+  height: 15px;
+  background-color: #4a5f88;
+  color: #f9ffff;
+  border-bottom: 1px solid #444444;
+  text-align: center;
+}
+
 .icon {
   height: 23px;
   width: 23px;
@@ -20,6 +28,10 @@ header {
   cursor: pointer;
   background-repeat: no-repeat;
   background-size: 23px;
+}
+
+.hidden {
+  display: none;
 }
 
 #status {

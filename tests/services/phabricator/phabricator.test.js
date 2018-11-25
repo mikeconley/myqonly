@@ -3,13 +3,17 @@ describe("Phabricator", function() {
 
   it("should be able to load the simple case", async function() {
     let testingURL = [TEST_URL_PREFIX, "one-ready.html",].join("/");
-    let total = await MyQOnly.phabricatorReviewRequests({ testingURL, });
-    assert.equal(total, 1);
+    let { ok, reviewTotal, } =
+      await MyQOnly.phabricatorReviewRequests({ testingURL, });
+    assert.ok(ok);
+    assert.equal(reviewTotal, 1);
   });
 
   it("should be able to load the empty case", async function() {
     let testingURL = [TEST_URL_PREFIX, "empty.html",].join("/");
-    let total = await MyQOnly.phabricatorReviewRequests({ testingURL, });
-    assert.equal(total, 0);
+    let { ok, reviewTotal, } =
+      await MyQOnly.phabricatorReviewRequests({ testingURL, });
+    assert.ok(ok);
+    assert.equal(reviewTotal, 0);
   });
 });

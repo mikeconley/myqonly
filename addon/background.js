@@ -287,18 +287,19 @@ var MyQOnly = {
     if (settings.container === undefined) {
       // Phabricator is disabled.
       console.log("Phabricator service is disabled.");
-      return { reviewTotal: 0, };
+      return { disabled: true, reviewTotal: 0, };
     }
 
     if (await this._hasPhabricatorCookie()) {
       console.log("Phabricator session found! Attempting to get dashboard " +
                   "page.");
 
-      return { reviewTotal: await this.phabricatorReviewRequests(), };
+      let { ok, reviewTotal, } = await this.phabricatorReviewRequests();
+      return { connected: ok, reviewTotal, };
     } else {
       console.log("No Phabricator session found. I won't try to fetch " +
                   "anything for it.");
-      return { reviewTotal: 0, };
+      return { connected: false, reviewTotal: 0, };
     }
   },
 
@@ -338,22 +339,23 @@ var MyQOnly = {
   },
 
   async phabricatorReviewRequests({ testingURL = null, } = {}) {
-    let { pageBody, } = await this._phabricatorDocumentBody({ testingURL, });
+    let { ok, pageBody, } =
+      await this._phabricatorDocumentBody({ testingURL, });
     let parser = new DOMParser();
     let doc = parser.parseFromString(pageBody, "text/html");
 
     let headers = doc.querySelectorAll(".phui-header-header");
-    let total = 0;
+    let reviewTotal = 0;
 
     for (let header of headers) {
       if (PHABRICATOR_REVIEW_HEADERS.includes(header.textContent)) {
         let box = header.closest(".phui-box");
         let rows = box.querySelectorAll(".phui-oi-table-row");
-        total += rows.length;
+        reviewTotal += rows.length;
       }
     }
 
-    return total;
+    return { ok, reviewTotal, };
   },
 
   async updateBugzilla(settings) {
@@ -508,13 +510,6 @@ var MyQOnly = {
    * exist), and attempts to get a review count for each.
    */
   async updateBadge() {
-    let workingHours = await this.isWorkingHours();
-    if (!workingHours) {
-      console.log("Current time is outside working hours. Hiding reviews.");
-      browser.browserAction.setBadgeText({ text: null, });
-      return;
-    }
-
     for (let service of this.services) {
       let state = this.states.get(service.id);
       let data = state.data;
@@ -544,6 +539,13 @@ var MyQOnly = {
       }
 
       state.data = data;
+    }
+
+    let workingHours = await this.isWorkingHours();
+    if (!workingHours) {
+      console.log("Current time is outside working hours. Hiding reviews.");
+      browser.browserAction.setBadgeText({ text: null, });
+      return;
     }
 
     let thingsToDo = this._calculateBadgeTotal(this.states);

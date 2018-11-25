@@ -72,6 +72,19 @@ const Panel = {
         break;
       }
       case "phabricator": {
+        // If Phabricator is disabled, well, just skip.
+        if (state.data.disabled) {
+          continue;
+        }
+
+        let phabDisconnected =
+          document.getElementById("phabricator-disconnected");
+        if (!state.data.connected) {
+          phabDisconnected.classList.remove("hidden");
+        } else {
+          phabDisconnected.classList.add("hidden");
+        }
+
         let serviceTotal = state.data.reviewTotal || 0;
         document.body.setAttribute("total-phabricator-reviews", serviceTotal);
         document.getElementById("phabricator-review-num").textContent =
