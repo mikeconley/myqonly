@@ -48,22 +48,17 @@ var MyQOnly = {
       await this.migrateUserKeysToServicesSchema(userKeys);
     }
 
+    this.states = new Map();
+
     let { services, } = await browser.storage.local.get("services");
     this.services = services || [];
     await this._initServices();
-
-    this.reviewTotals = {
-      bugzilla: 0,
-      phabricator: 0,
-      github: 0,
-    };
-
     await this.resetAlarm();
     await this.updateBadge();
   },
 
   uninit() {
-    delete this.reviewTotals;
+    delete this.states;
     delete this.services;
     delete this.updateInterval;
     delete this.featureRev;
@@ -142,10 +137,14 @@ var MyQOnly = {
    * defaults at initialization. Most service manipulation should really
    * be done by the user in the Options interface.
    */
-  _nextServiceID: 0,
+  _nextServiceID: 1,
   async _initServices() {
     let maxServiceID = this._nextServiceID;
     for (let service of this.services) {
+      this.states.set(service.id, {
+        type: service.type,
+        data: {},
+      });
       maxServiceID = Math.max(service.id, maxServiceID);
     }
     this._nextServiceID = maxServiceID++;
@@ -175,10 +174,17 @@ var MyQOnly = {
    * the provided settings, and saves the services to storage.
    */
   async _addService(serviceType, settings) {
-    this.services.push({
+    let newService = {
       id: this._nextServiceID++,
       type: serviceType,
       settings,
+    };
+
+    this.services.push(newService);
+
+    this.states.set(newService.id, {
+      type: serviceType,
+      data: {},
     });
 
     await browser.storage.local.set({ services: this.services, });
@@ -229,9 +235,9 @@ var MyQOnly = {
    */
   onMessage(message, sender, sendReply) {
     switch (message.name) {
-    case "get-reviews": {
-      // The popup wants to know how many reviews there are to do.
-      sendReply(this.reviewTotals);
+    case "get-states": {
+      // The popup wants to know how many things there are to do.
+      sendReply(this.states);
       break;
     }
 
@@ -281,22 +287,31 @@ var MyQOnly = {
     if (settings.container === undefined) {
       // Phabricator is disabled.
       console.log("Phabricator service is disabled.");
-      return 0;
+      return { reviewTotal: 0, };
     }
 
-    if (await this._hasPhabricatorSession()) {
+    if (await this._hasPhabricatorCookie()) {
       console.log("Phabricator session found! Attempting to get dashboard " +
                   "page.");
 
-      return await this.phabricatorReviewRequests();
+      return { reviewTotal: await this.phabricatorReviewRequests(), };
     } else {
       console.log("No Phabricator session found. I won't try to fetch " +
                   "anything for it.");
-      return 0;
+      return { reviewTotal: 0, };
     }
   },
 
-  async _hasPhabricatorSession() {
+  async _hasPhabricatorSession({ testingURL = null, } = {}) {
+    if (await this._hasPhabricatorCookie()) {
+      let { ok, } = await this._phabricatorDocumentBody({ testingURL, });
+      return ok;
+    }
+
+    return false;
+  },
+
+  async _hasPhabricatorCookie() {
     let phabCookie = await browser.cookies.get({
       url: PHABRICATOR_ROOT,
       name: "phsid",
@@ -317,12 +332,13 @@ var MyQOnly = {
     });
 
     let resp = await window.fetch(req);
+    let ok = resp.ok;
     let pageBody = await resp.text();
-    return pageBody;
+    return { ok, pageBody, };
   },
 
   async phabricatorReviewRequests({ testingURL = null, } = {}) {
-    let pageBody = await this._phabricatorDocumentBody({ testingURL, });
+    let { pageBody, } = await this._phabricatorDocumentBody({ testingURL, });
     let parser = new DOMParser();
     let doc = parser.parseFromString(pageBody, "text/html");
 
@@ -375,7 +391,7 @@ var MyQOnly = {
       bugzillaData.result.result.requestee.filter(f => {
         return f.type == "review";
       }).length;
-    return total;
+    return { reviewTotal: total, };
   },
 
   async updateGitHub(settings) {
@@ -401,7 +417,7 @@ var MyQOnly = {
                       `${await response.text()}`);
     }
     const data = await response.json();
-    return data.total_count;
+    return { reviewTotal: data.total_count, };
   },
 
   /**
@@ -475,6 +491,18 @@ var MyQOnly = {
     return true;
   },
 
+  _calculateBadgeTotal(states) {
+    let total = 0;
+    for (let [, state,] of states) {
+      // Eventually, each service type might have slightly
+      // different state characteristics, but for now, they all
+      // supply reviewTotals.
+      total += state.data.reviewTotal;
+    }
+
+    return total;
+  },
+
   /**
    * Contacts Phabricator, Bugzilla, and Github (if the API keys for them
    * exist), and attempts to get a review count for each.
@@ -488,40 +516,40 @@ var MyQOnly = {
     }
 
     for (let service of this.services) {
+      let state = this.states.get(service.id);
+      let data = state.data;
+
       try {
         switch (service.type) {
         case "phabricator": {
-          this.reviewTotals.phabricator =
-            await this.updatePhabricator(service.settings);
-          console.log(`Found ${this.reviewTotals.phabricator} Phabricator ` +
+          data = await this.updatePhabricator(service.settings);
+          console.log(`Found ${data.reviewTotal} Phabricator ` +
                       "reviews to do");
           break;
         }
         case "bugzilla": {
-          this.reviewTotals.bugzilla =
-            await this.updateBugzilla(service.settings);
-          console.log(`Found ${this.reviewTotals.bugzilla} Bugzilla reviews ` +
+          data = await this.updateBugzilla(service.settings);
+          console.log(`Found ${data.reviewTotal} Bugzilla reviews ` +
                       "to do");
           break;
         }
         case "github": {
-          this.reviewTotals.github = await this.updateGitHub(service.settings);
-          console.log(`Found ${this.reviewTotals.github} GitHub reviews to do`);
+          data = await this.updateGitHub(service.settings);
+          console.log(`Found ${data.reviewTotal} GitHub reviews to do`);
           break;
         }
         }
       } catch (e) {
         console.error(`Error when updating ${service.type}: `, e);
       }
+
+      state.data = data;
     }
 
-    let reviews = 0;
-    for (let serviceReviewCount in this.reviewTotals) {
-      reviews += this.reviewTotals[serviceReviewCount];
-    }
+    let thingsToDo = this._calculateBadgeTotal(this.states);
 
-    console.log(`Found a total of ${reviews} reviews to do`);
-    if (!reviews) {
+    console.log(`Found a total of ${thingsToDo} things to do`);
+    if (!thingsToDo) {
       // Check to see if there are new features to notify the user about.
       // We intentionally only do this if there are new reviews to do.
       if (this.featureRev < FEATURE_ALERT_REV) {
@@ -538,7 +566,7 @@ var MyQOnly = {
       browser.browserAction.setBadgeBackgroundColor({
         color: null,
       });
-      browser.browserAction.setBadgeText({ text: String(reviews), });
+      browser.browserAction.setBadgeText({ text: String(thingsToDo), });
     }
   },
 };

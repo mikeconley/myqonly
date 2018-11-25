@@ -58,21 +58,39 @@ const Panel = {
 
   async updatePanel() {
     let status = document.getElementById("status");
-    let reviews = await browser.runtime.sendMessage({ name: "get-reviews", });
-    let total = reviews.phabricator + reviews.bugzilla + reviews.github;
-    document.body.setAttribute("total-phabricator-reviews",
-      reviews.phabricator);
-    document.body.setAttribute("total-bugzilla-reviews",
-      reviews.bugzilla);
-    document.body.setAttribute("total-github-reviews",
-      reviews.github);
+    let states = await browser.runtime.sendMessage({ name: "get-states", });
+    let total = 0;
+    for (let [, state,] of states) {
+      switch (state.type) {
+      case "bugzilla": {
+        let serviceTotal = state.data.reviewTotal || 0;
+        document.body.setAttribute("total-bugzilla-reviews", serviceTotal);
+        document.getElementById("bugzilla-review-num").textContent =
+          serviceTotal;
 
-    document.getElementById("phabricator-review-num").textContent =
-      reviews.phabricator;
-    document.getElementById("bugzilla-review-num").textContent =
-      reviews.bugzilla;
-    document.getElementById("github-review-num").textContent =
-      reviews.github;
+        total += serviceTotal;
+        break;
+      }
+      case "phabricator": {
+        let serviceTotal = state.data.reviewTotal || 0;
+        document.body.setAttribute("total-phabricator-reviews", serviceTotal);
+        document.getElementById("phabricator-review-num").textContent =
+          serviceTotal;
+
+        total += serviceTotal;
+        break;
+      }
+      case "github": {
+        let serviceTotal = state.data.reviewTotal || 0;
+        document.body.setAttribute("total-github-reviews", serviceTotal);
+        document.getElementById("github-review-num").textContent =
+          serviceTotal;
+
+        total += serviceTotal;
+        break;
+      }
+      }
+    }
 
     if (total) {
       let noun = total > 1 ? "reviews" : "review";
