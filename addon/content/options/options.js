@@ -65,6 +65,10 @@ const Options = {
 
     let apiKey = bugzillaSettings.querySelector("[data-setting='apiKey']");
     apiKey.value = service.settings.apiKey;
+
+    let needinfos =
+      bugzillaSettings.querySelector("[data-setting='needinfos']");
+    needinfos.checked = !!service.settings.needinfos;
   },
 
   populateGitHub(service) {
@@ -85,7 +89,11 @@ const Options = {
       break;
     case "checkbox":
       if (event.target.checked) {
-        newValue = event.target.value;
+        if (event.target.hasAttribute("value")) {
+          newValue = event.target.value;
+        } else {
+          newValue = true;
+        }
       } else {
         newValue = null;
       }
