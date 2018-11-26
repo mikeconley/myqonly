@@ -11,7 +11,6 @@ module.exports = {
     "GITHUB_API": true,
     "DEFAULT_UPDATE_INTERVAL": true,
     "ALARM_NAME": true,
-    "FIRST_FEATURE_ALERT_REV": true,
     "FEATURE_ALERT_REV": true,
     "FEATURE_ALERT_BG_COLOR": true,
     "FEATURE_ALERT_STRING": true,

@@ -14,7 +14,6 @@ const ALARM_NAME = "check-for-updates";
 
 // Anytime we want to alert the user about changes in the changelog, we should
 // bump the revision number here.
-const FIRST_FEATURE_ALERT_REV = 1;
-const FEATURE_ALERT_REV = 1;
+const FEATURE_ALERT_REV = 2;
 const FEATURE_ALERT_BG_COLOR = "#EC9329";
 const FEATURE_ALERT_STRING = "New";
