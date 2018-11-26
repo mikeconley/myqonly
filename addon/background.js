@@ -182,12 +182,19 @@ var MyQOnly = {
 
     this.services.push(newService);
 
-    this.states.set(newService.id, {
-      type: serviceType,
-      data: {},
-    });
-
     await browser.storage.local.set({ services: this.services, });
+    this._ensureStatesForServices();
+  },
+
+  _ensureStatesForServices() {
+    for (let service of this.services) {
+      if (!this.states.has(service.id)) {
+        this.states.set(service.id, {
+          type: service.type,
+          data: {},
+        });
+      }
+    }
   },
 
   /**
@@ -208,6 +215,7 @@ var MyQOnly = {
       if (changes.services) {
         this.services = changes.services.newValue;
         console.log("background.js saw change to services");
+        this._ensureStatesForServices();
         await this.updateBadge();
       }
     }
@@ -504,10 +512,10 @@ var MyQOnly = {
   _calculateBadgeTotal(states) {
     let total = 0;
     for (let [, state,] of states) {
-      total += state.data.reviewTotal;
+      total += state.data.reviewTotal || 0;
 
       if (state.type == "bugzilla") {
-        total += state.data.needinfoTotal;
+        total += state.data.needinfoTotal || 0;
       }
     }
 

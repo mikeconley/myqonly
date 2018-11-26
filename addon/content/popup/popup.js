@@ -72,13 +72,13 @@ const Panel = {
         }
 
         document.body.setAttribute("total-bugzilla-reviews",
-          state.data.reviewTotal);
+          state.data.reviewTotal || 0);
         document.body.setAttribute("total-bugzilla-needinfos",
-          state.data.needinfoTotal);
+          state.data.needinfoTotal || 0);
         document.getElementById("bugzilla-review-num").textContent =
-          state.data.reviewTotal;
+          state.data.reviewTotal || 0;
         document.getElementById("bugzilla-needinfo-num").textContent =
-          state.data.needinfoTotal;
+          state.data.needinfoTotal || 0;
 
         total += serviceTotal;
         break;
@@ -98,18 +98,20 @@ const Panel = {
         }
 
         let serviceTotal = state.data.reviewTotal || 0;
-        document.body.setAttribute("total-phabricator-reviews", serviceTotal);
+        document.body.setAttribute("total-phabricator-reviews",
+          serviceTotal || 0);
         document.getElementById("phabricator-review-num").textContent =
-          serviceTotal;
+          serviceTotal || 0;
 
         total += serviceTotal;
         break;
       }
       case "github": {
         let serviceTotal = state.data.reviewTotal || 0;
-        document.body.setAttribute("total-github-reviews", serviceTotal);
+        document.body.setAttribute("total-github-reviews",
+          serviceTotal || 0);
         document.getElementById("github-review-num").textContent =
-          serviceTotal;
+          serviceTotal || 0;
 
         total += serviceTotal;
         break;
