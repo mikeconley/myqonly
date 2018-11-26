@@ -1,6 +1,6 @@
 {
   "name": "myqonly",
-  "version": "0.5.4",
+  "version": "0.6",
   "description": "A tool for Mozillians who want to know how many reviews are in their queue in their browser.",
   "main": "index.js",
   "scripts": {
