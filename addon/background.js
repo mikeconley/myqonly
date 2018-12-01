@@ -137,7 +137,7 @@ var MyQOnly = {
    * defaults at initialization. Most service manipulation should really
    * be done by the user in the Options interface.
    */
-  _nextServiceID: 1,
+  _nextServiceID: 0,
   async _initServices() {
     let maxServiceID = this._nextServiceID;
     for (let service of this.services) {
@@ -147,7 +147,7 @@ var MyQOnly = {
       });
       maxServiceID = Math.max(service.id, maxServiceID);
     }
-    this._nextServiceID = maxServiceID++;
+    this._nextServiceID = maxServiceID + 1;
 
     // Introduce a new default service configuration for Phabricator.
     if (!this._serviceExists("phabricator")) {
@@ -175,10 +175,12 @@ var MyQOnly = {
    */
   async _addService(serviceType, settings) {
     let newService = {
-      id: this._nextServiceID++,
+      id: this._nextServiceID,
       type: serviceType,
       settings,
     };
+
+    this._nextServiceID++;
 
     this.services.push(newService);
 

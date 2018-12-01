@@ -141,4 +141,66 @@ describe("MyQOnly initting fresh", function() {
       },
     }));
   });
+
+  it("should give unique IDs when adding the Phabricator service", async () => {
+    browser.storage.local.get.withArgs("services").returns(
+      Promise.resolve({
+        services: [{
+          id: 1,
+          type: "bugzilla",
+          settings: {
+            apiKey: "abc123",
+          },
+        }, {
+          id: 2,
+          type: "github",
+          settings: {
+            username: "mikeconley",
+          },
+        }],
+      })
+    );
+
+    await MyQOnly.init();
+
+    assert.ok(browser.storage.local.set.calledWith({
+      services: [{
+        id: 1,
+        type: "bugzilla",
+        settings: {
+          apiKey: "abc123",
+        },
+      }, {
+        id: 2,
+        type: "github",
+        settings: {
+          username: "mikeconley",
+        },
+      }, {
+        id: 3,
+        type: "phabricator",
+        settings: {
+          container: 0,
+        },
+      }],
+    }));
+  });
+
+  it("should add the default Phabricator service for new installs", async () => {
+    browser.storage.local.get.withArgs("services").returns(
+      Promise.resolve({})
+    );
+
+    await MyQOnly.init();
+
+    assert.ok(browser.storage.local.set.calledWith({
+      services: [{
+        id: 1,
+        type: "phabricator",
+        settings: {
+          container: 0,
+        },
+      }],
+    }));
+  });
 });
