@@ -157,7 +157,7 @@ describe("MyQOnly initting fresh", function() {
           settings: {
             username: "mikeconley",
           },
-        }],
+        },],
       })
     );
 
@@ -182,11 +182,12 @@ describe("MyQOnly initting fresh", function() {
         settings: {
           container: 0,
         },
-      }],
+      },],
     }));
   });
 
-  it("should add the default Phabricator service for new installs", async () => {
+  it("should add the default Phabricator service for " +
+     "new installs", async () => {
     browser.storage.local.get.withArgs("services").returns(
       Promise.resolve({})
     );
@@ -200,7 +201,7 @@ describe("MyQOnly initting fresh", function() {
         settings: {
           container: 0,
         },
-      }],
+      },],
     }));
   });
 });
