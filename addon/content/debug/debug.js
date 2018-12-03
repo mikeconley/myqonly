@@ -22,6 +22,10 @@ const Debug = {
       this.generatePhabricatorTestcase();
       break;
     }
+    case "show-services": {
+      this.showServices();
+      break;
+    }
     case "show-old-userKeys": {
       this.showOldUserKeys();
       break;
@@ -56,6 +60,21 @@ const Debug = {
 
     let outputEl = document.getElementById("phabricator-testcase");
     outputEl.textContent = activeRevisions.innerHTML;
+  },
+
+  async showServices() {
+    let { services, } = await browser.storage.local.get("services");
+    let servicesEl = document.getElementById("services");
+    if (!services) {
+      servicesEl.textContent = "Couldn't find any services";
+    } else {
+      for (let service of services) {
+        if (service.type == "bugzilla") {
+          service.settings.apiKey = "<Bugzilla API key>";
+        }
+      }
+      servicesEl.textContent = JSON.stringify(services);
+    }
   },
 
   async showOldUserKeys() {
