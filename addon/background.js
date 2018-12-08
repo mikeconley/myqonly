@@ -38,16 +38,6 @@ var MyQOnly = {
     }
     this.updateInterval = updateInterval;
 
-    // Version 0.5.2 and earlier used a simpler schema for storing service
-    // information. If we find the old storage schema, migrate it to the
-    // new one.
-    console.debug("Looking for old userKeys");
-    let { userKeys, } = await browser.storage.local.get("userKeys");
-    if (userKeys) {
-      console.debug("Found old userKeys - attempting to migrate");
-      await this.migrateUserKeysToServicesSchema(userKeys);
-    }
-
     this.states = new Map();
 
     let { services, } = await browser.storage.local.get("services");
@@ -63,73 +53,6 @@ var MyQOnly = {
     delete this.updateInterval;
     delete this.featureRev;
     this._nextServiceID = 0;
-  },
-
-  /**
-   * Migrates the service storage schema from userKeys (from v0.5.2 and
-   * earlier) to the service schema.
-   *
-   * The userKeys schema was a simple Object with the following optional
-   * keys:
-   *
-   *  "phabricator" -> string:
-   *    This was only stored at one time, very early on in MyQOnly's lifetime,
-   *    before it started using page scraping, and used the Conduit API instead.
-   *    The value was the Phabricator API key.
-   *  "bugzilla" -> string:
-   *    The Bugzilla API token for the user for querying for review flags.
-   *  "ghuser" -> string:
-   *    The GitHub username for the user for querying for open pull requests.
-   *
-   * The new services schema is an Array, where each element in the Array is
-   * an Object with the following keys:
-   *
-   *  "id" -> int
-   *    A unique ID for the service instance.
-   *  "type" -> string
-   *    A string describing the type of service. Example: "phabricator",
-   *    "bugzilla"
-   *  "settings" -> Object
-   *    A set of service-specific options.
-   */
-  async migrateUserKeysToServicesSchema(userKeys) {
-    let services = [];
-    let id = 1;
-
-    for (let oldKey in userKeys) {
-      let oldValue = userKeys[oldKey];
-      switch (oldKey) {
-      case "bugzilla": {
-        services.push({
-          id,
-          type: "bugzilla",
-          settings: {
-            apiKey: oldValue,
-          },
-        });
-        break;
-      }
-      case "ghuser": {
-        services.push({
-          id,
-          type: "github",
-          settings: {
-            username: oldValue,
-          },
-        });
-        break;
-      }
-      }
-      id++;
-    }
-
-    // Save the new schema, and move the userKeys object into temporary
-    // storage. We'll remove it in a later version.
-    await browser.storage.local.set({
-      services,
-      userKeys: null,
-      oldUserKeys: userKeys,
-    });
   },
 
   /**

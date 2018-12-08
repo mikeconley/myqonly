@@ -30,10 +30,6 @@ const Debug = {
       this.showOldUserKeys();
       break;
     }
-    case "revert-userKeys": {
-      this.revertToUserKeys();
-      break;
-    }
     }
   },
 
@@ -88,15 +84,6 @@ const Debug = {
       }
       outputEl.textContent = JSON.stringify(oldUserKeys);
     }
-  },
-
-  async revertToUserKeys() {
-    let { oldUserKeys, } = await browser.storage.local.get("oldUserKeys");
-    await browser.storage.local.set({
-      userKeys: oldUserKeys,
-      services: null,
-      oldUserKeys: null,
-    });
   },
 };
 
