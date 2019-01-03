@@ -343,6 +343,9 @@ var MyQOnly = {
     // reason.
     let url = new URL(GITHUB_API);
     let query = `review-requested:${username} type:pr is:open archived:false`;
+    if (settings.ignoreOwnPrs) {
+      query += ` -author:${username}`;
+    }
     url.searchParams.set("q", query);
     // Note: we might need to paginate if we care about fetching more than the
     // first 100.
