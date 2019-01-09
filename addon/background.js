@@ -424,23 +424,67 @@ var MyQOnly = {
       query += ` -author:${username}`;
     }
     url.searchParams.set("q", query);
-    // Note: we might need to paginate if we care about fetching more than the
-    // first 100.
-    let response = await window.fetch(url, {
+    const apiRequestOptions = {
       method: "GET",
       headers: {
         Accept: "application/vnd.github.v3+json",
       },
       // Probably doesn't matter.
       credentials: "omit",
-    });
+    };
+    // Note: we might need to paginate if we care about fetching more than the
+    // first 100.
+    let response = await window.fetch(url, apiRequestOptions);
     if (!response.ok) {
       console.error("Failed to request from github", response);
       throw new Error(`Github request failed (${response.status}): ` +
                       `${await response.text()}`);
     }
     const data = await response.json();
-    return { reviewTotal: data.total_count, };
+
+    let ignoredTeams = new Set(
+      (settings.ignoredTeams || "")
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean));
+
+    if (ignoredTeams.size === 0) {
+      return { reviewTotal: data.total_count, };
+    }
+    // Sadly, `-team-review-requested:` doesn't appear to work in the API, so we
+    // just fetch each PR. Unfortunately, there's a rate limit of 60 requests
+    // per hour associated with these (requiring an OAuth token would fix this
+    // too). If we hit it, we stop respecting the ignore list.
+
+    let hitRateLimit = false;
+    // `items` may be a partial list. Ideally we'd paginate, but for now we just
+    // assume everything in total_count that isn't part of items is important.
+    let validPrs = data.total_count - data.items.length;
+    for (let pr of data.items) {
+      let prUrl = pr.pull_request.url;
+      let teams = [];
+      if (!hitRateLimit) {
+        let resp = await window.fetch(prUrl, apiRequestOptions);
+        let rateLimRemaining = resp.headers.get("X-RateLimit-Remaining");
+        if (rateLimRemaining === 0) {
+          hitRateLimit = true;
+        } else {
+          if (resp.ok) {
+            let respBody = await resp.json();
+            teams = respBody.requested_teams || [];
+          } else {
+            // Don't treat a request failure here as fatal, just stop making
+            // requests as if we hit the rate limit.
+            console.error("Failed to request from github", response);
+            hitRateLimit = true;
+          }
+        }
+      }
+      if (teams.every(team => !ignoredTeams.has(team.name))) {
+        validPrs += 1;
+      }
+    }
+    return { reviewTotal: validPrs, };
   },
 
   /**
@@ -559,7 +603,7 @@ var MyQOnly = {
         }
         }
       } catch (e) {
-        console.error(`Error when updating ${service.type}: `, e);
+        console.error(`Error when updating ${service.type}: `, e.toString());
       }
 
       state.data = data;
