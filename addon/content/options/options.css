@@ -12,6 +12,10 @@ input[type="text"] {
   width: 50ch;
 }
 
+label, .form-rows {
+  margin-top: 5px;
+}
+
 .service-settings,
 .field-rows {
   display: grid;
