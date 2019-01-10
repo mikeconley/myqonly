@@ -293,6 +293,10 @@ var MyQOnly = {
 
   async updateBugzilla(settings) {
     let apiKey = settings.apiKey;
+    if (!apiKey) {
+      return { reviewTotal: 0, needinfoTotal: 0, };
+    }
+
     // I'm not sure how much of this is necessary - I just looked at what
     // the Bugzilla My Dashboard thing does in the network inspector, and
     // I'm more or less mimicking that here.
@@ -339,6 +343,10 @@ var MyQOnly = {
 
   async updateGitHub(settings) {
     let username = settings.username;
+    if (!username) {
+      return { reviewTotal: 0, };
+    }
+
     // We don't seem to need authentication for this request, for whatever
     // reason.
     let url = new URL(GITHUB_API);
