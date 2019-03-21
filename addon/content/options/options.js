@@ -69,6 +69,10 @@ const Options = {
     let needinfos =
       bugzillaSettings.querySelector("[data-setting='needinfos']");
     needinfos.checked = !!service.settings.needinfos;
+
+    let allBugzillaFlags =
+      bugzillaSettings.querySelector("[data-setting='allBugzillaFlags']");
+    allBugzillaFlags.checked = !!service.settings.allBugzillaFlags;
   },
 
   populateGitHub(service) {
