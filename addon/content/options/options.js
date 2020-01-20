@@ -51,6 +51,10 @@ const Options = {
       phabricatorSettings.querySelector("[data-setting='container']");
     container.checked = service.settings.container !== undefined;
 
+    let exclReviewerGroups =
+      phabricatorSettings.querySelector("[data-setting='exclReviewerGroups']");
+    exclReviewerGroups.checked = service.settings.exclReviewerGroups !== undefined;
+
     let sessionPromise =
       browser.runtime.sendMessage({ name: "check-for-phabricator-session", });
     sessionPromise.then(hasSession => {

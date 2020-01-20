@@ -227,8 +227,8 @@ var MyQOnly = {
       console.log("Phabricator session found! Attempting to get dashboard " +
                   "page.");
 
-      let { ok, reviewTotal, } = await this.phabricatorReviewRequests();
-      return { connected: ok, reviewTotal, };
+      let { ok, reviewTotal, groupReviewTotal, } = await this.phabricatorReviewRequests();
+      return { connected: ok, reviewTotal, groupReviewTotal, };
     } else {
       console.log("No Phabricator session found. I won't try to fetch " +
                   "anything for it.");
@@ -277,18 +277,37 @@ var MyQOnly = {
     let parser = new DOMParser();
     let doc = parser.parseFromString(pageBody, "text/html");
 
+    let userMenu = doc.querySelector(".phabricator-core-user-menu");
+    let userId = userMenu.attributes.getNamedItem("href");
+
     let headers = doc.querySelectorAll(".phui-header-header");
-    let reviewTotal = 0;
+    let userReviewTotal = 0;
+    let groupReviewTotal = 0;
 
     for (let header of headers) {
       if (PHABRICATOR_REVIEW_HEADERS.includes(header.textContent)) {
         let box = header.closest(".phui-box");
         let rows = box.querySelectorAll(".phui-oi-table-row");
-        reviewTotal += rows.length;
+        let localUserReviewTotal = 0;
+        for (let row of rows) {
+          let reviewers = row.querySelectorAll(".phui-link-person");
+          for (let reviewer of reviewers) {
+            let reviewerId = reviewer.attributes.getNamedItem("href");
+            if (reviewerId == userId) {
+              userReviewTotal += 1;
+              break;
+            }
+          }
+        }
+
+        userReviewTotal += localUserReviewTotal;
+        groupReviewTotal += rows.length - localUserReviewTotal;
       }
     }
 
-    return { ok, reviewTotal, };
+    let reviewTotal = userReviewTotal + groupReviewTotal;
+
+    return { ok, reviewTotal, userReviewTotal, groupReviewTotal, };
   },
 
   async updateBugzilla(settings) {
@@ -515,8 +534,12 @@ var MyQOnly = {
         switch (service.type) {
         case "phabricator": {
           data = await this.updatePhabricator(service.settings);
-          console.log(`Found ${data.reviewTotal} Phabricator ` +
-                      "reviews to do");
+          console.log(`Found ${data.reviewTotal} user reviews, ` +
+                      `${data.groupReviewTotal} group reviews ` +
+                      "to do in Phabricator.");
+          if (service.settings.exclReviewerGroups) {
+            data.reviewTotal -= data.groupReviewTotal;
+          }
           break;
         }
         case "bugzilla": {
