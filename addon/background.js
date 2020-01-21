@@ -227,8 +227,8 @@ var MyQOnly = {
       console.log("Phabricator session found! Attempting to get dashboard " +
                   "page.");
 
-      let { ok, reviewTotal, groupReviewTotal, } = await this.phabricatorReviewRequests();
-      return { connected: ok, reviewTotal, groupReviewTotal, };
+      let { ok, reviewTotal, userReviewTotal, groupReviewTotal, } = await this.phabricatorReviewRequests();
+      return { connected: ok, reviewTotal, userReviewTotal, groupReviewTotal, };
     } else {
       console.log("No Phabricator session found. I won't try to fetch " +
                   "anything for it.");
@@ -305,7 +305,7 @@ var MyQOnly = {
       }
     }
 
-    let reviewTotal = userReviewTotal + groupReviewTotal;
+    let reviewTotal = userReviewTotal;
 
     return { ok, reviewTotal, userReviewTotal, groupReviewTotal, };
   },
@@ -537,8 +537,8 @@ var MyQOnly = {
           console.log(`Found ${data.reviewTotal} user reviews, ` +
                       `${data.groupReviewTotal} group reviews ` +
                       "to do in Phabricator.");
-          if (service.settings.exclReviewerGroups) {
-            data.reviewTotal -= data.groupReviewTotal;
+          if (service.settings.inclReviewerGroups) {
+            data.reviewTotal += data.groupReviewTotal;
           }
           break;
         }
