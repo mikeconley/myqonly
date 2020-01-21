@@ -27,8 +27,10 @@
     <div class="form-rows">
       <input type="checkbox" id="phabricator-enabled" data-setting="container" value="0">
       <label for="phabricator-enabled">Use pre-existing Phabricator session in default container</label>
-      <input type="checkbox" id="exclude-reviewer-groups" data-setting="inclReviewerGroups" value="1">
-      <label for="exclude-reviewer-groups">Exclude reviewer groups from badge count</label>
+    </div>
+    <div class="form-rows">
+      <input type="checkbox" id="include-reviewer-groups" data-setting="inclReviewerGroups" value="1">
+      <label for="include-reviewer-groups">Include reviewer groups in badge count</label>
     </div>
     <p id="phabricator-session-status">
       <span class="yes-session">Found a Phabricator session cookie in the default container</span>

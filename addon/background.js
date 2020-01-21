@@ -220,7 +220,7 @@ var MyQOnly = {
     if (settings.container === undefined) {
       // Phabricator is disabled.
       console.log("Phabricator service is disabled.");
-      return { disabled: true, reviewTotal: 0, };
+      return { disabled: true, reviewTotal: 0, userReviewTotal: 0, groupReviewTotal: 0, };
     }
 
     if (await this._hasPhabricatorCookie()) {
@@ -232,7 +232,7 @@ var MyQOnly = {
     } else {
       console.log("No Phabricator session found. I won't try to fetch " +
                   "anything for it.");
-      return { connected: false, reviewTotal: 0, };
+      return { connected: false, reviewTotal: 0, userReviewTotal: 0, groupReviewTotal: 0, };
     }
   },
 
@@ -277,8 +277,8 @@ var MyQOnly = {
     let parser = new DOMParser();
     let doc = parser.parseFromString(pageBody, "text/html");
 
-    let userMenu = doc.querySelector(".phabricator-core-user-menu");
-    let userId = userMenu.attributes.getNamedItem("href");
+    let userMenu = doc.querySelector("a.phabricator-core-user-menu[href^='/p/']");
+    let userId = userMenu.attributes.getNamedItem("href").value;
 
     let headers = doc.querySelectorAll(".phui-header-header");
     let userReviewTotal = 0;
@@ -292,9 +292,9 @@ var MyQOnly = {
         for (let row of rows) {
           let reviewers = row.querySelectorAll(".phui-link-person");
           for (let reviewer of reviewers) {
-            let reviewerId = reviewer.attributes.getNamedItem("href");
+            let reviewerId = reviewer.attributes.getNamedItem("href").value;
             if (reviewerId == userId) {
-              userReviewTotal += 1;
+              localUserReviewTotal += 1;
               break;
             }
           }

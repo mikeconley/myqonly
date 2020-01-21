@@ -53,7 +53,7 @@ const Options = {
 
     let inclReviewerGroups =
       phabricatorSettings.querySelector("[data-setting='inclReviewerGroups']");
-    inclReviewerGroups.checked = service.settings.inclReviewerGroups !== undefined;
+    inclReviewerGroups.checked = !!service.settings.inclReviewerGroups;
 
     let sessionPromise =
       browser.runtime.sendMessage({ name: "check-for-phabricator-session", });
