@@ -278,7 +278,7 @@ var MyQOnly = {
     let doc = parser.parseFromString(pageBody, "text/html");
 
     let userMenu = doc.querySelector("a.phabricator-core-user-menu[href^='/p/']");
-    let userId = userMenu.attributes.getNamedItem("href").value;
+    let userId = userMenu.href;
 
     let headers = doc.querySelectorAll(".phui-header-header");
     let userReviewTotal = 0;
@@ -292,7 +292,7 @@ var MyQOnly = {
         for (let row of rows) {
           let reviewers = row.querySelectorAll(".phui-link-person");
           for (let reviewer of reviewers) {
-            let reviewerId = reviewer.attributes.getNamedItem("href").value;
+            let reviewerId = reviewer.href;
             if (reviewerId == userId) {
               localUserReviewTotal += 1;
               break;
