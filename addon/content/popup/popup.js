@@ -97,12 +97,22 @@ const Panel = {
           phabDisconnected.classList.add("hidden");
         }
 
-        let serviceTotal = state.data.reviewTotal || 0;
-        document.body.setAttribute("total-phabricator-reviews",
-          serviceTotal || 0);
-        document.getElementById("phabricator-review-num").textContent =
-          serviceTotal || 0;
+        let serviceUserTotal = state.data.userReviewTotal || 0;
 
+        document.body.setAttribute("total-phabricator-user-reviews",
+          serviceUserTotal || 0);
+        document.getElementById("phabricator-user-review-num").textContent =
+          serviceUserTotal || 0;
+
+        let serviceGroupTotal = state.data.groupReviewTotal || 0;
+
+        document.body.setAttribute("total-phabricator-group-reviews",
+          serviceGroupTotal || 0);
+        document.getElementById("phabricator-group-review-num").textContent =
+          serviceGroupTotal || 0;
+        document.getElementById("phabricator-group-reviews").hidden = serviceGroupTotal == 0;
+
+        let serviceTotal = state.data.reviewTotal || 0;
         total += serviceTotal;
         break;
       }
