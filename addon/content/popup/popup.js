@@ -110,7 +110,8 @@ const Panel = {
           serviceGroupTotal || 0);
         document.getElementById("phabricator-group-review-num").textContent =
           serviceGroupTotal || 0;
-        document.getElementById("phabricator-group-reviews").hidden = serviceGroupTotal == 0;
+        document.getElementById("phabricator-group-reviews").hidden =
+          serviceGroupTotal == 0;
 
         let serviceTotal = state.data.reviewTotal || 0;
         total += serviceTotal;

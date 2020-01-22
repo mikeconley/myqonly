@@ -220,19 +220,34 @@ var MyQOnly = {
     if (settings.container === undefined) {
       // Phabricator is disabled.
       console.log("Phabricator service is disabled.");
-      return { disabled: true, reviewTotal: 0, userReviewTotal: 0, groupReviewTotal: 0, };
+      return {
+        disabled: true,
+        reviewTotal: 0,
+        userReviewTotal: 0,
+        groupReviewTotal: 0,
+      };
     }
 
     if (await this._hasPhabricatorCookie()) {
       console.log("Phabricator session found! Attempting to get dashboard " +
                   "page.");
 
-      let { ok, reviewTotal, userReviewTotal, groupReviewTotal, } = await this.phabricatorReviewRequests();
+      let {
+        ok,
+        reviewTotal,
+        userReviewTotal,
+        groupReviewTotal,
+      } = await this.phabricatorReviewRequests();
       return { connected: ok, reviewTotal, userReviewTotal, groupReviewTotal, };
     } else {
       console.log("No Phabricator session found. I won't try to fetch " +
                   "anything for it.");
-      return { connected: false, reviewTotal: 0, userReviewTotal: 0, groupReviewTotal: 0, };
+      return {
+        connected: false,
+        reviewTotal: 0,
+        userReviewTotal: 0,
+        groupReviewTotal: 0,
+      };
     }
   },
 
@@ -277,7 +292,8 @@ var MyQOnly = {
     let parser = new DOMParser();
     let doc = parser.parseFromString(pageBody, "text/html");
 
-    let userMenu = doc.querySelector("a.phabricator-core-user-menu[href^='/p/']");
+    let userMenu =
+      doc.querySelector("a.phabricator-core-user-menu[href^='/p/']");
     let userId = userMenu.href;
 
     let headers = doc.querySelectorAll(".phui-header-header");
@@ -294,7 +310,7 @@ var MyQOnly = {
           for (let reviewer of reviewers) {
             let reviewerId = reviewer.href;
             if (reviewerId == userId) {
-              localUserReviewTotal += 1;
+              localUserReviewTotal++;
               break;
             }
           }
@@ -431,7 +447,7 @@ var MyQOnly = {
         }
       }
       if (teams.every(team => !ignoredTeams.has(team.name))) {
-        validPrs += 1;
+        validPrs++;
       }
     }
     return { reviewTotal: validPrs, };

@@ -34,7 +34,7 @@ const Debug = {
   },
 
   async generatePhabricatorTestcase() {
-    let { pageBody } =
+    let { pageBody, } =
       await browser.runtime.sendMessage({ name: "get-phabricator-html", });
     let parser = new DOMParser();
     let doc = parser.parseFromString(pageBody, "text/html");
