@@ -41,6 +41,7 @@ var MyQOnly = {
     this.states = new Map();
 
     let { services, } = await browser.storage.local.get("services");
+
     this.services = services || [];
     await this._initServices();
     await this.resetAlarm();
@@ -73,23 +74,28 @@ var MyQOnly = {
     this._nextServiceID = maxServiceID + 1;
 
     // Introduce a new default service configuration for Phabricator.
-    if (!this._serviceExists("phabricator")) {
+    let phabService = this._getService("phabricator");
+    if (!phabService) {
       await this._addService("phabricator", {
         container: 0,
+        inclReviewerGroups: true,
       });
+    } else if (phabService.settings.inclReviewerGroups === undefined) {
+      phabService.settings.inclReviewerGroups = true;
+      await browser.storage.local.set({ services: this.services, });
     }
   },
 
   /**
-   * Returns true if a particular service type exists.
+   * Returns a service if it exists, null otherwise.
    */
-  _serviceExists(serviceType) {
+  _getService(serviceType) {
     for (let service of this.services) {
       if (service.type == serviceType) {
-        return true;
+        return service;
       }
     }
-    return false;
+    return null;
   },
 
   /**

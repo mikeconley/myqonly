@@ -14,6 +14,7 @@ async function setupBlank(browser) {
         type: "phabricator",
         settings: {
           container: 0,
+          inclReviewerGroups: true,
         },
       },],
     })
@@ -51,6 +52,7 @@ async function setupWithServices(browser) {
         type: "phabricator",
         settings: {
           container: 0,
+          inclReviewerGroups: true,
         },
       },],
     })
@@ -127,6 +129,7 @@ describe("Options page", function() {
             type: "phabricator",
             settings: {
               container: 0,
+              inclReviewerGroups: true,
             },
           },],
         }));
@@ -169,6 +172,7 @@ describe("Options page", function() {
             type: "phabricator",
             settings: {
               container: 0,
+              inclReviewerGroups: true,
             },
           },],
         }));
@@ -210,6 +214,7 @@ describe("Options page", function() {
             type: "phabricator",
             settings: {
               container: 0,
+              inclReviewerGroups: true,
             },
           },],
         }));

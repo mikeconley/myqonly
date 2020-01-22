@@ -91,6 +91,7 @@ describe("MyQOnly initting fresh", function() {
         type: "phabricator",
         settings: {
           container: 0,
+          inclReviewerGroups: true,
         },
       },],
     }));
@@ -110,8 +111,94 @@ describe("MyQOnly initting fresh", function() {
         type: "phabricator",
         settings: {
           container: 0,
+          inclReviewerGroups: true,
         },
       },],
     }));
+  });
+
+  it("should default the Phabricator service to show the " +
+     "review group count.", async () => {
+    browser.storage.local.get.withArgs("services").returns(
+      Promise.resolve({
+        services: [{
+          id: 1,
+          type: "bugzilla",
+          settings: {
+            apiKey: "abc123",
+          },
+        }, {
+          id: 2,
+          type: "github",
+          settings: {
+            username: "mikeconley",
+          },
+        },{
+          id: 3,
+          type: "phabricator",
+          settings: {
+            container: 0,
+          },
+        },],
+      })
+    );
+
+    await MyQOnly.init();
+
+    assert.ok(browser.storage.local.set.calledWith({
+      services: [{
+        id: 1,
+        type: "bugzilla",
+        settings: {
+          apiKey: "abc123",
+        },
+      }, {
+        id: 2,
+        type: "github",
+        settings: {
+          username: "mikeconley",
+        },
+      }, {
+        id: 3,
+        type: "phabricator",
+        settings: {
+          container: 0,
+          inclReviewerGroups: true,
+        },
+      },],
+    }));
+  });
+
+  it("should not update review group configuration for Phabricator " +
+     "if it was already set.", async () => {
+    browser.storage.local.get.withArgs("services").returns(
+      Promise.resolve({
+        services: [{
+          id: 1,
+          type: "bugzilla",
+          settings: {
+            apiKey: "abc123",
+          },
+        }, {
+          id: 2,
+          type: "github",
+          settings: {
+            username: "mikeconley",
+          },
+        },{
+          id: 3,
+          type: "phabricator",
+          settings: {
+            container: 0,
+            inclReviewerGroups: false,
+          },
+        },],
+      })
+    );
+
+    await MyQOnly.init();
+
+    let service = MyQOnly._getService("phabricator");
+    assert(!service.settings.inclReviewerGroups);
   });
 });
