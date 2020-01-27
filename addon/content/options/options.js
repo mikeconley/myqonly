@@ -49,7 +49,7 @@ const Options = {
 
     let container =
       phabricatorSettings.querySelector("[data-setting='container']");
-    container.checked = service.settings.container !== undefined;
+    container.checked = !!service.settings.container;
 
     let inclReviewerGroups =
       phabricatorSettings.querySelector("[data-setting='inclReviewerGroups']");
@@ -114,7 +114,7 @@ const Options = {
 
     // For now, there's only a single service instance per type.
     let settings = this.getServiceSettings(serviceType);
-    if (newValue !== null) {
+    if (newValue !== undefined) {
       settings[changedSetting] = newValue;
     } else {
       delete settings[changedSetting];
