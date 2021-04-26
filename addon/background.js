@@ -420,7 +420,13 @@ var MyQOnly = {
         .map(s => s.trim())
         .filter(Boolean));
 
-    if (ignoredTeams.size === 0) {
+    let ignoredRepos = new Array(
+      (settings.ignoredRepos || "")
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean));
+
+    if (ignoredTeams.size === 0 && ignoredRepos.length === 0) {
       return { reviewTotal: data.total_count, };
     }
     // Sadly, `-team-review-requested:` doesn't appear to work in the API, so we
@@ -457,7 +463,8 @@ var MyQOnly = {
       // If review was requested directly, always treat as a valid PR.
       if (reviewers.some(reviewer => reviewer.login === username)) {
         validPrs++;
-      } else if (teams.every(team => !ignoredTeams.has(team.name))) {
+      } else if (teams.every(team => !ignoredTeams.has(team.name)) &&
+                 ignoredRepos.every(repo => !prUrl.includes(repo))) {
         validPrs++;
       }
     }
