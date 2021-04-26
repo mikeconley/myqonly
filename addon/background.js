@@ -434,6 +434,7 @@ var MyQOnly = {
     let validPrs = data.total_count - data.items.length;
     for (let pr of data.items) {
       let prUrl = pr.pull_request.url;
+      let reviewers = [];
       let teams = [];
       if (!hitRateLimit) {
         let resp = await window.fetch(prUrl, apiRequestOptions);
@@ -443,6 +444,7 @@ var MyQOnly = {
         } else {
           if (resp.ok) {
             let respBody = await resp.json();
+            reviewers = respBody.requested_reviewers || [];
             teams = respBody.requested_teams || [];
           } else {
             // Don't treat a request failure here as fatal, just stop making
@@ -452,7 +454,10 @@ var MyQOnly = {
           }
         }
       }
-      if (teams.every(team => !ignoredTeams.has(team.name))) {
+      // If review was requested directly, always treat as a valid PR.
+      if (reviewers.some(reviewer => reviewer.login === username)) {
+        validPrs++;
+      } else if (teams.every(team => !ignoredTeams.has(team.name))) {
         validPrs++;
       }
     }
