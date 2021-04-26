@@ -89,6 +89,10 @@ const Options = {
     let ignoredTeams =
       githubSettings.querySelector("[data-setting='ignoredTeams']");
     ignoredTeams.value = service.settings.ignoredTeams || "";
+
+    let ignoredRepos =
+      githubSettings.querySelector("[data-setting='ignoredRepos']");
+    ignoredRepos.value = service.settings.ignoredRepos || "";
   },
 
   onUpdateService(event, serviceType) {
