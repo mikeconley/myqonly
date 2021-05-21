@@ -9,6 +9,28 @@
 <body>
   <h1>MyQOnly Release Notes</h1>
 
+  <section data-version="0.9.0">
+    <h2>0.9.0</h2>
+    <h3>New features</h3>
+    <ul>
+        <li>It's now possible to ignore a GitHub team repository by using just a substring of the URL. This means <code>mozilla-mobile/fenix</code> would skip reviews for that repo, and <code>mozilla-mobile</code> would skip reviews for that entire org. Thanks to <a href="https://github.com/ahal/">Andrew Halberstadt</a> for the patch!</li>
+        <li>GitHub API tokens can now be set in the Options page for private repositories! Thanks to <a href="https://github.com/Callek/">Justin Wood</a> for the patch!</li>
+    </ul>
+    <h3>Changes</h3>
+    <ul>
+      <li>The panel now links to <a href="https://phabricator.services.mozilla.com/differential">https://phabricator.services.mozilla.com/differential</a> for Phabricator reviews. This is more direct and less noisy than the full-blown Phabricator dashboard.</li>
+    </ul>
+    <h3>Bug fixes</h3>
+    <ul>
+      <li>Fixed an issue where the <a href="https://github.com/mikeconley/myqonly/issues/37">"Include reviewer groups in badge count" setting</a> wouldn't persist between browser restarts. Thanks to <a href="https://github.com/dblohm7/">Aaron Klotz</a> for the patch!</li>
+      <li>Fixed an issue where MyQOnly wouldn't count GitHub pull requests on ignored groups even if the user was requested directly. Thanks to <a href="https://github.com/ahal/">Andrew Halberstadt</a> for the patch!</li>
+    </ul>
+    <h3>Known issues</h3>
+    <ul>
+      <li><a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a> <a href="https://github.com/mikeconley/myqonly/issues/18">support</a> for Containers</li>
+    </ul>
+  </section>
+
   <section data-version="0.8.2">
     <h2>0.8.2</h2>
     <h3>Bug fixes</h3>
