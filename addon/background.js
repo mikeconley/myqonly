@@ -387,6 +387,7 @@ var MyQOnly = {
     if (!username) {
       return { reviewTotal: 0, };
     }
+    let token = settings.token;
 
     // We don't seem to need authentication for this request, for whatever
     // reason.
@@ -396,11 +397,15 @@ var MyQOnly = {
       query += ` -author:${username}`;
     }
     url.searchParams.set("q", query);
+    let headers = {
+      Accept: "application/vnd.github.v3+json",
+    };
+    if (token) {
+      headers["Authorization"] = `token ${token}`;
+    }
     const apiRequestOptions = {
       method: "GET",
-      headers: {
-        Accept: "application/vnd.github.v3+json",
-      },
+      headers: headers,
       // Probably doesn't matter.
       credentials: "omit",
     };
