@@ -82,6 +82,9 @@ const Options = {
     let username = githubSettings.querySelector("[data-setting='username']");
     username.value = service.settings.username;
 
+    let token = githubSettings.querySelector("[data-setting='token']");
+    token.value = service.settings.token;
+
     let ignoreOwnPrs =
       githubSettings.querySelector("[data-setting='ignoreOwnPrs']");
     ignoreOwnPrs.checked = !!service.settings.ignoreOwnPrs;
