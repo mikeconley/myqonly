@@ -52,16 +52,18 @@ header {
 }
 
 body[total-phabricator-reviews="0"] > #phabricator-reviews,
-body[total-bugzilla-reviews="0"] > #bugzilla-reviews,
-body[total-bugzilla-needinfos="0"] > #bugzilla-needinfos,
 body[total-github-reviews="0"] > #github-reviews,
 body:not([has-new-features]) > #has-new-features {
   display: none;
 }
 
-body > section,
+body section,
 body > h1 {
   margin: 15px;
+}
+
+#bugzilla-flags {
+  display: grid;
 }
 
 #has-new-features {

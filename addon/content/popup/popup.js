@@ -64,21 +64,27 @@ const Panel = {
       switch (state.type) {
       case "bugzilla": {
         let serviceTotal = 0;
-        if (state.data.reviewTotal) {
-          serviceTotal += state.data.reviewTotal;
-        }
-        if (state.data.needinfoTotal) {
-          serviceTotal += state.data.needinfoTotal;
-        }
+        let flagsElt = document.getElementById("bugzilla-flags");
+        flagsElt.innerHTML = "";
 
-        document.body.setAttribute("total-bugzilla-reviews",
-          state.data.reviewTotal || 0);
-        document.body.setAttribute("total-bugzilla-needinfos",
-          state.data.needinfoTotal || 0);
-        document.getElementById("bugzilla-review-num").textContent =
-          state.data.reviewTotal || 0;
-        document.getElementById("bugzilla-needinfo-num").textContent =
-          state.data.needinfoTotal || 0;
+        for (let [flag, count] of Object.entries(state.data)) {
+          serviceTotal += count;
+
+          document.body.setAttribute(`total-bugzilla-${flag}s`, count || 0);
+
+          if (!count || count === 0) {
+            continue;
+          }
+
+          let sectionElt = document.createElement("section");
+          sectionElt.id = "bugzilla-" + flag + "s";
+          let anchorElt = document.createElement("a");
+          anchorElt.href =
+            "https://bugzilla.mozilla.org/page.cgi?id=mydashboard.html";
+          anchorElt.textContent = `${count} ${flag}(s) on Bugzilla`;
+          sectionElt.appendChild(anchorElt);
+          flagsElt.appendChild(sectionElt);
+        }
 
         total += serviceTotal;
         break;

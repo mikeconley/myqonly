@@ -180,6 +180,48 @@ describe("Options page", function() {
     });
   });
 
+  it("should be able to update the all flags state for Bugzilla", async () => {
+    await loadPage({
+      url: "/addon/content/options/options.html",
+      setup: setupWithServices,
+      test: async(content, document) => {
+        let field = document.getElementById("bugzilla-allBugzillaFlags");
+        field.checked.should.equal(false);
+
+        browser.storage.local.set.withArgs({ services: undefined, }).returns(
+          Promise.resolve()
+        );
+
+        // Now update the value
+        field.click();
+
+        assert.ok(browser.storage.local.set.calledOnce);
+        assert.ok(browser.storage.local.set.calledWith({
+          services: [{
+            id: 1,
+            type: "bugzilla",
+            settings: {
+              apiKey: "abc123",
+              allBugzillaFlags: true,
+            },
+          }, {
+            id: 2,
+            type: "github",
+            settings: {
+              username: "mikeconley",
+            },
+          }, {
+            id: 3,
+            type: "phabricator",
+            settings: {
+              container: 0,
+            },
+          },],
+        }));
+      },
+    });
+  });
+
   it("should show and be able to update the GitHub username", async () => {
     await loadPage({
       url: "/addon/content/options/options.html",
