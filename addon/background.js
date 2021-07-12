@@ -428,7 +428,7 @@ var MyQOnly = {
     let ignoredRepos = (settings.ignoredRepos || "")
         .split(",")
         .map(s => s.trim())
-        .filter(Boolean));
+        .filter(Boolean);
 
     if (ignoredTeams.size === 0 && ignoredRepos.length === 0) {
       return { reviewTotal: data.total_count, };
