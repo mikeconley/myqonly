@@ -425,8 +425,7 @@ var MyQOnly = {
         .map(s => s.trim())
         .filter(Boolean));
 
-    let ignoredRepos = new Array(
-      (settings.ignoredRepos || "")
+    let ignoredRepos = (settings.ignoredRepos || "")
         .split(",")
         .map(s => s.trim())
         .filter(Boolean));
