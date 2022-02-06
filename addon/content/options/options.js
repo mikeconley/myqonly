@@ -112,6 +112,14 @@ const Options = {
     let ignoredRepos =
       gitlabSettings.querySelector("[data-setting='ignoredRepos']");
     ignoredRepos.value = service.settings.ignoredRepos || "";
+
+    let apiUrl =
+      gitlabSettings.querySelector("[data-setting='apiUrl']");
+    apiUrl.value = service.settings.apiUrl || GITLAB_API_DEFAULT_DOMAIN;
+
+    let userUrl =
+      gitlabSettings.querySelector("[data-setting='userUrl']");
+      userUrl.value = service.settings.userUrl || GITLAB_DEFAULT_DOMAIN;
   },
 
   onUpdateService(event, serviceType) {

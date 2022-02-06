@@ -128,6 +128,7 @@ const Panel = {
         break;
       }
       case "gitlab": {
+        console.debug("YORIC","gitlab",state);
         let serviceTotal = state.data.reviewTotal || 0;
         document.body.setAttribute("total-gitlab-reviews",
           serviceTotal || 0);
