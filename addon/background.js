@@ -382,6 +382,58 @@ var MyQOnly = {
     return { reviewTotal, needinfoTotal, };
   },
 
+  async updateGitLab(settings) {
+    let username = settings.username;
+    if (!username) {
+      return { reviewTotal: 0, };
+    }
+    let token = settings.token;
+    if (!token) {
+      return { reviewTotal: 0, };
+    }
+
+    let url = new URL(GITLAB_API_PATH,
+      settings.apiUrl || GITLAB_API_DEFAULT_DOMAIN);
+    url.searchParams.append("action", "review_requested");
+    let headers = {
+      "PRIVATE-TOKEN": token,
+    };
+    const apiRequestOptions = {
+      method: "GET",
+      headers: headers,
+      // Probably doesn't matter.
+      credentials: "omit",
+    };
+    // Note: we might need to paginate if we care about fetching more than the
+    // first 100.
+    let response = await window.fetch(url, apiRequestOptions);
+    if (!response.ok) {
+      console.error("Failed to request from github", response);
+      throw new Error(`GitLab request failed (${response.status}): ` +
+                      `${await response.text()}`);
+    }
+    const data = await response.json();
+
+    let ignoredRepos = new Set((settings.ignoredRepos || "")
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean));
+
+    if (ignoredRepos.length === 0) {
+      return { reviewTotal: data.total_count, };
+    }
+    const reviewTotal = data.filter(request =>
+      !ignoredRepos.has(request.project.path)
+      && !ignoredRepos.has(request.project.path_with_namespace))
+      .length;
+    const todoPath = new URL(GITLAB_TODOS_PATH,
+      settings.userUrl || GITLAB_DEFAULT_DOMAIN).toString();
+    return {
+      reviewTotal,
+      todoPath,
+    };
+  },
+
   async updateGitHub(settings) {
     let username = settings.username;
     if (!username) {
@@ -591,6 +643,11 @@ var MyQOnly = {
         case "github": {
           data = await this.updateGitHub(service.settings);
           console.log(`Found ${data.reviewTotal} GitHub reviews to do`);
+          break;
+        }
+        case "gitlab": {
+          data = await this.updateGitLab(service.settings);
+          console.log(`Found ${data.reviewTotal} GitLab reviews to do`);
           break;
         }
         }
