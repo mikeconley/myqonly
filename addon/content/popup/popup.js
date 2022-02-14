@@ -127,6 +127,18 @@ const Panel = {
         total += serviceTotal;
         break;
       }
+      case "gitlab": {
+        console.debug("YORIC","gitlab",state);
+        let serviceTotal = state.data.reviewTotal || 0;
+        document.body.setAttribute("total-gitlab-reviews",
+          serviceTotal || 0);
+        document.getElementById("gitlab-review-num").textContent =
+          serviceTotal || 0;
+        document.getElementById("gitlab-path").href =
+          state.data.todoPath;
+        total += serviceTotal;
+        break;
+      }
       }
     }
 

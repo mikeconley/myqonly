@@ -28,6 +28,10 @@ const Options = {
         this.populateGitHub(service);
         break;
       }
+      case "gitlab": {
+        this.populateGitLab(service);
+        break;
+      }
       }
       this._nextID = Math.max(this._nextID, service.id);
     }
@@ -96,6 +100,26 @@ const Options = {
     let ignoredRepos =
       githubSettings.querySelector("[data-setting='ignoredRepos']");
     ignoredRepos.value = service.settings.ignoredRepos || "";
+  },
+
+  populateGitLab(service) {
+    let gitlabSettings =
+      document.querySelector(".service-settings[data-type='gitlab']");
+
+    let token = gitlabSettings.querySelector("[data-setting='token']");
+    token.value = service.settings.token || "";
+
+    let ignoredRepos =
+      gitlabSettings.querySelector("[data-setting='ignoredRepos']");
+    ignoredRepos.value = service.settings.ignoredRepos || "";
+
+    let apiUrl =
+      gitlabSettings.querySelector("[data-setting='apiUrl']");
+    apiUrl.value = service.settings.apiUrl || GITLAB_API_DEFAULT_DOMAIN;
+
+    let userUrl =
+      gitlabSettings.querySelector("[data-setting='userUrl']");
+      userUrl.value = service.settings.userUrl || GITLAB_DEFAULT_DOMAIN;
   },
 
   onUpdateService(event, serviceType) {

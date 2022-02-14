@@ -63,6 +63,18 @@
     <label for="github-ignored-repos">Comma-separated list of github repositories to ignore as a substring of the url (only applies when requested as part of a team).</label>
     <input type="text" id="github-ignored-repos" data-setting="ignoredRepos">
   </div>
+
+  <h3>GitLab</h3>
+  <div class="service-settings" data-type="gitlab">
+    <label for="gitlab-token">GitLab Access Token</label>
+    <input type="password" id="gitlab-token" data-setting="token">
+    <label for="gitlab-api-url">GitLab API URI (e.g. https://api.gitlab.com, only if you use a custom instance of GitLab)</label>
+    <input type="text" id="gitlab-api-url" data-setting="apiUrl">
+    <label for="gitlab-user-url">GitLab user URI (e.g. https://gitlab.example.com, only if you use a custom instance of GitLab)</label>
+    <input type="text" id="gitlab-user-url" data-setting="userUrl">
+    <label for="gitlab-ignored-repos">Comma-separated list of gitlab repositories to ignore (e.g. "myqonly" or "mikeconley/mqonly").</label>
+    <input type="text" id="gitlab-ignored-repos" data-setting="ignoredRepos">
+  </div>
 </section>
 
 <section id="working-hours">
