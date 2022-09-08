@@ -335,7 +335,7 @@ var MyQOnly = {
   async updateBugzilla(settings) {
     let apiKey = settings.apiKey;
     if (!apiKey) {
-      return { reviewTotal: 0, needinfoTotal: 0, };
+      return { review: 0, needinfo: 0, };
     }
 
     // I'm not sure how much of this is necessary - I just looked at what
@@ -367,19 +367,31 @@ var MyQOnly = {
     if (bugzillaData.error) {
       throw new Error(`Bugzilla request failed: ${bugzillaData.error.message}`);
     }
-    let reviewTotal =
+
+    if (settings.allBugzillaFlags) {
+      let flagCounts = {};
+      bugzillaData.result.result.requestee.map(f => {
+        if (!(f.type in flagCounts)) {
+          flagCounts[f.type] = 0;
+        }
+        flagCounts[f.type]++;
+      });
+      return flagCounts;
+    }
+
+    let review =
       bugzillaData.result.result.requestee.filter(f => {
         return f.type == "review";
       }).length;
 
-    let needinfoTotal = 0;
+    let needinfo = 0;
     if (settings.needinfos) {
-      needinfoTotal =bugzillaData.result.result.requestee.filter(f => {
+      needinfo = bugzillaData.result.result.requestee.filter(f => {
         return f.type == "needinfo";
       }).length;
     }
 
-    return { reviewTotal, needinfoTotal, };
+    return { review, needinfo, };
   },
 
   async updateGitHub(settings) {
@@ -552,7 +564,9 @@ var MyQOnly = {
       total += state.data.reviewTotal || 0;
 
       if (state.type == "bugzilla") {
-        total += state.data.needinfoTotal || 0;
+        for (let count of Object.values(state.data)) {
+          total += count;
+        }
       }
     }
 
@@ -582,10 +596,9 @@ var MyQOnly = {
         }
         case "bugzilla": {
           data = await this.updateBugzilla(service.settings);
-          console.log(`Found ${data.reviewTotal} Bugzilla reviews ` +
-                      "to do");
-          console.log(`Found ${data.needinfoTotal} Bugzilla needinfos ` +
-                      "to do");
+          for (let [flag, count] of Object.entries(data)) {
+            console.log(`Found ${count} Bugzilla ${flag}s to do`);
+          }
           break;
         }
         case "github": {
