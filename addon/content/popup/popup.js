@@ -1,4 +1,4 @@
-const Panel = {
+class Panel {
   async init() {
     let { newFeatures, featureRev, } =
       await browser.runtime.sendMessage({ name: "get-feature-rev", });
@@ -10,7 +10,7 @@ const Panel = {
 
     window.addEventListener("click", this);
     await this.updatePanel();
-  },
+  }
 
   handleEvent(event) {
     switch (event.type) {
@@ -19,7 +19,7 @@ const Panel = {
       break;
     }
     }
-  },
+  }
 
   onClick(event) {
     switch (event.target.id) {
@@ -43,7 +43,7 @@ const Panel = {
       return false;
     }
     }
-  },
+  }
 
   async refresh() {
     let status = document.getElementById("status");
@@ -54,7 +54,7 @@ const Panel = {
     await Promise.all([refreshPromise, visualDelayPromise,]);
 
     await this.updatePanel();
-  },
+  }
 
   async updatePanel() {
     let status = document.getElementById("status");
@@ -136,9 +136,10 @@ const Panel = {
     } else {
       status.textContent = "Nothing to do! \\o/";
     }
-  },
+  }
 };
 
 addEventListener("DOMContentLoaded", () => {
-  Panel.init();
+  let panel = new Panel();
+  panel.init();
 }, { once: true, });

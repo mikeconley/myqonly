@@ -1,5 +1,5 @@
-const Options = {
-  _nextID: 0,
+class Options {
+  _nextID = 0;
 
   async init() {
     console.log("Initting Options page");
@@ -41,7 +41,7 @@ const Options = {
     this.initWorkingHours();
     let initted = new CustomEvent("initted", { bubbles: true, });
     document.dispatchEvent(initted);
-  },
+  }
 
   populatePhabricator(service) {
     let phabricatorSettings =
@@ -61,7 +61,7 @@ const Options = {
       let status = document.getElementById("phabricator-session-status");
       status.setAttribute("has-session", hasSession);
     });
-  },
+  }
 
   populateBugzilla(service) {
     let bugzillaSettings =
@@ -73,7 +73,7 @@ const Options = {
     let needinfos =
       bugzillaSettings.querySelector("[data-setting='needinfos']");
     needinfos.checked = !!service.settings.needinfos;
-  },
+  }
 
   populateGitHub(service) {
     let githubSettings =
@@ -96,7 +96,7 @@ const Options = {
     let ignoredRepos =
       githubSettings.querySelector("[data-setting='ignoredRepos']");
     ignoredRepos.value = service.settings.ignoredRepos || "";
-  },
+  }
 
   onUpdateService(event, serviceType) {
     let changedSetting = event.target.dataset.setting;
@@ -130,7 +130,7 @@ const Options = {
     browser.storage.local.set({ "services": this.services, }).then(() => {
       console.log(`Saved update to ${serviceType} setting ${changedSetting}`);
     });
-  },
+  }
 
   getServiceSettings(serviceType) {
     for (let instance of this.services) {
@@ -148,7 +148,7 @@ const Options = {
     });
 
     return settings;
-  },
+  }
 
   async initWorkingHours() {
     // Specify reasonable defaults for the first-run case.
@@ -177,7 +177,7 @@ const Options = {
     for (let dayEl of dayEls) {
       dayEl.checked = workingHours.days.includes(dayEl.id);
     }
-  },
+  }
 
   handleEvent(event) {
     switch (event.type) {
@@ -188,7 +188,7 @@ const Options = {
       return this.onChange(event);
     }
     }
-  },
+  }
 
   onClick(event) {
     switch (event.target.id) {
@@ -204,7 +204,7 @@ const Options = {
       break;
     }
     }
-  },
+  }
 
   onChange(event) {
     // Are we updating a service?
@@ -221,7 +221,7 @@ const Options = {
     } else if (event.target.closest("#working-hours-fields")) {
       this.onWorkingHoursChanged();
     }
-  },
+  }
 
   onWorkingHoursChanged() {
     console.log("Working hours changed");
@@ -258,9 +258,10 @@ const Options = {
     }).catch((err) => {
       console.error(`Error updating working hours: ${err}`);
     });
-  },
+  }
 };
 
 addEventListener("DOMContentLoaded", () => {
-  Options.init();
+  let options = new Options();
+  options.init();
 }, { once: true, });

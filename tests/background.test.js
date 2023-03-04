@@ -1,4 +1,6 @@
 describe("MyQOnly initting fresh", function() {
+  let mqo = new MyQOnly();
+
   beforeEach(async function() {
     browser.storage.local.get.withArgs("featureRev").returns(
       Promise.resolve({})
@@ -18,27 +20,27 @@ describe("MyQOnly initting fresh", function() {
   });
 
   afterEach(async function() {
-    MyQOnly.uninit();
+    mqo.uninit();
     browser.flush();
   });
 
   it("should exist, and be able to init with defaults", async () => {
-    should.exist(MyQOnly);
-    await MyQOnly.init();
+    should.exist(mqo);
+    await mqo.init();
     // Should have set up listeners and alarms
     assert.ok(browser.storage.onChanged.addListener.calledOnce);
     assert.ok(browser.alarms.onAlarm.addListener.calledOnce);
     assert.ok(browser.runtime.onMessage.addListener.calledOnce);
 
-    assert.equal(MyQOnly.featureRev, FEATURE_ALERT_REV);
-    assert.equal(MyQOnly.updateInterval, DEFAULT_UPDATE_INTERVAL);
+    assert.equal(mqo.featureRev, FEATURE_ALERT_REV);
+    assert.equal(mqo.updateInterval, DEFAULT_UPDATE_INTERVAL);
 
     // We should default with the Phabricator service enabled
-    assert.equal(MyQOnly.services.length, 1);
-    assert.equal(MyQOnly.services[0].type, "phabricator");
+    assert.equal(mqo.services.length, 1);
+    assert.equal(mqo.services[0].type, "phabricator");
 
-    for (let service in MyQOnly.reviewTotals) {
-      assert.equal(MyQOnly.reviewTotals[service], 0);
+    for (let service in mqo.reviewTotals) {
+      assert.equal(mqo.reviewTotals[service], 0);
     }
 
     assert.ok(browser.storage.local.set.calledWith({
@@ -71,7 +73,7 @@ describe("MyQOnly initting fresh", function() {
       })
     );
 
-    await MyQOnly.init();
+    await mqo.init();
 
     assert.ok(browser.storage.local.set.calledWith({
       services: [{
@@ -103,7 +105,7 @@ describe("MyQOnly initting fresh", function() {
       Promise.resolve({})
     );
 
-    await MyQOnly.init();
+    await mqo.init();
 
     assert.ok(browser.storage.local.set.calledWith({
       services: [{
@@ -143,7 +145,7 @@ describe("MyQOnly initting fresh", function() {
       })
     );
 
-    await MyQOnly.init();
+    await mqo.init();
 
     assert.ok(browser.storage.local.set.calledWith({
       services: [{
@@ -196,9 +198,9 @@ describe("MyQOnly initting fresh", function() {
       })
     );
 
-    await MyQOnly.init();
+    await mqo.init();
 
-    let service = MyQOnly._getService("phabricator");
+    let service = mqo._getService("phabricator");
     assert(!service.settings.inclReviewerGroups);
   });
 });

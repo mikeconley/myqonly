@@ -1,7 +1,7 @@
-const Debug = {
+class Debug {
   async init() {
     window.addEventListener("click", this);
-  },
+  }
 
   handleEvent(event) {
     switch (event.type) {
@@ -9,7 +9,7 @@ const Debug = {
       return this.onClick(event);
     }
     }
-  },
+  }
 
   onClick(event) {
     switch (event.target.id) {
@@ -31,7 +31,7 @@ const Debug = {
       break;
     }
     }
-  },
+  }
 
   async generatePhabricatorTestcase() {
     let { pageBody, } =
@@ -54,7 +54,7 @@ const Debug = {
 
     let outputEl = document.getElementById("phabricator-testcase");
     outputEl.textContent = doc.body.innerHTML;
-  },
+  }
 
   async showServices() {
     let { services, } = await browser.storage.local.get("services");
@@ -69,7 +69,7 @@ const Debug = {
       }
       servicesEl.textContent = JSON.stringify(services);
     }
-  },
+  }
 
   async showOldUserKeys() {
     let { oldUserKeys, } = await browser.storage.local.get("oldUserKeys");
@@ -82,9 +82,10 @@ const Debug = {
       }
       outputEl.textContent = JSON.stringify(oldUserKeys);
     }
-  },
+  }
 };
 
 addEventListener("DOMContentLoaded", () => {
-  Debug.init();
+  let debug = new Debug();
+  debug.init();
 }, { once: true, });

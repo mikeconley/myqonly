@@ -4,7 +4,7 @@ if (typeof(browser) == "undefined") {
   var browser = chrome;
 }
 
-var MyQOnly = {
+class MyQOnly {
   /**
    * Main entry. After set-up, attempts to update the badge right
    * away.
@@ -46,7 +46,7 @@ var MyQOnly = {
     await this._initServices();
     await this.resetAlarm();
     await this.updateBadge();
-  },
+  }
 
   uninit() {
     delete this.states;
@@ -54,14 +54,14 @@ var MyQOnly = {
     delete this.updateInterval;
     delete this.featureRev;
     this._nextServiceID = 0;
-  },
+  }
 
   /**
    * The following functions for manipulating services are for adding
    * defaults at initialization. Most service manipulation should really
    * be done by the user in the Options interface.
    */
-  _nextServiceID: 0,
+  _nextServiceID = 0
   async _initServices() {
     let maxServiceID = this._nextServiceID;
     for (let service of this.services) {
@@ -84,7 +84,7 @@ var MyQOnly = {
       phabService.settings.inclReviewerGroups = true;
       await browser.storage.local.set({ services: this.services, });
     }
-  },
+  }
 
   /**
    * Returns a service if it exists, null otherwise.
@@ -96,7 +96,7 @@ var MyQOnly = {
       }
     }
     return null;
-  },
+  }
 
   /**
    * Puts a service of serviceType into the services list with
@@ -115,7 +115,7 @@ var MyQOnly = {
 
     await browser.storage.local.set({ services: this.services, });
     this._ensureStatesForServices();
-  },
+  }
 
   _ensureStatesForServices() {
     for (let service of this.services) {
@@ -126,7 +126,7 @@ var MyQOnly = {
         });
       }
     }
-  },
+  }
 
   /**
    * Handles updates to the user options.
@@ -150,7 +150,7 @@ var MyQOnly = {
         await this.updateBadge();
       }
     }
-  },
+  }
 
   /**
    * Wipes out any pre-existing alarm and sets up a new one with
@@ -167,7 +167,7 @@ var MyQOnly = {
     browser.alarms.create(ALARM_NAME, {
       periodInMinutes: this.updateInterval,
     });
-  },
+  }
 
   /**
    * Handles messages from the popup.
@@ -210,7 +210,7 @@ var MyQOnly = {
       return this._phabricatorDocumentBody();
     }
     }
-  },
+  }
 
   /**
    * The alarm went off! Let's do the badge updating stuff now.
@@ -220,7 +220,7 @@ var MyQOnly = {
       console.log("Updating the badge now...");
       this.updateBadge();
     }
-  },
+  }
 
   async updatePhabricator(settings) {
     if (settings.container === undefined) {
@@ -255,7 +255,7 @@ var MyQOnly = {
         groupReviewTotal: 0,
       };
     }
-  },
+  }
 
   async _hasPhabricatorSession({ testingURL = null, } = {}) {
     if (await this._hasPhabricatorCookie()) {
@@ -264,7 +264,7 @@ var MyQOnly = {
     }
 
     return false;
-  },
+  }
 
   async _hasPhabricatorCookie() {
     let phabCookie = await browser.cookies.get({
@@ -272,7 +272,7 @@ var MyQOnly = {
       name: "phsid",
     });
     return !!phabCookie;
-  },
+  }
 
   async _phabricatorDocumentBody({ testingURL = null, } = {}) {
     let url = testingURL ||
@@ -290,7 +290,7 @@ var MyQOnly = {
     let ok = resp.ok;
     let pageBody = await resp.text();
     return { ok, pageBody, };
-  },
+  }
 
   async phabricatorReviewRequests({ testingURL = null, } = {}) {
     let { ok, pageBody, } =
@@ -330,7 +330,7 @@ var MyQOnly = {
     let reviewTotal = userReviewTotal;
 
     return { ok, reviewTotal, userReviewTotal, groupReviewTotal, };
-  },
+  }
 
   async updateBugzilla(settings) {
     let apiKey = settings.apiKey;
@@ -380,7 +380,7 @@ var MyQOnly = {
     }
 
     return { reviewTotal, needinfoTotal, };
-  },
+  }
 
   async updateGitHub(settings) {
     let username = settings.username;
@@ -473,7 +473,7 @@ var MyQOnly = {
       }
     }
     return { reviewTotal: validPrs, };
-  },
+  }
 
   /**
    * Is the current time within the user's working hours (if enabled)?
@@ -544,7 +544,7 @@ var MyQOnly = {
 
     console.log("Current time is within the working hours");
     return true;
-  },
+  }
 
   _calculateBadgeTotal(states) {
     let total = 0;
@@ -557,7 +557,7 @@ var MyQOnly = {
     }
 
     return total;
-  },
+  }
 
   /**
    * Contacts Phabricator, Bugzilla, and Github (if the API keys for them
@@ -630,11 +630,12 @@ var MyQOnly = {
       });
       browser.browserAction.setBadgeText({ text: String(thingsToDo), });
     }
-  },
+  }
 };
 
 // Hackily detect the sinon-chrome test framework. If we're inside it,
 // don't run init automatically.
 if (!browser.flush) {
-  MyQOnly.init();
+  let mqo = new MyQOnly();
+  mqo.init();
 }
