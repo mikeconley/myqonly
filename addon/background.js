@@ -604,7 +604,7 @@ class MyQOnly {
     let workingHours = await this.isWorkingHours();
     if (!workingHours) {
       console.log("Current time is outside working hours. Hiding reviews.");
-      browser.browserAction.setBadgeText({ text: null, });
+      browser.action.setBadgeText({ text: null, });
       return;
     }
 
@@ -615,20 +615,20 @@ class MyQOnly {
       // Check to see if there are new features to notify the user about.
       // We intentionally only do this if there are new reviews to do.
       if (this.featureRev < FEATURE_ALERT_REV) {
-        browser.browserAction.setBadgeBackgroundColor({
+        browser.action.setBadgeBackgroundColor({
           color: FEATURE_ALERT_BG_COLOR,
         });
-        browser.browserAction.setBadgeText({ text: FEATURE_ALERT_STRING, });
+        browser.action.setBadgeText({ text: FEATURE_ALERT_STRING, });
       } else {
-        browser.browserAction.setBadgeText({ text: null, });
+        browser.action.setBadgeText({ text: null, });
       }
     } else {
       // If we happened to set the background colour when alerting about
       // new features, clear that out now.
-      browser.browserAction.setBadgeBackgroundColor({
+      browser.action.setBadgeBackgroundColor({
         color: null,
       });
-      browser.browserAction.setBadgeText({ text: String(thingsToDo), });
+      browser.action.setBadgeText({ text: String(thingsToDo), });
     }
   }
 };

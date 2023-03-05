@@ -1,5 +1,10 @@
 /* eslint-disable no-unused-vars */
 
+// With Manifest V3, browser.action is the new endpoint for what was
+// the Manifest V2 browser.browserAction endpoint. sinon-chrome doesn't
+// seem to know this, so we'll wallpaper over this ourselves.
+browser.action = browser.browserAction;
+
 /**
  * Runs some optional setup script to prepare sinon-chrome with
  * some values, and then loads a url in an iframe in the main document
