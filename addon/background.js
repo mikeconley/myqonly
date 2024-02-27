@@ -384,8 +384,10 @@ var MyQOnly = {
 
   async updateGitHub(settings) {
     let username = settings.username;
+    let reviewUrl = new URL("https://github.com/pulls/review-requested");
+
     if (!username) {
-      return { reviewTotal: 0, };
+      return { reviewTotal: 0, reviewUrl: reviewUrl.toString(), };
     }
     let token = settings.token;
 
@@ -396,7 +398,13 @@ var MyQOnly = {
     if (settings.ignoreOwnPrs) {
       query += ` -author:${username}`;
     }
+    if (settings.ignoreDraftPrs) {
+      query += " draft:false";
+    }
     url.searchParams.set("q", query);
+    reviewUrl.searchParams.set("q", query);
+    reviewUrl = reviewUrl.toString();
+
     let headers = {
       Accept: "application/vnd.github.v3+json",
     };
@@ -431,7 +439,7 @@ var MyQOnly = {
       .filter(Boolean);
 
     if (ignoredTeams.size === 0 && ignoredRepos.length === 0) {
-      return { reviewTotal: data.total_count, };
+      return { reviewTotal: data.total_count, reviewUrl, };
     }
     // Sadly, `-team-review-requested:` doesn't appear to work in the API, so we
     // just fetch each PR. Unfortunately, there's a rate limit of 60 requests
@@ -472,7 +480,7 @@ var MyQOnly = {
         validPrs++;
       }
     }
-    return { reviewTotal: validPrs, };
+    return { reviewTotal: validPrs, reviewUrl, };
   },
 
   /**

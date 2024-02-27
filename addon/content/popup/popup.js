@@ -119,10 +119,12 @@ const Panel = {
       }
       case "github": {
         let serviceTotal = state.data.reviewTotal || 0;
+        let reviewUrl = state.data.reviewUrl || "https://github.com/pulls/review-requested";
         document.body.setAttribute("total-github-reviews",
           serviceTotal || 0);
         document.getElementById("github-review-num").textContent =
           serviceTotal || 0;
+        document.getElementById("github-review-link").href = reviewUrl;
 
         total += serviceTotal;
         break;
