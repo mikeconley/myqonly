@@ -18,6 +18,8 @@ You can lint an individual file or directory by using `yarn lint-file <path>`.
 
 [sinon-chrome](https://www.npmjs.com/package/sinon-chrome) is used to mock out the WebExtension APIs, and some (very) basic unit tests exist within the test directory. You can run those tests with `yarn test`.
 
+You may need to set the `FIREFOX_BIN` environment variable, pointed at a local Firefox instance in order for the Karma launcher to launch it.
+
 Manual testing can be done by running `yarn test:manual`, which will open up a fresh instance of Firefox with MyQOnly installed.
 
 # Debugging
