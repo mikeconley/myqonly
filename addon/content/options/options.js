@@ -43,13 +43,40 @@ const Options = {
     document.dispatchEvent(initted);
   },
 
-  populatePhabricator(service) {
+  async _getContainerNamesAndStoreIds() {
+    if (!browser.contextualIdentities) {
+      return null;
+    }
+
+    const identities = await browser.contextualIdentities.query({});
+
+    return [{name: "Default", cookieStoreId: ""}, ...identities];
+  },
+
+  async populatePhabricator(service) {
     let phabricatorSettings =
       document.querySelector(".service-settings[data-type='phabricator']");
 
-    let container =
-      phabricatorSettings.querySelector("[data-setting='container']");
-    container.checked = !!service.settings.container;
+    const identities = await this._getContainerNamesAndStoreIds();
+    if (identities) {
+      // Use UI for containers
+      const select = phabricatorSettings.querySelector(
+        "select[data-setting='container']");
+      phabricatorSettings.classList.add("has-containers");
+      for (let identity of identities) {
+        const option = document.createElement("option");
+        option.value = identity.cookieStoreId;
+        option.textContent = identity.name;
+        if (identity.cookieStoreId == service.settings.container) {
+          option.selected = true;
+        }
+        select.appendChild(option);
+      }
+    } else {
+      let container =
+        phabricatorSettings.querySelector("input[data-setting='container']");
+      container.checked = !!service.settings.container;
+    }
 
     let inclReviewerGroups =
       phabricatorSettings.querySelector("[data-setting='inclReviewerGroups']");
@@ -104,13 +131,8 @@ const Options = {
 
   onUpdateService(event, serviceType) {
     let changedSetting = event.target.dataset.setting;
-    let newValue;
-    switch (event.target.type) {
-    case "text":
-    case "password":
-      newValue = event.target.value;
-      break;
-    case "checkbox":
+    let newValue = event.target.value;
+    if (event.target.type == "checkbox") {
       if (event.target.checked) {
         if (event.target.hasAttribute("value")) {
           newValue = event.target.value;
@@ -120,7 +142,6 @@ const Options = {
       } else {
         newValue = null;
       }
-      break;
     }
 
     // For now, there's only a single service instance per type.

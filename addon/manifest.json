@@ -40,7 +40,10 @@
   "permissions": [
     "alarms",
     "cookies",
+    "contextualIdentities",
     "storage",
+    "webRequest",
+    "webRequestBlocking",
     "https://phabricator.services.mozilla.com/*",
     "https://bugzilla.mozilla.org/*"
   ]
