@@ -398,6 +398,14 @@ var MyQOnly = {
     if (settings.ignoreOwnPrs) {
       query += ` -author:${username}`;
     }
+    let ignoredUsers = [...new Set(
+      (settings.ignoredUsers || "")
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean))];
+    if (ignoredUsers.length > 0) {
+      query += ignoredUsers.map(u => ` -author:${u}`).join(" ");
+    }
     if (settings.ignoreDraftPrs) {
       query += " draft:false";
     }
