@@ -384,7 +384,7 @@ var MyQOnly = {
 
   async updateGitHub(settings) {
     let username = settings.username;
-    let reviewUrl = new URL("https://github.com/pulls/review-requested");
+    let reviewUrl = new URL("https://github.com/search");
 
     if (!username) {
       return { reviewTotal: 0, reviewUrl: reviewUrl.toString(), };
