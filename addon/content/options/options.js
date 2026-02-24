@@ -93,6 +93,10 @@ const Options = {
       githubSettings.querySelector("[data-setting='ignoreDraftPrs']");
     ignoreDraftPrs.checked = !!service.settings.ignoreDraftPrs;
 
+    let ignoredUsers =
+      githubSettings.querySelector("[data-setting='ignoredUsers']");
+    ignoredUsers.value = service.settings.ignoredUsers || "";
+
     let ignoredTeams =
       githubSettings.querySelector("[data-setting='ignoredTeams']");
     ignoredTeams.value = service.settings.ignoredTeams || "";
