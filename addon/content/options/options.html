@@ -24,7 +24,11 @@
 
   <h3>Phabricator</h3>
   <div class="service-settings" data-type="phabricator">
-    <div class="form-rows">
+    <div id="phabricator-container-options" class="form-rows">
+      <label for="phabricator-container">Phabricator container</label>
+      <select id="phabricator-container" name="phabricator-container" data-setting="container"></select>
+    </div>
+    <div id="phabricator-no-container-options" class="form-rows">
       <input type="checkbox" id="phabricator-enabled" data-setting="container" value="0">
       <label for="phabricator-enabled">Use pre-existing Phabricator session in default container</label>
     </div>

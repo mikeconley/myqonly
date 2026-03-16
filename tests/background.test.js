@@ -90,7 +90,7 @@ describe("MyQOnly initting fresh", function() {
         id: 3,
         type: "phabricator",
         settings: {
-          container: 0,
+          container: "",
           inclReviewerGroups: true,
         },
       },],
@@ -110,7 +110,7 @@ describe("MyQOnly initting fresh", function() {
         id: 1,
         type: "phabricator",
         settings: {
-          container: 0,
+          container: "",
           inclReviewerGroups: true,
         },
       },],

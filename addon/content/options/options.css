@@ -12,7 +12,7 @@ input[type="text"] {
   width: 50ch;
 }
 
-label, .form-rows {
+label, .form-rows, select {
   margin-top: 5px;
 }
 
@@ -54,4 +54,9 @@ section:not(:first-child) {
 
 #debug:not(:hover) {
   opacity: 0;
+}
+
+div.service-settings:not(.has-containers) > #phabricator-container-options,
+div.service-settings.has-containers > #phabricator-no-container-options {
+  display: none;
 }

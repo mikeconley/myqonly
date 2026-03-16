@@ -17,6 +17,11 @@ var MyQOnly = {
     // Add a listener for the popup if it asks for review totals.
     browser.runtime.onMessage.addListener(this.onMessage.bind(this));
 
+    browser.webRequest.onBeforeSendHeaders.addListener(
+      this.onPhabSendHeaders.bind(this),
+      {urls: [PHABRICATOR_ROOT + "/*"]},
+      ["blocking", "requestHeaders"]);
+
     console.debug("Looking for feature rev");
     let { featureRev, } = await browser.storage.local.get("featureRev");
     if (!featureRev) {
@@ -77,7 +82,7 @@ var MyQOnly = {
     let phabService = this._getService("phabricator");
     if (!phabService) {
       await this._addService("phabricator", {
-        container: 0,
+        container: "",
         inclReviewerGroups: true,
       });
     } else if (phabService.settings.inclReviewerGroups === undefined) {
@@ -234,7 +239,7 @@ var MyQOnly = {
       };
     }
 
-    if (await this._hasPhabricatorCookie()) {
+    if (await this._getPhabricatorCookies()) {
       console.log("Phabricator session found! Attempting to get dashboard " +
                   "page.");
 
@@ -258,7 +263,7 @@ var MyQOnly = {
   },
 
   async _hasPhabricatorSession({ testingURL = null, } = {}) {
-    if (await this._hasPhabricatorCookie()) {
+    if (await this._getPhabricatorCookies()) {
       let { ok, } = await this._phabricatorDocumentBody({ testingURL, });
       return ok;
     }
@@ -266,22 +271,36 @@ var MyQOnly = {
     return false;
   },
 
-  async _hasPhabricatorCookie() {
-    let phabCookie = await browser.cookies.get({
+  async _getPhabricatorCookies() {
+    const cookieGetOpts = {
       url: PHABRICATOR_ROOT,
-      name: "phsid",
-    });
-    return !!phabCookie;
+    };
+
+    const phabService = (this.services || []).find(
+      s => s.type == "phabricator");
+    if (phabService) {
+      if (phabService.settings.container) {
+        cookieGetOpts.storeId = phabService.settings.container;
+      }
+    }
+
+    let phabCookies = await browser.cookies.getAll(cookieGetOpts);
+    let cookieStrings = (phabCookies || []).filter(
+      c => c.name == "phsid" || c.name == "phusr").map(
+        c => `${c.name}=${c.value}`);
+
+    return cookieStrings.join("; ");
   },
 
   async _phabricatorDocumentBody({ testingURL = null, } = {}) {
     let url = testingURL ||
               [PHABRICATOR_ROOT, PHABRICATOR_DASHBOARD,].join("/");
-
+    let cookies = await this._getPhabricatorCookies();
     let req = new Request(url, {
       method: "GET",
       headers: {
         "Content-Type": "text/html",
+        "X-MyQOnly-Phab-Cookies": cookies,
       },
       redirect: "follow",
     });
@@ -290,6 +309,16 @@ var MyQOnly = {
     let ok = resp.ok;
     let pageBody = await resp.text();
     return { ok, pageBody, };
+  },
+
+  onPhabSendHeaders(e) {
+    const indexOfSpecialHeader = e.requestHeaders.map(h => h.name).indexOf("X-MyQOnly-Phab-Cookies");
+    if (indexOfSpecialHeader >= 0) {
+      let [phabCookie] = e.requestHeaders.splice(indexOfSpecialHeader, 1);
+      let cookieHeader = e.requestHeaders.find(h => h.name == "Cookie");
+      cookieHeader.value = phabCookie.value;
+    }
+    return {requestHeaders: e.requestHeaders};
   },
 
   async phabricatorReviewRequests({ testingURL = null, } = {}) {
