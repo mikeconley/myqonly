@@ -391,6 +391,11 @@ var MyQOnly = {
     }
     let token = settings.token;
 
+    let ignoredRepos = (settings.ignoredRepos || "")
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean);
+
     // We don't seem to need authentication for this request, for whatever
     // reason.
     let url = new URL(GITHUB_API);
@@ -416,6 +421,9 @@ var MyQOnly = {
     }
     if (settings.ignoreDraftPrs) {
       query += " draft:false";
+    }
+    for (let repo of ignoredRepos) {
+      query += ` -repo:${repo}`;
     }
     url.searchParams.set("q", query);
     reviewUrl.searchParams.set("q", query);
@@ -443,11 +451,6 @@ var MyQOnly = {
     }
     const data = await response.json();
 
-    let ignoredRepos = (settings.ignoredRepos || "")
-      .split(",")
-      .map(s => s.trim())
-      .filter(Boolean);
-
     if (ignoredRepos.length === 0) {
       return { reviewTotal: data.total_count, reviewUrl, };
     }
@@ -457,7 +460,7 @@ var MyQOnly = {
     let validPrs = data.total_count - data.items.length;
     for (let pr of data.items) {
       let prUrl = pr.pull_request.url;
-      if (ignoredRepos.every(repo => !prUrl.includes(repo))) {
+      if (ignoredRepos.every(repo => !pr.repository_url.endsWith(`/${repo}`))) {
         validPrs++;
       }
     }
