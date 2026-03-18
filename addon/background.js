@@ -7,8 +7,12 @@ if (typeof browser == "undefined") {
 
 var MyQOnly = {
   /**
-   * Main entry. After set-up, attempts to update the badge right
-   * away.
+   * Initializes the MyQOnly extension by setting up listeners, loading stored
+   * settings, and performing the initial badge update.
+   *
+   * @param {Object} options - Initialization options
+   * @param {number} options.alertRev - Feature alert revision number to check
+   * @returns {Promise<void>}
    */
   async init({ alertRev = FEATURE_ALERT_REV } = {}) {
     // Add a listener so that if our options change, we react to it.
@@ -53,6 +57,9 @@ var MyQOnly = {
     await this.updateBadge();
   },
 
+  /**
+   * Cleans up the extension state. Used primarily for testing.
+   */
   uninit() {
     delete this.states;
     delete this.services;
@@ -67,6 +74,14 @@ var MyQOnly = {
    * be done by the user in the Options interface.
    */
   _nextServiceID: 0,
+
+  /**
+   * Initializes service configurations by creating state entries for existing
+   * services, ensuring Phabricator service exists with defaults, and checking
+   * for GitHub migration needs.
+   *
+   * @returns {Promise<void>}
+   */
   async _initServices() {
     let maxServiceID = this._nextServiceID;
     for (let service of this.services) {
@@ -97,7 +112,10 @@ var MyQOnly = {
   },
 
   /**
-   * Returns a service if it exists, null otherwise.
+   * Finds and returns a service by its type.
+   *
+   * @param {string} serviceType - Service type (e.g., "phabricator", "bugzilla", "github")
+   * @returns {Object|null} Service object if found, null otherwise
    */
   _getService(serviceType) {
     for (let service of this.services) {
@@ -109,8 +127,12 @@ var MyQOnly = {
   },
 
   /**
-   * Puts a service of serviceType into the services list with
-   * the provided settings, and saves the services to storage.
+   * Creates and adds a new service to the services list, then persists
+   * it to storage. Assigns a unique ID to the service.
+   *
+   * @param {string} serviceType - Service type (e.g., "phabricator", "bugzilla", "github")
+   * @param {Object} settings - Service-specific settings object
+   * @returns {Promise<void>}
    */
   async _addService(serviceType, settings) {
     let newService = {
@@ -127,6 +149,10 @@ var MyQOnly = {
     this._ensureStatesForServices();
   },
 
+  /**
+   * Ensures that all services in the services list have corresponding state
+   * entries in the states Map. Creates empty state objects for any missing services.
+   */
   _ensureStatesForServices() {
     for (let service of this.services) {
       if (!this.states.has(service.id)) {
@@ -138,6 +164,14 @@ var MyQOnly = {
     }
   },
 
+  /**
+   * Checks if a GitHub service has ignored repos in the old format (without
+   * owner prefix) and flags them for migration if needed. Sets needsGitHubMigration
+   * flag in storage if migration is required.
+   *
+   * @param {Object} service - GitHub service object
+   * @returns {Promise<void>}
+   */
   async _checkGitHubMigration(service) {
     let { needsGitHubMigration } = await browser.storage.local.get(
       "needsGitHubMigration"
@@ -164,7 +198,12 @@ var MyQOnly = {
   },
 
   /**
-   * Handles updates to the user options.
+   * Handles updates to browser.storage. Reacts to changes in update interval
+   * and service configurations by resetting alarms and updating the badge.
+   *
+   * @param {Object} changes - Storage changes object from browser.storage.onChanged
+   * @param {string} area - Storage area name (e.g., "local", "sync")
+   * @returns {Promise<void>}
    */
   async onStorageChanged(changes, area) {
     if (area == "local") {
@@ -189,8 +228,10 @@ var MyQOnly = {
   },
 
   /**
-   * Wipes out any pre-existing alarm and sets up a new one with
-   * the current update interval.
+   * Clears any existing alarm and creates a new one using the current
+   * update interval.
+   *
+   * @returns {Promise<void>}
    */
   async resetAlarm() {
     let cleared = await browser.alarms.clear(ALARM_NAME);
@@ -207,7 +248,14 @@ var MyQOnly = {
   },
 
   /**
-   * Handles messages from the popup.
+   * Handles runtime messages from the popup, options page, and debug page.
+   * Supports: get-states, refresh, get-feature-rev, opened-release-notes,
+   * check-for-phabricator-session, get-phabricator-html.
+   *
+   * @param {Object} message - Message object with a 'name' property
+   * @param {Object} sender - Sender information from browser.runtime
+   * @param {Function} sendReply - Callback to send a response
+   * @returns {Promise|undefined} Promise for async responses, undefined otherwise
    */
   onMessage(message, sender, sendReply) {
     switch (message.name) {
@@ -250,7 +298,10 @@ var MyQOnly = {
   },
 
   /**
-   * The alarm went off! Let's do the badge updating stuff now.
+   * Handles browser alarm events. Triggers a badge update when the periodic
+   * alarm fires.
+   *
+   * @param {Object} alarmInfo - Alarm information from browser.alarms.onAlarm
    */
   onAlarm(alarmInfo) {
     if (alarmInfo.name == ALARM_NAME) {
@@ -259,6 +310,14 @@ var MyQOnly = {
     }
   },
 
+  /**
+   * Fetches Phabricator review counts for the logged-in user.
+   *
+   * @param {Object} settings - Phabricator service settings
+   * @param {number} [settings.container] - Firefox container ID (undefined = disabled)
+   * @param {boolean} [settings.inclReviewerGroups] - Include group review counts
+   * @returns {Promise<Object>} Object with reviewTotal, userReviewTotal, groupReviewTotal
+   */
   async updatePhabricator(settings) {
     if (settings.container === undefined) {
       // Phabricator is disabled.
@@ -293,6 +352,14 @@ var MyQOnly = {
     }
   },
 
+  /**
+   * Checks if there is an active Phabricator session by verifying the cookie
+   * exists and the dashboard page is accessible.
+   *
+   * @param {Object} options - Options object
+   * @param {string|null} [options.testingURL] - Optional URL for testing
+   * @returns {Promise<boolean>} True if session is active, false otherwise
+   */
   async _hasPhabricatorSession({ testingURL = null } = {}) {
     if (await this._hasPhabricatorCookie()) {
       let { ok } = await this._phabricatorDocumentBody({ testingURL });
@@ -302,6 +369,11 @@ var MyQOnly = {
     return false;
   },
 
+  /**
+   * Checks if the Phabricator session cookie (phsid) exists.
+   *
+   * @returns {Promise<boolean>} True if cookie exists, false otherwise
+   */
   async _hasPhabricatorCookie() {
     let phabCookie = await browser.cookies.get({
       url: PHABRICATOR_ROOT,
@@ -310,6 +382,13 @@ var MyQOnly = {
     return !!phabCookie;
   },
 
+  /**
+   * Fetches the Phabricator dashboard page HTML.
+   *
+   * @param {Object} options - Options object
+   * @param {string|null} [options.testingURL] - Optional URL for testing
+   * @returns {Promise<Object>} Object with ok (boolean) and pageBody (string)
+   */
   async _phabricatorDocumentBody({ testingURL = null } = {}) {
     let url = testingURL || [PHABRICATOR_ROOT, PHABRICATOR_DASHBOARD].join("/");
 
@@ -327,6 +406,15 @@ var MyQOnly = {
     return { ok, pageBody };
   },
 
+  /**
+   * Parses the Phabricator dashboard HTML to extract review counts.
+   * Distinguishes between reviews directly assigned to the user vs. assigned
+   * to groups the user belongs to.
+   *
+   * @param {Object} options - Options object
+   * @param {string} [options.testingURL] - Optional URL for testing
+   * @returns {Promise<Object>} Object with ok, reviewTotal, userReviewTotal, groupReviewTotal
+   */
   async phabricatorReviewRequests({ testingURL = null } = {}) {
     let { ok, pageBody } = await this._phabricatorDocumentBody({ testingURL });
     let parser = new DOMParser();
@@ -367,6 +455,14 @@ var MyQOnly = {
     return { ok, reviewTotal, userReviewTotal, groupReviewTotal };
   },
 
+  /**
+   * Fetches Bugzilla review and needinfo counts using the Bugzilla API.
+   *
+   * @param {Object} settings - Bugzilla service settings
+   * @param {string} settings.apiKey - Bugzilla API key
+   * @param {boolean} [settings.needinfos] - Whether to include needinfo counts
+   * @returns {Promise<Object>} Object with reviewTotal and needinfoTotal
+   */
   async updateBugzilla(settings) {
     let apiKey = settings.apiKey;
     if (!apiKey) {
@@ -416,6 +512,20 @@ var MyQOnly = {
     return { reviewTotal, needinfoTotal };
   },
 
+  /**
+   * Fetches GitHub pull request review counts using the GitHub Search API.
+   * Filters by various criteria including ignored repos, users, teams, and PR types.
+   *
+   * @param {Object} settings - GitHub service settings
+   * @param {string} settings.username - GitHub username
+   * @param {string} [settings.token] - Optional GitHub personal access token
+   * @param {string} [settings.ignoredRepos] - Comma-separated list of owner/repo to ignore
+   * @param {string} [settings.ignoredUsers] - Comma-separated list of users to ignore
+   * @param {string} [settings.ignoredTeams] - Comma-separated list of teams to ignore
+   * @param {boolean} [settings.ignoreOwnPrs] - Ignore PRs authored by the user
+   * @param {boolean} [settings.ignoreDraftPrs] - Ignore draft PRs
+   * @returns {Promise<Object>} Object with reviewTotal and reviewUrl
+   */
   async updateGitHub(settings) {
     let username = settings.username;
     let reviewUrl = new URL("https://github.com/pulls/review-requested");
@@ -513,7 +623,10 @@ var MyQOnly = {
   },
 
   /**
-   * Is the current time within the user's working hours (if enabled)?
+   * Checks if the current time is within the user-configured working hours.
+   * If working hours are disabled, always returns true.
+   *
+   * @returns {Promise<boolean>} True if within working hours or if feature is disabled
    */
   async isWorkingHours() {
     console.log("Checking working hours.");
@@ -589,6 +702,13 @@ var MyQOnly = {
     return true;
   },
 
+  /**
+   * Calculates the total badge count across all services. Sums up review
+   * counts and, for Bugzilla services, includes needinfo counts.
+   *
+   * @param {Map} states - Map of service states
+   * @returns {number} Total count of reviews and needinfos
+   */
   _calculateBadgeTotal(states) {
     let total = 0;
     for (let [, state] of states) {
@@ -603,8 +723,11 @@ var MyQOnly = {
   },
 
   /**
-   * Contacts Phabricator, Bugzilla, and Github (if the API keys for them
-   * exist), and attempts to get a review count for each.
+   * Updates the browser action badge by polling all configured services
+   * (Phabricator, Bugzilla, GitHub) for review counts. Respects working hours
+   * settings and shows feature alerts when no reviews are pending.
+   *
+   * @returns {Promise<void>}
    */
   async updateBadge() {
     for (let service of this.services) {
