@@ -1,9 +1,14 @@
 describe("Phabricator", function () {
   const TEST_URL_PREFIX = "base/tests/services/phabricator";
+  let phabService;
+
+  beforeEach(function () {
+    phabService = new PhabricatorService();
+  });
 
   it("should be able to load the simple case", async function () {
     let testingURL = [TEST_URL_PREFIX, "one-ready.html"].join("/");
-    let { ok, reviewTotal } = await MyQOnly.phabricatorReviewRequests({
+    let { ok, reviewTotal } = await phabService._fetchReviewRequests({
       testingURL
     });
     assert.ok(ok);
@@ -12,7 +17,7 @@ describe("Phabricator", function () {
 
   it("should be able to load the empty case", async function () {
     let testingURL = [TEST_URL_PREFIX, "empty.html"].join("/");
-    let { ok, reviewTotal } = await MyQOnly.phabricatorReviewRequests({
+    let { ok, reviewTotal } = await phabService._fetchReviewRequests({
       testingURL
     });
     assert.ok(ok);

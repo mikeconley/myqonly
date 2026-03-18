@@ -15,6 +15,9 @@ var MyQOnly = {
    * @returns {Promise<void>}
    */
   async init({ alertRev = FEATURE_ALERT_REV } = {}) {
+    // Initialize service registry
+    this.serviceRegistry = new ServiceRegistry();
+
     // Add a listener so that if our options change, we react to it.
     browser.storage.onChanged.addListener(this.onStorageChanged.bind(this));
     // Hook up our timer
@@ -286,13 +289,19 @@ var MyQOnly = {
       }
 
       case "check-for-phabricator-session": {
-        return this._hasPhabricatorSession();
+        let phabService = this.serviceRegistry.getService(
+          SERVICE_TYPES.PHABRICATOR
+        );
+        return phabService.hasSession();
       }
 
       // Debug stuff
       case "get-phabricator-html": {
         console.debug("Getting Phabricator dashboard body");
-        return this._phabricatorDocumentBody();
+        let phabService = this.serviceRegistry.getService(
+          SERVICE_TYPES.PHABRICATOR
+        );
+        return phabService.getDocumentBodyForDebug();
       }
     }
   },
@@ -308,318 +317,6 @@ var MyQOnly = {
       console.log("Updating the badge now...");
       this.updateBadge();
     }
-  },
-
-  /**
-   * Fetches Phabricator review counts for the logged-in user.
-   *
-   * @param {Object} settings - Phabricator service settings
-   * @param {number} [settings.container] - Firefox container ID (undefined = disabled)
-   * @param {boolean} [settings.inclReviewerGroups] - Include group review counts
-   * @returns {Promise<Object>} Object with reviewTotal, userReviewTotal, groupReviewTotal
-   */
-  async updatePhabricator(settings) {
-    if (settings.container === undefined) {
-      // Phabricator is disabled.
-      console.log("Phabricator service is disabled.");
-      return {
-        disabled: true,
-        reviewTotal: 0,
-        userReviewTotal: 0,
-        groupReviewTotal: 0
-      };
-    }
-
-    if (await this._hasPhabricatorCookie()) {
-      console.log(
-        "Phabricator session found! Attempting to get dashboard " + "page."
-      );
-
-      let { ok, reviewTotal, userReviewTotal, groupReviewTotal } =
-        await this.phabricatorReviewRequests();
-      return { connected: ok, reviewTotal, userReviewTotal, groupReviewTotal };
-    } else {
-      console.log(
-        "No Phabricator session found. I won't try to fetch " +
-          "anything for it."
-      );
-      return {
-        connected: false,
-        reviewTotal: 0,
-        userReviewTotal: 0,
-        groupReviewTotal: 0
-      };
-    }
-  },
-
-  /**
-   * Checks if there is an active Phabricator session by verifying the cookie
-   * exists and the dashboard page is accessible.
-   *
-   * @param {Object} options - Options object
-   * @param {string|null} [options.testingURL] - Optional URL for testing
-   * @returns {Promise<boolean>} True if session is active, false otherwise
-   */
-  async _hasPhabricatorSession({ testingURL = null } = {}) {
-    if (await this._hasPhabricatorCookie()) {
-      let { ok } = await this._phabricatorDocumentBody({ testingURL });
-      return ok;
-    }
-
-    return false;
-  },
-
-  /**
-   * Checks if the Phabricator session cookie (phsid) exists.
-   *
-   * @returns {Promise<boolean>} True if cookie exists, false otherwise
-   */
-  async _hasPhabricatorCookie() {
-    let phabCookie = await browser.cookies.get({
-      url: PHABRICATOR_ROOT,
-      name: "phsid"
-    });
-    return !!phabCookie;
-  },
-
-  /**
-   * Fetches the Phabricator dashboard page HTML.
-   *
-   * @param {Object} options - Options object
-   * @param {string|null} [options.testingURL] - Optional URL for testing
-   * @returns {Promise<Object>} Object with ok (boolean) and pageBody (string)
-   */
-  async _phabricatorDocumentBody({ testingURL = null } = {}) {
-    let url = testingURL || [PHABRICATOR_ROOT, PHABRICATOR_DASHBOARD].join("/");
-
-    let req = new Request(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "text/html"
-      },
-      redirect: "follow"
-    });
-
-    let resp = await window.fetch(req);
-    let ok = resp.ok;
-    let pageBody = await resp.text();
-    return { ok, pageBody };
-  },
-
-  /**
-   * Parses the Phabricator dashboard HTML to extract review counts.
-   * Distinguishes between reviews directly assigned to the user vs. assigned
-   * to groups the user belongs to.
-   *
-   * @param {Object} options - Options object
-   * @param {string} [options.testingURL] - Optional URL for testing
-   * @returns {Promise<Object>} Object with ok, reviewTotal, userReviewTotal, groupReviewTotal
-   */
-  async phabricatorReviewRequests({ testingURL = null } = {}) {
-    let { ok, pageBody } = await this._phabricatorDocumentBody({ testingURL });
-    let parser = new DOMParser();
-    let doc = parser.parseFromString(pageBody, "text/html");
-
-    let userMenu = doc.querySelector(
-      "a.phabricator-core-user-menu[href^='/p/']"
-    );
-    let userId = userMenu.href;
-
-    let headers = doc.querySelectorAll(".phui-header-header");
-    let userReviewTotal = 0;
-    let groupReviewTotal = 0;
-
-    for (let header of headers) {
-      if (PHABRICATOR_REVIEW_HEADERS.includes(header.textContent)) {
-        let box = header.closest(".phui-box");
-        let rows = box.querySelectorAll(".phui-oi-table-row");
-        let localUserReviewTotal = 0;
-        for (let row of rows) {
-          let reviewers = row.querySelectorAll(".phui-link-person");
-          for (let reviewer of reviewers) {
-            let reviewerId = reviewer.href;
-            if (reviewerId == userId) {
-              localUserReviewTotal++;
-              break;
-            }
-          }
-        }
-
-        userReviewTotal += localUserReviewTotal;
-        groupReviewTotal += rows.length - localUserReviewTotal;
-      }
-    }
-
-    let reviewTotal = userReviewTotal;
-
-    return { ok, reviewTotal, userReviewTotal, groupReviewTotal };
-  },
-
-  /**
-   * Fetches Bugzilla review and needinfo counts using the Bugzilla API.
-   *
-   * @param {Object} settings - Bugzilla service settings
-   * @param {string} settings.apiKey - Bugzilla API key
-   * @param {boolean} [settings.needinfos] - Whether to include needinfo counts
-   * @returns {Promise<Object>} Object with reviewTotal and needinfoTotal
-   */
-  async updateBugzilla(settings) {
-    let apiKey = settings.apiKey;
-    if (!apiKey) {
-      return { reviewTotal: 0, needinfoTotal: 0 };
-    }
-
-    // I'm not sure how much of this is necessary - I just looked at what
-    // the Bugzilla My Dashboard thing does in the network inspector, and
-    // I'm more or less mimicking that here.
-    let body = JSON.stringify({
-      id: 4,
-      method: "MyDashboard.run_flag_query",
-      params: {
-        Bugzilla_api_key: apiKey,
-        type: "requestee"
-      },
-      version: "1.1"
-    });
-
-    let req = new Request(BUGZILLA_API, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body,
-      credentials: "omit",
-      redirect: "follow",
-      referrer: "client"
-    });
-
-    let resp = await window.fetch(req);
-    let bugzillaData = await resp.json();
-    if (bugzillaData.error) {
-      throw new Error(`Bugzilla request failed: ${bugzillaData.error.message}`);
-    }
-    let reviewTotal = bugzillaData.result.result.requestee.filter((f) => {
-      return f.type == "review";
-    }).length;
-
-    let needinfoTotal = 0;
-    if (settings.needinfos) {
-      needinfoTotal = bugzillaData.result.result.requestee.filter((f) => {
-        return f.type == "needinfo";
-      }).length;
-    }
-
-    return { reviewTotal, needinfoTotal };
-  },
-
-  /**
-   * Fetches GitHub pull request review counts using the GitHub Search API.
-   * Filters by various criteria including ignored repos, users, teams, and PR types.
-   *
-   * @param {Object} settings - GitHub service settings
-   * @param {string} settings.username - GitHub username
-   * @param {string} [settings.token] - Optional GitHub personal access token
-   * @param {string} [settings.ignoredRepos] - Comma-separated list of owner/repo to ignore
-   * @param {string} [settings.ignoredUsers] - Comma-separated list of users to ignore
-   * @param {string} [settings.ignoredTeams] - Comma-separated list of teams to ignore
-   * @param {boolean} [settings.ignoreOwnPrs] - Ignore PRs authored by the user
-   * @param {boolean} [settings.ignoreDraftPrs] - Ignore draft PRs
-   * @returns {Promise<Object>} Object with reviewTotal and reviewUrl
-   */
-  async updateGitHub(settings) {
-    let username = settings.username;
-    let reviewUrl = new URL("https://github.com/pulls/review-requested");
-
-    if (!username) {
-      return { reviewTotal: 0, reviewUrl: reviewUrl.toString() };
-    }
-    let token = settings.token;
-
-    let ignoredRepos = (settings.ignoredRepos || "")
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-
-    // We don't seem to need authentication for this request, for whatever
-    // reason.
-    let url = new URL(GITHUB_API);
-    let query = `review-requested:${username} type:pr is:open archived:false`;
-    if (settings.ignoreOwnPrs) {
-      query += ` -author:${username}`;
-    }
-    let ignoredUsers = [
-      ...new Set(
-        (settings.ignoredUsers || "")
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-      )
-    ];
-    if (ignoredUsers.length > 0) {
-      query += ignoredUsers.map((u) => ` -author:${u}`).join(" ");
-    }
-    let ignoredTeams = [
-      ...new Set(
-        (settings.ignoredTeams || "")
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-      )
-    ];
-    if (ignoredTeams.length > 0) {
-      query += ignoredTeams
-        .map((u) => ` -team-review-requested:${u}`)
-        .join(" ");
-    }
-    if (settings.ignoreDraftPrs) {
-      query += " draft:false";
-    }
-    for (let repo of ignoredRepos) {
-      query += ` -repo:${repo}`;
-    }
-    url.searchParams.set("q", query);
-    reviewUrl.searchParams.set("q", query);
-    reviewUrl = reviewUrl.toString();
-
-    let headers = {
-      Accept: "application/vnd.github.v3+json"
-    };
-    if (token) {
-      headers["Authorization"] = `token ${token}`;
-    }
-    const apiRequestOptions = {
-      method: "GET",
-      headers: headers,
-      // Probably doesn't matter.
-      credentials: "omit"
-    };
-    // Note: we might need to paginate if we care about fetching more than the
-    // first 100.
-    let response = await window.fetch(url, apiRequestOptions);
-    if (!response.ok) {
-      console.error("Failed to request from github", response);
-      throw new Error(
-        `Github request failed (${response.status}): ` +
-          `${await response.text()}`
-      );
-    }
-    const data = await response.json();
-
-    if (ignoredRepos.length === 0) {
-      return { reviewTotal: data.total_count, reviewUrl };
-    }
-
-    // `items` may be a partial list. Ideally we'd paginate, but for now we just
-    // assume everything in total_count that isn't part of items is important.
-    let validPrs = data.total_count - data.items.length;
-    for (let pr of data.items) {
-      if (
-        ignoredRepos.every((repo) => !pr.repository_url.endsWith(`/${repo}`))
-      ) {
-        validPrs++;
-      }
-    }
-    return { reviewTotal: validPrs, reviewUrl };
   },
 
   /**
@@ -735,34 +432,29 @@ var MyQOnly = {
       let data = state.data;
 
       try {
-        switch (service.type) {
-          case "phabricator": {
-            data = await this.updatePhabricator(service.settings);
-            console.log(
-              `Found ${data.reviewTotal} user reviews, ` +
-                `${data.groupReviewTotal} group reviews ` +
-                "to do in Phabricator."
-            );
-            if (service.settings.inclReviewerGroups) {
-              data.reviewTotal += data.groupReviewTotal;
-            }
-            break;
+        let serviceHandler = this.serviceRegistry.getService(service.type);
+        if (!serviceHandler) {
+          console.error(`No service handler found for type: ${service.type}`);
+          continue;
+        }
+
+        data = await serviceHandler.update(service.settings);
+
+        // Log service-specific results
+        if (service.type === SERVICE_TYPES.PHABRICATOR) {
+          console.log(
+            `Found ${data.reviewTotal} user reviews, ` +
+              `${data.groupReviewTotal} group reviews ` +
+              "to do in Phabricator."
+          );
+          if (service.settings.inclReviewerGroups) {
+            data.reviewTotal += data.groupReviewTotal;
           }
-          case "bugzilla": {
-            data = await this.updateBugzilla(service.settings);
-            console.log(
-              `Found ${data.reviewTotal} Bugzilla reviews ` + "to do"
-            );
-            console.log(
-              `Found ${data.needinfoTotal} Bugzilla needinfos ` + "to do"
-            );
-            break;
-          }
-          case "github": {
-            data = await this.updateGitHub(service.settings);
-            console.log(`Found ${data.reviewTotal} GitHub reviews to do`);
-            break;
-          }
+        } else if (service.type === SERVICE_TYPES.BUGZILLA) {
+          console.log(`Found ${data.reviewTotal} Bugzilla reviews to do`);
+          console.log(`Found ${data.needinfoTotal} Bugzilla needinfos to do`);
+        } else if (service.type === SERVICE_TYPES.GITHUB) {
+          console.log(`Found ${data.reviewTotal} GitHub reviews to do`);
         }
       } catch (e) {
         console.error(`Error when updating ${service.type}: `, e.toString());

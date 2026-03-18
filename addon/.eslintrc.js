@@ -11,6 +11,7 @@ module.exports = {
     PHABRICATOR_COOKIE_NAME: true,
     PHABRICATOR_SELECTORS: true,
     BUGZILLA_API: true,
+    BUGZILLA_DASHBOARD: true,
     BUGZILLA_METHOD: true,
     BUGZILLA_REQUEST_ID: true,
     BUGZILLA_VERSION: true,
@@ -26,6 +27,11 @@ module.exports = {
     FEATURE_ALERT_REV: true,
     FEATURE_ALERT_BG_COLOR: true,
     FEATURE_ALERT_STRING: true,
+    BaseService: true,
+    PhabricatorService: true,
+    BugzillaService: true,
+    GitHubService: true,
+    ServiceRegistry: true,
     browser: true,
     chrome: true
   }

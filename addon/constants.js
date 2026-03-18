@@ -13,6 +13,8 @@ const PHABRICATOR_SELECTORS = {
 };
 
 const BUGZILLA_API = "https://bugzilla.mozilla.org/jsonrpc.cgi";
+const BUGZILLA_DASHBOARD =
+  "https://bugzilla.mozilla.org/page.cgi?id=mydashboard.html";
 const BUGZILLA_METHOD = "MyDashboard.run_flag_query";
 const BUGZILLA_REQUEST_ID = 4;
 const BUGZILLA_VERSION = "1.1";

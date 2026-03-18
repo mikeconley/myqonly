@@ -14,6 +14,11 @@ module.exports = {
     browser: true,
     chrome: true,
     MyQOnly: true,
-    sinon: true
+    sinon: true,
+    BaseService: true,
+    PhabricatorService: true,
+    BugzillaService: true,
+    GitHubService: true,
+    ServiceRegistry: true
   }
 };

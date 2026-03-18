@@ -16,7 +16,13 @@ module.exports = function (config) {
       "node_modules/sinon-chrome/bundle/sinon-chrome-webextensions.min.js",
 
       // Source to test
-      "addon/*.js",
+      "addon/constants.js",
+      "addon/services/base-service.js",
+      "addon/services/phabricator-service.js",
+      "addon/services/bugzilla-service.js",
+      "addon/services/github-service.js",
+      "addon/services/service-registry.js",
+      "addon/background.js",
       { pattern: "addon/content/*/*.*", served: true, included: false },
 
       // Tests
