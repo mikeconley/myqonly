@@ -1,225 +1,392 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <link rel="stylesheet" type="text/css" href="release-notes.css">
-  <link rel="icon" type="image/svg" href="/icons/myqonly-dark.svg" />
-  <title>MyQOnly Release Notes</title>
-</head>
-<body>
-  <h1>MyQOnly Release Notes</h1>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="release-notes.css" />
+    <link rel="icon" type="image/svg" href="/icons/myqonly-dark.svg" />
+    <title>MyQOnly Release Notes</title>
+  </head>
+  <body>
+    <h1>MyQOnly Release Notes</h1>
 
-  <section data-version="0.11.0">
-    <h2>0.11.0</h2>
-    <h3>New features</h3>
-    <ul>
-      <li>There is now an option to ignore specific users from GitHub. Thanks to <a href="https://github.com/shtrom/">Olivier Mehani</a> for the patch!</li>
-    </ul>
-    <h3>Known issues</h3>
-    <ul>
-      <li><a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a> <a href="https://github.com/mikeconley/myqonly/issues/18">support</a> for Containers</li>
-    </ul>
-  </section>
+    <section data-version="0.11.0">
+      <h2>0.11.0</h2>
+      <h3>New features</h3>
+      <ul>
+        <li>
+          There is now an option to ignore specific users from GitHub. Thanks to
+          <a href="https://github.com/shtrom/">Olivier Mehani</a> for the patch!
+        </li>
+      </ul>
+      <h3>Known issues</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a>
+          <a href="https://github.com/mikeconley/myqonly/issues/18">support</a>
+          for Containers
+        </li>
+      </ul>
+    </section>
 
-  <section data-version="0.10.0">
-    <h2>0.10.0</h2>
-    <h3>New features</h3>
-    <ul>
-      <li>There is now an option to ignore draft pull requests from GitHub. Thanks to <a href="https://github.com/ahal/">Andrew Halberstadt</a> for the patch!</li>
-    </ul>
-    <h3>Known issues</h3>
-    <ul>
-      <li><a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a> <a href="https://github.com/mikeconley/myqonly/issues/18">support</a> for Containers</li>
-    </ul>
-  </section>
+    <section data-version="0.10.0">
+      <h2>0.10.0</h2>
+      <h3>New features</h3>
+      <ul>
+        <li>
+          There is now an option to ignore draft pull requests from GitHub.
+          Thanks to
+          <a href="https://github.com/ahal/">Andrew Halberstadt</a> for the
+          patch!
+        </li>
+      </ul>
+      <h3>Known issues</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a>
+          <a href="https://github.com/mikeconley/myqonly/issues/18">support</a>
+          for Containers
+        </li>
+      </ul>
+    </section>
 
-  <section data-version="0.9.1">
-    <h2>0.9.1</h2>
-    <h3>Bug fixes</h3>
-    <ul>
-      <li>Fixed an issue where setting an empty string as the list of ignored GitHub team repositories would cause all GitHub repositories to be hidden. Thanks to <a href="https://github.com/ahal/">Andrew Halberstadt</a> for the patch!</li>
-    </ul>
-    <h3>Known issues</h3>
-    <ul>
-      <li><a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a> <a href="https://github.com/mikeconley/myqonly/issues/18">support</a> for Containers</li>
-    </ul>
-  </section>
+    <section data-version="0.9.1">
+      <h2>0.9.1</h2>
+      <h3>Bug fixes</h3>
+      <ul>
+        <li>
+          Fixed an issue where setting an empty string as the list of ignored
+          GitHub team repositories would cause all GitHub repositories to be
+          hidden. Thanks to
+          <a href="https://github.com/ahal/">Andrew Halberstadt</a> for the
+          patch!
+        </li>
+      </ul>
+      <h3>Known issues</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a>
+          <a href="https://github.com/mikeconley/myqonly/issues/18">support</a>
+          for Containers
+        </li>
+      </ul>
+    </section>
 
-  <section data-version="0.9.0">
-    <h2>0.9.0</h2>
-    <h3>New features</h3>
-    <ul>
-        <li>It's now possible to ignore a GitHub team repository by using just a substring of the URL. This means <code>mozilla-mobile/fenix</code> would skip reviews for that repo, and <code>mozilla-mobile</code> would skip reviews for that entire org. Thanks to <a href="https://github.com/ahal/">Andrew Halberstadt</a> for the patch!</li>
-        <li>GitHub API tokens can now be set in the Options page for private repositories! Thanks to <a href="https://github.com/Callek/">Justin Wood</a> for the patch!</li>
-    </ul>
-    <h3>Changes</h3>
-    <ul>
-      <li>The panel now links to <a href="https://phabricator.services.mozilla.com/differential">https://phabricator.services.mozilla.com/differential</a> for Phabricator reviews. This is more direct and less noisy than the full-blown Phabricator dashboard.</li>
-    </ul>
-    <h3>Bug fixes</h3>
-    <ul>
-      <li>Fixed an issue where the <a href="https://github.com/mikeconley/myqonly/issues/37">"Include reviewer groups in badge count" setting</a> wouldn't persist between browser restarts. Thanks to <a href="https://github.com/dblohm7/">Aaron Klotz</a> for the patch!</li>
-      <li>Fixed an issue where MyQOnly wouldn't count GitHub pull requests on ignored groups even if the user was requested directly. Thanks to <a href="https://github.com/ahal/">Andrew Halberstadt</a> for the patch!</li>
-    </ul>
-    <h3>Known issues</h3>
-    <ul>
-      <li><a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a> <a href="https://github.com/mikeconley/myqonly/issues/18">support</a> for Containers</li>
-    </ul>
-  </section>
+    <section data-version="0.9.0">
+      <h2>0.9.0</h2>
+      <h3>New features</h3>
+      <ul>
+        <li>
+          It's now possible to ignore a GitHub team repository by using just a
+          substring of the URL. This means
+          <code>mozilla-mobile/fenix</code> would skip reviews for that repo,
+          and <code>mozilla-mobile</code> would skip reviews for that entire
+          org. Thanks to
+          <a href="https://github.com/ahal/">Andrew Halberstadt</a> for the
+          patch!
+        </li>
+        <li>
+          GitHub API tokens can now be set in the Options page for private
+          repositories! Thanks to
+          <a href="https://github.com/Callek/">Justin Wood</a> for the patch!
+        </li>
+      </ul>
+      <h3>Changes</h3>
+      <ul>
+        <li>
+          The panel now links to
+          <a href="https://phabricator.services.mozilla.com/differential"
+            >https://phabricator.services.mozilla.com/differential</a
+          >
+          for Phabricator reviews. This is more direct and less noisy than the
+          full-blown Phabricator dashboard.
+        </li>
+      </ul>
+      <h3>Bug fixes</h3>
+      <ul>
+        <li>
+          Fixed an issue where the
+          <a href="https://github.com/mikeconley/myqonly/issues/37"
+            >"Include reviewer groups in badge count" setting</a
+          >
+          wouldn't persist between browser restarts. Thanks to
+          <a href="https://github.com/dblohm7/">Aaron Klotz</a> for the patch!
+        </li>
+        <li>
+          Fixed an issue where MyQOnly wouldn't count GitHub pull requests on
+          ignored groups even if the user was requested directly. Thanks to
+          <a href="https://github.com/ahal/">Andrew Halberstadt</a> for the
+          patch!
+        </li>
+      </ul>
+      <h3>Known issues</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a>
+          <a href="https://github.com/mikeconley/myqonly/issues/18">support</a>
+          for Containers
+        </li>
+      </ul>
+    </section>
 
-  <section data-version="0.8.2">
-    <h2>0.8.2</h2>
-    <h3>Bug fixes</h3>
-    <ul>
-      <li>Updated icons to meet new requirements on addons.mozilla.org.</li>
-    </ul>
-    <h3>Known issues</h3>
-    <ul>
-      <li><a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a> <a href="https://github.com/mikeconley/myqonly/issues/18">support</a> for Containers</li>
-    </ul>
-  </section>
+    <section data-version="0.8.2">
+      <h2>0.8.2</h2>
+      <h3>Bug fixes</h3>
+      <ul>
+        <li>Updated icons to meet new requirements on addons.mozilla.org.</li>
+      </ul>
+      <h3>Known issues</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a>
+          <a href="https://github.com/mikeconley/myqonly/issues/18">support</a>
+          for Containers
+        </li>
+      </ul>
+    </section>
 
-  <section data-version="0.8">
-    <h2>0.8</h2>
-    <h3>New features</h3>
-    <ul>
-      <li>It's now possible to filter out group reviews from your review count. Look for the "Include reviewer groups in badge count" checkbox in the Options interface. Thanks to <a href="https://github.com/dblohm7/">Aaron Klotz</a> for the patch!</li>
-    </ul>
-    <h3>Known issues</h3>
-    <ul>
-      <li><a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a> <a href="https://github.com/mikeconley/myqonly/issues/18">support</a> for Containers</li>
-    </ul>
-  </section>
+    <section data-version="0.8">
+      <h2>0.8</h2>
+      <h3>New features</h3>
+      <ul>
+        <li>
+          It's now possible to filter out group reviews from your review count.
+          Look for the "Include reviewer groups in badge count" checkbox in the
+          Options interface. Thanks to
+          <a href="https://github.com/dblohm7/">Aaron Klotz</a> for the patch!
+        </li>
+      </ul>
+      <h3>Known issues</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a>
+          <a href="https://github.com/mikeconley/myqonly/issues/18">support</a>
+          for Containers
+        </li>
+      </ul>
+    </section>
 
-  <section data-version="0.7.1">
-    <h2>0.7.1</h2>
-    <h3>Bug fixes</h3>
-    <ul>
-      <li>Fixed the "activeRevisions is null" bug in the Phabricator test case debug tool.</li>
-    </ul>
-    <h3>Known issues</h3>
-    <ul>
-      <li><a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a> <a href="https://github.com/mikeconley/myqonly/issues/18">support</a> for Containers</li>
-    </ul>
-  </section>
+    <section data-version="0.7.1">
+      <h2>0.7.1</h2>
+      <h3>Bug fixes</h3>
+      <ul>
+        <li>
+          Fixed the "activeRevisions is null" bug in the Phabricator test case
+          debug tool.
+        </li>
+      </ul>
+      <h3>Known issues</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a>
+          <a href="https://github.com/mikeconley/myqonly/issues/18">support</a>
+          for Containers
+        </li>
+      </ul>
+    </section>
 
-  <section data-version="0.7">
-    <h2>0.7</h2>
-    <h3>New features</h3>
-    <ul>
-      <li>GitHub pull requests from yourself or specific teams can be filtered out. Thanks to <a href="https://github.com/thomcc">thomcc</a> for the patch!</li>
-    </ul>
-    <h3>Bug fixes</h3>
-    <ul>
-      <li>Worked around <a href="https://github.com/mikeconley/myqonly/issues/25">a grammar issue</a> for singular reviews / needinfos in the panel.</li>
-      <li>If GitHub usernames or Bugzilla API keys are cleared after originally being set, doesn't attempt to query those services</li>
-      <li>Improved some spacing in the Options interface</li>
-    </ul>
-    <h3>Known issues</h3>
-    <ul>
-      <li><a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a> <a href="https://github.com/mikeconley/myqonly/issues/18">support</a> for Containers</li>
-    </ul>
-  </section>
+    <section data-version="0.7">
+      <h2>0.7</h2>
+      <h3>New features</h3>
+      <ul>
+        <li>
+          GitHub pull requests from yourself or specific teams can be filtered
+          out. Thanks to <a href="https://github.com/thomcc">thomcc</a> for the
+          patch!
+        </li>
+      </ul>
+      <h3>Bug fixes</h3>
+      <ul>
+        <li>
+          Worked around
+          <a href="https://github.com/mikeconley/myqonly/issues/25"
+            >a grammar issue</a
+          >
+          for singular reviews / needinfos in the panel.
+        </li>
+        <li>
+          If GitHub usernames or Bugzilla API keys are cleared after originally
+          being set, doesn't attempt to query those services
+        </li>
+        <li>Improved some spacing in the Options interface</li>
+      </ul>
+      <h3>Known issues</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a>
+          <a href="https://github.com/mikeconley/myqonly/issues/18">support</a>
+          for Containers
+        </li>
+      </ul>
+    </section>
 
-  <section data-version="0.6.1">
-    <h2>0.6.1</h2>
-    <h3>Bug fixes</h3>
-    <ul>
-      <li>Fixed a bug where some services would get the same IDs.</li>
-    </ul>
-    <h3>Known issues</h3>
-    <ul>
-      <li><a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a> <a href="https://github.com/mikeconley/myqonly/issues/18">support</a> for Containers</li>
-    </ul>
-  </section>
+    <section data-version="0.6.1">
+      <h2>0.6.1</h2>
+      <h3>Bug fixes</h3>
+      <ul>
+        <li>Fixed a bug where some services would get the same IDs.</li>
+      </ul>
+      <h3>Known issues</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a>
+          <a href="https://github.com/mikeconley/myqonly/issues/18">support</a>
+          for Containers
+        </li>
+      </ul>
+    </section>
 
-  <section id="featureRev-2" data-version="0.6">
-    <h2>0.6</h2>
-    <h3>New features</h3>
-    <ul>
-      <li>
-        <a href="https://github.com/mikeconley/myqonly/issues/6">Needinfos can now be counted for Bugzilla. This is disabled by default.</a>
-        <img src="0.6/needinfos-in-options.png"/>
-        <img src="0.6/needinfos-in-panel.png"/>
-      </li>
-    </ul>
-    <h3>Bug fixes</h3>
-    <ul>
-      <li>
-        <a href="https://github.com/mikeconley/myqonly/issues/19">Warnings show up in the panel if no Phabricator session exists.</a>
-        <img src="0.6/no-phabricator-session.png"/>
-      </li>
-    </ul>
-    <h3>Known issues</h3>
-    <ul>
-      <li><a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a> <a href="https://github.com/mikeconley/myqonly/issues/18">support</a> for Containers</li>
-    </ul>
-  </section>
+    <section id="featureRev-2" data-version="0.6">
+      <h2>0.6</h2>
+      <h3>New features</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/6"
+            >Needinfos can now be counted for Bugzilla. This is disabled by
+            default.</a
+          >
+          <img src="0.6/needinfos-in-options.png" />
+          <img src="0.6/needinfos-in-panel.png" />
+        </li>
+      </ul>
+      <h3>Bug fixes</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/19"
+            >Warnings show up in the panel if no Phabricator session exists.</a
+          >
+          <img src="0.6/no-phabricator-session.png" />
+        </li>
+      </ul>
+      <h3>Known issues</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a>
+          <a href="https://github.com/mikeconley/myqonly/issues/18">support</a>
+          for Containers
+        </li>
+      </ul>
+    </section>
 
-  <section data-version="0.5.4">
-    <h2>0.5.4</h2>
-    <h3>Bug fixes</h3>
-    <ul>
-      <li>Skipped 0.5.3 due to an AMO upload snafu.</li>
-      <li>Migrating the storage schema to increase flexibility for upcoming features.</li>
-    </ul>
-    <h3>Known issues</h3>
-    <ul>
-      <li><a href="https://github.com/mikeconley/myqonly/issues/19">No warnings if you're signed out from Phabricator</a></li>
-      <li><a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a> <a href="https://github.com/mikeconley/myqonly/issues/18">support</a> for Containers</li>
-    </ul>
-  </section>
+    <section data-version="0.5.4">
+      <h2>0.5.4</h2>
+      <h3>Bug fixes</h3>
+      <ul>
+        <li>Skipped 0.5.3 due to an AMO upload snafu.</li>
+        <li>
+          Migrating the storage schema to increase flexibility for upcoming
+          features.
+        </li>
+      </ul>
+      <h3>Known issues</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/19"
+            >No warnings if you're signed out from Phabricator</a
+          >
+        </li>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a>
+          <a href="https://github.com/mikeconley/myqonly/issues/18">support</a>
+          for Containers
+        </li>
+      </ul>
+    </section>
 
-  <section data-version="0.5.2">
-    <h2>0.5.2</h2>
-    <h3>Bug fixes</h3>
-    <ul>
-      <li>Fixed the Bugzilla API key input so that it properly updates the configuration now.</li>
-    </ul>
-    <h3>Known issues</h3>
-    <ul>
-      <li><a href="https://github.com/mikeconley/myqonly/issues/19">No warnings if you're signed out from Phabricator</a></li>
-      <li><a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a> <a href="https://github.com/mikeconley/myqonly/issues/18">support</a> for Containers</li>
-    </ul>
-  </section>
+    <section data-version="0.5.2">
+      <h2>0.5.2</h2>
+      <h3>Bug fixes</h3>
+      <ul>
+        <li>
+          Fixed the Bugzilla API key input so that it properly updates the
+          configuration now.
+        </li>
+      </ul>
+      <h3>Known issues</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/19"
+            >No warnings if you're signed out from Phabricator</a
+          >
+        </li>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a>
+          <a href="https://github.com/mikeconley/myqonly/issues/18">support</a>
+          for Containers
+        </li>
+      </ul>
+    </section>
 
-  <section data-version="0.5.1">
-    <h2>0.5.1</h2>
-    <h3>Bug fixes</h3>
-    <ul>
-      <li><a href="https://github.com/mikeconley/myqonly/issues/20">Fixed</a> the refresh button so that it actually refreshes the count by asking services for updated counts. How embarrassing!</li>
-      <li>Added a minimum delay of 250ms to the refresh state in the popup. Thanks to jhirsch for the patch!</li>
-    </ul>
-    <h3>Known issues</h3>
-    <ul>
-      <li><a href="https://github.com/mikeconley/myqonly/issues/19">No warnings if you're signed out from Phabricator</a></li>
-      <li><a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a> <a href="https://github.com/mikeconley/myqonly/issues/18">support</a> for Containers</li>
-    </ul>
-  </section>
+    <section data-version="0.5.1">
+      <h2>0.5.1</h2>
+      <h3>Bug fixes</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/20">Fixed</a>
+          the refresh button so that it actually refreshes the count by asking
+          services for updated counts. How embarrassing!
+        </li>
+        <li>
+          Added a minimum delay of 250ms to the refresh state in the popup.
+          Thanks to jhirsch for the patch!
+        </li>
+      </ul>
+      <h3>Known issues</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/19"
+            >No warnings if you're signed out from Phabricator</a
+          >
+        </li>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a>
+          <a href="https://github.com/mikeconley/myqonly/issues/18">support</a>
+          for Containers
+        </li>
+      </ul>
+    </section>
 
-  <section id="featureRev-1" data-version="0.5">
-    <h2>0.5</h2>
-    <h3>New features</h3>
-    <ul>
-      <li>Redesigned the panel. The panel now has a button to refresh the review count, as well as a shortcut to the add-on options page.
-        <img src="0.5/panel.png"/>
-      </li>
-      <li>Added working hours support. Choose which windows of time you want to be informed about your review queue. Thanks to jhirsch for the initial implementation!
-        <img src="0.5/working-hours.png"/>
-      </li>
-    </ul>
-    <h3>Bug fixes</h3>
-    <ul>
-      <li>Made the Bugzilla API key input a password field</li>
-      <li>Added a simple, and hopefully unobtrusive new feature notification system. To be used sparingly.</li>
-      <li>Added a very simple debugging tool for generating Phabricator test cases (hover your mouse over the bottom-right part of the options page).</li>
-    </ul>
-    <h3>Known issues</h3>
-    <ul>
-      <li><a href="https://github.com/mikeconley/myqonly/issues/19">No warnings if you're signed out from Phabricator</a></li>
-      <li><a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a> <a href="https://github.com/mikeconley/myqonly/issues/18">support</a> for Containers</li>
-    </ul>
-  </section>
-</body>
-
+    <section id="featureRev-1" data-version="0.5">
+      <h2>0.5</h2>
+      <h3>New features</h3>
+      <ul>
+        <li>
+          Redesigned the panel. The panel now has a button to refresh the review
+          count, as well as a shortcut to the add-on options page.
+          <img src="0.5/panel.png" />
+        </li>
+        <li>
+          Added working hours support. Choose which windows of time you want to
+          be informed about your review queue. Thanks to jhirsch for the initial
+          implementation!
+          <img src="0.5/working-hours.png" />
+        </li>
+      </ul>
+      <h3>Bug fixes</h3>
+      <ul>
+        <li>Made the Bugzilla API key input a password field</li>
+        <li>
+          Added a simple, and hopefully unobtrusive new feature notification
+          system. To be used sparingly.
+        </li>
+        <li>
+          Added a very simple debugging tool for generating Phabricator test
+          cases (hover your mouse over the bottom-right part of the options
+          page).
+        </li>
+      </ul>
+      <h3>Known issues</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/19"
+            >No warnings if you're signed out from Phabricator</a
+          >
+        </li>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a>
+          <a href="https://github.com/mikeconley/myqonly/issues/18">support</a>
+          for Containers
+        </li>
+      </ul>
+    </section>
+  </body>
 </html>

@@ -8,7 +8,9 @@
     "test:manual": "web-ext run -s ./addon",
     "build": "web-ext build -s ./addon",
     "lint": "./node_modules/eslint/bin/eslint.js .",
-    "lint-file": "./node_modules/eslint/bin/eslint.js"
+    "lint-file": "./node_modules/eslint/bin/eslint.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "repository": "git@github.com:mikeconley/myqonly.git",
   "author": "Mike Conley <mike.d.conley@gmail.com>",
@@ -16,12 +18,14 @@
   "devDependencies": {
     "chai": "^4.3.7",
     "eslint": "^8.57.0",
+    "eslint-config-prettier": "^10.1.8",
     "expect.js": "^0.3.1",
     "karma": "^6.3.14",
     "karma-chai": "^0.1.0",
     "karma-firefox-launcher": "^2.1.2",
     "karma-mocha": "^2.0.1",
     "mocha": "^10.3.0",
+    "prettier": "^3.8.1",
     "sinon": "^21.0.3",
     "sinon-chrome": "^3.0.1",
     "web-ext": "^7.11.0"

@@ -5,37 +5,38 @@ const Debug = {
 
   handleEvent(event) {
     switch (event.type) {
-    case "click": {
-      return this.onClick(event);
-    }
+      case "click": {
+        return this.onClick(event);
+      }
     }
   },
 
   onClick(event) {
     switch (event.target.id) {
-    case "update": {
-      browser.runtime.sendMessage({ name: "refresh", });
-      break;
-    }
-    case "generate-phabricator-testcase": {
-      console.log("Generating Phabricator testcase...");
-      this.generatePhabricatorTestcase();
-      break;
-    }
-    case "show-services": {
-      this.showServices();
-      break;
-    }
-    case "show-old-userKeys": {
-      this.showOldUserKeys();
-      break;
-    }
+      case "update": {
+        browser.runtime.sendMessage({ name: "refresh" });
+        break;
+      }
+      case "generate-phabricator-testcase": {
+        console.log("Generating Phabricator testcase...");
+        this.generatePhabricatorTestcase();
+        break;
+      }
+      case "show-services": {
+        this.showServices();
+        break;
+      }
+      case "show-old-userKeys": {
+        this.showOldUserKeys();
+        break;
+      }
     }
   },
 
   async generatePhabricatorTestcase() {
-    let { pageBody, } =
-      await browser.runtime.sendMessage({ name: "get-phabricator-html", });
+    let { pageBody } = await browser.runtime.sendMessage({
+      name: "get-phabricator-html"
+    });
     let parser = new DOMParser();
     let doc = parser.parseFromString(pageBody, "text/html");
 
@@ -57,7 +58,7 @@ const Debug = {
   },
 
   async showServices() {
-    let { services, } = await browser.storage.local.get("services");
+    let { services } = await browser.storage.local.get("services");
     let servicesEl = document.getElementById("services");
     if (!services) {
       servicesEl.textContent = "Couldn't find any services";
@@ -72,7 +73,7 @@ const Debug = {
   },
 
   async showOldUserKeys() {
-    let { oldUserKeys, } = await browser.storage.local.get("oldUserKeys");
+    let { oldUserKeys } = await browser.storage.local.get("oldUserKeys");
     let outputEl = document.getElementById("old-userKeys");
     if (!oldUserKeys) {
       outputEl.textContent = "Couldn't find any old userKeys";
@@ -82,9 +83,13 @@ const Debug = {
       }
       outputEl.textContent = JSON.stringify(oldUserKeys);
     }
-  },
+  }
 };
 
-addEventListener("DOMContentLoaded", () => {
-  Debug.init();
-}, { once: true, });
+addEventListener(
+  "DOMContentLoaded",
+  () => {
+    Debug.init();
+  },
+  { once: true }
+);

@@ -1,11 +1,12 @@
-html, body {
+html,
+body {
   font: message-box;
   font-size: 1em;
 }
 
 img {
   display: block;
-  box-shadow: 2px 2px 2px 1px #AAAAAA;
+  box-shadow: 2px 2px 2px 1px #aaaaaa;
   margin: 20px 0px;
 }
 

@@ -1,13 +1,12 @@
 // eslint-disable-next-line no-undef
-module.exports = function(config) {
+module.exports = function (config) {
   config.set({
-
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: "",
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ["mocha", "chai",],
+    frameworks: ["mocha", "chai"],
 
     // list of files / patterns to load in the browser
     files: [
@@ -18,7 +17,7 @@ module.exports = function(config) {
 
       // Source to test
       "addon/*.js",
-      { pattern: "addon/content/*/*.*", served: true, included: false, },
+      { pattern: "addon/content/*/*.*", served: true, included: false },
 
       // Tests
       "tests/*.js",
@@ -26,26 +25,25 @@ module.exports = function(config) {
       "tests/services/**/*.js",
 
       // Service test files
-      { pattern: "tests/services/**/*.html", served: true, included: false, },
+      { pattern: "tests/services/**/*.html", served: true, included: false }
     ],
 
     client: {
       mocha: {
         // change Karma's debug.html to the mocha web reporter
-        reporter: "html",
-      },
+        reporter: "html"
+      }
     },
 
     // preprocess matching files before serving them to the browser
     // available preprocessors:
     // https://npmjs.org/browse/keyword/karma-preprocessor
-    preprocessors: {
-    },
+    preprocessors: {},
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ["dots",],
+    reporters: ["dots"],
 
     // web server port
     port: 9876,
@@ -64,7 +62,7 @@ module.exports = function(config) {
     // start these browsers
     // available browser launchers:
     // https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ["Firefox",],
+    browsers: ["Firefox"],
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
@@ -72,6 +70,6 @@ module.exports = function(config) {
 
     // Concurrency level
     // how many browser should be started simultaneous
-    concurrency: Infinity,
+    concurrency: Infinity
   });
 };

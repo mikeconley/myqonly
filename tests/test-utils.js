@@ -28,7 +28,7 @@
  *           fired a custom "initted" event.
  *
  */
-async function loadPage({ url, setup, waitForInitted = true, test, } = {}) {
+async function loadPage({ url, setup, waitForInitted = true, test } = {}) {
   let iframe = document.createElement("iframe");
   // Karma hosts these files at http://localhost/base/ + file path.
   // See http://karma-runner.github.io/3.0/config/files.html
@@ -45,9 +45,9 @@ async function loadPage({ url, setup, waitForInitted = true, test, } = {}) {
   iframe.contentWindow.browser = chrome;
   iframe.contentWindow.console = console;
 
-  await new Promise(resolve => {
+  await new Promise((resolve) => {
     let event = waitForInitted ? "initted" : "load";
-    iframe.contentWindow.addEventListener(event, resolve, { once: true, });
+    iframe.contentWindow.addEventListener(event, resolve, { once: true });
   });
 
   await test(iframe.contentWindow, iframe.contentDocument);
@@ -58,7 +58,9 @@ async function loadPage({ url, setup, waitForInitted = true, test, } = {}) {
 function changeFieldValue(field, value) {
   field.value = value;
   let win = field.ownerDocument.defaultView;
-  field.dispatchEvent(new win.Event("change", {
-    bubbles: true,
-  }));
+  field.dispatchEvent(
+    new win.Event("change", {
+      bubbles: true
+    })
+  );
 }

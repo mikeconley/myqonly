@@ -1,6 +1,7 @@
 // If we're running in the sinon-chrome test framework, we need to alias
 // the chrome namespace to browser.
-if (typeof(browser) == "undefined") {
+if (typeof browser == "undefined") {
+  // eslint-disable-next-line no-redeclare
   var browser = chrome;
 }
 
@@ -9,7 +10,7 @@ var MyQOnly = {
    * Main entry. After set-up, attempts to update the badge right
    * away.
    */
-  async init({ alertRev = FEATURE_ALERT_REV, } = {}) {
+  async init({ alertRev = FEATURE_ALERT_REV } = {}) {
     // Add a listener so that if our options change, we react to it.
     browser.storage.onChanged.addListener(this.onStorageChanged.bind(this));
     // Hook up our timer
@@ -18,29 +19,33 @@ var MyQOnly = {
     browser.runtime.onMessage.addListener(this.onMessage.bind(this));
 
     console.debug("Looking for feature rev");
-    let { featureRev, } = await browser.storage.local.get("featureRev");
+    let { featureRev } = await browser.storage.local.get(
+      STORAGE_KEYS.FEATURE_REV
+    );
     if (!featureRev) {
       console.debug("No feature rev - this is a first timer.");
       featureRev = alertRev;
-      await browser.storage.local.set({ featureRev, });
+      await browser.storage.local.set({ featureRev });
     } else {
       console.debug("Got feature rev ", featureRev);
     }
 
     this.featureRev = featureRev;
 
-    let { updateInterval, } = await browser.storage.local.get("updateInterval");
+    let { updateInterval } = await browser.storage.local.get(
+      STORAGE_KEYS.UPDATE_INTERVAL
+    );
     if (!updateInterval) {
       updateInterval = DEFAULT_UPDATE_INTERVAL;
       await browser.storage.local.set({
-        updateInterval,
+        updateInterval
       });
     }
     this.updateInterval = updateInterval;
 
     this.states = new Map();
 
-    let { services, } = await browser.storage.local.get("services");
+    let { services } = await browser.storage.local.get(STORAGE_KEYS.SERVICES);
 
     this.services = services || [];
     await this._initServices();
@@ -67,25 +72,25 @@ var MyQOnly = {
     for (let service of this.services) {
       this.states.set(service.id, {
         type: service.type,
-        data: {},
+        data: {}
       });
       maxServiceID = Math.max(service.id, maxServiceID);
     }
     this._nextServiceID = maxServiceID + 1;
 
     // Introduce a new default service configuration for Phabricator.
-    let phabService = this._getService("phabricator");
+    let phabService = this._getService(SERVICE_TYPES.PHABRICATOR);
     if (!phabService) {
-      await this._addService("phabricator", {
+      await this._addService(SERVICE_TYPES.PHABRICATOR, {
         container: 0,
-        inclReviewerGroups: true,
+        inclReviewerGroups: true
       });
     } else if (phabService.settings.inclReviewerGroups === undefined) {
       phabService.settings.inclReviewerGroups = true;
-      await browser.storage.local.set({ services: this.services, });
+      await browser.storage.local.set({ services: this.services });
     }
 
-    let githubService = this._getService("github");
+    let githubService = this._getService(SERVICE_TYPES.GITHUB);
     if (githubService) {
       await this._checkGitHubMigration(githubService);
     }
@@ -111,14 +116,14 @@ var MyQOnly = {
     let newService = {
       id: this._nextServiceID,
       type: serviceType,
-      settings,
+      settings
     };
 
     this._nextServiceID++;
 
     this.services.push(newService);
 
-    await browser.storage.local.set({ services: this.services, });
+    await browser.storage.local.set({ services: this.services });
     this._ensureStatesForServices();
   },
 
@@ -127,25 +132,28 @@ var MyQOnly = {
       if (!this.states.has(service.id)) {
         this.states.set(service.id, {
           type: service.type,
-          data: {},
+          data: {}
         });
       }
     }
   },
 
   async _checkGitHubMigration(service) {
-    let { needsGitHubMigration } = await browser.storage.local.get("needsGitHubMigration");
+    let { needsGitHubMigration } = await browser.storage.local.get(
+      "needsGitHubMigration"
+    );
     if (needsGitHubMigration) {
       return;
     }
 
     let repos = (service.settings.ignoredRepos || "")
       .split(",")
-      .map(s => s.trim())
+      .map((s) => s.trim())
       .filter(Boolean);
 
-    // Check if any repos don't match owner/repo format (e.g., "mozilla/gecko-dev")
-    let hasOldFormat = repos.some(repo => !repo.match(/^[^\/]+\/[^\/]+$/));
+    // Check if any repos don't match owner/repo format
+    // (e.g., "mozilla/gecko-dev")
+    let hasOldFormat = repos.some((repo) => !repo.match(/^[^/]+\/[^/]+$/));
 
     if (hasOldFormat) {
       await browser.storage.local.set({
@@ -164,8 +172,9 @@ var MyQOnly = {
       // alarm and set up a new one.
       if (changes.updateInterval) {
         this.updateInterval = changes.updateInterval.newValue;
-        console.log("background.js saw change to updateInterval: " +
-                    this.updateInterval);
+        console.log(
+          "background.js saw change to updateInterval: " + this.updateInterval
+        );
         this.resetAlarm();
       }
 
@@ -189,10 +198,11 @@ var MyQOnly = {
       console.log("Cleared old alarm");
     }
 
-    console.log("Resetting alarm - will fire in " +
-                `${this.updateInterval} minutes`);
+    console.log(
+      "Resetting alarm - will fire in " + `${this.updateInterval} minutes`
+    );
     browser.alarms.create(ALARM_NAME, {
-      periodInMinutes: this.updateInterval,
+      periodInMinutes: this.updateInterval
     });
   },
 
@@ -201,41 +211,41 @@ var MyQOnly = {
    */
   onMessage(message, sender, sendReply) {
     switch (message.name) {
-    case "get-states": {
-      // The popup wants to know how many things there are to do.
-      sendReply(this.states);
-      break;
-    }
+      case "get-states": {
+        // The popup wants to know how many things there are to do.
+        sendReply(this.states);
+        break;
+      }
 
-    case "refresh": {
-      this.updateBadge();
-      break;
-    }
+      case "refresh": {
+        this.updateBadge();
+        break;
+      }
 
-    case "get-feature-rev": {
-      sendReply({
-        newFeatures: this.featureRev < FEATURE_ALERT_REV,
-        featureRev: this.featureRev + 1,
-      });
-      break;
-    }
+      case "get-feature-rev": {
+        sendReply({
+          newFeatures: this.featureRev < FEATURE_ALERT_REV,
+          featureRev: this.featureRev + 1
+        });
+        break;
+      }
 
-    case "opened-release-notes": {
-      this.featureRev = FEATURE_ALERT_REV;
-      browser.storage.local.set({ featureRev: this.featureRev, });
-      this.updateBadge();
-      break;
-    }
+      case "opened-release-notes": {
+        this.featureRev = FEATURE_ALERT_REV;
+        browser.storage.local.set({ featureRev: this.featureRev });
+        this.updateBadge();
+        break;
+      }
 
-    case "check-for-phabricator-session": {
-      return this._hasPhabricatorSession();
-    }
+      case "check-for-phabricator-session": {
+        return this._hasPhabricatorSession();
+      }
 
-    // Debug stuff
-    case "get-phabricator-html": {
-      console.debug("Getting Phabricator dashboard body");
-      return this._phabricatorDocumentBody();
-    }
+      // Debug stuff
+      case "get-phabricator-html": {
+        console.debug("Getting Phabricator dashboard body");
+        return this._phabricatorDocumentBody();
+      }
     }
   },
 
@@ -257,36 +267,35 @@ var MyQOnly = {
         disabled: true,
         reviewTotal: 0,
         userReviewTotal: 0,
-        groupReviewTotal: 0,
+        groupReviewTotal: 0
       };
     }
 
     if (await this._hasPhabricatorCookie()) {
-      console.log("Phabricator session found! Attempting to get dashboard " +
-                  "page.");
+      console.log(
+        "Phabricator session found! Attempting to get dashboard " + "page."
+      );
 
-      let {
-        ok,
-        reviewTotal,
-        userReviewTotal,
-        groupReviewTotal,
-      } = await this.phabricatorReviewRequests();
-      return { connected: ok, reviewTotal, userReviewTotal, groupReviewTotal, };
+      let { ok, reviewTotal, userReviewTotal, groupReviewTotal } =
+        await this.phabricatorReviewRequests();
+      return { connected: ok, reviewTotal, userReviewTotal, groupReviewTotal };
     } else {
-      console.log("No Phabricator session found. I won't try to fetch " +
-                  "anything for it.");
+      console.log(
+        "No Phabricator session found. I won't try to fetch " +
+          "anything for it."
+      );
       return {
         connected: false,
         reviewTotal: 0,
         userReviewTotal: 0,
-        groupReviewTotal: 0,
+        groupReviewTotal: 0
       };
     }
   },
 
-  async _hasPhabricatorSession({ testingURL = null, } = {}) {
+  async _hasPhabricatorSession({ testingURL = null } = {}) {
     if (await this._hasPhabricatorCookie()) {
-      let { ok, } = await this._phabricatorDocumentBody({ testingURL, });
+      let { ok } = await this._phabricatorDocumentBody({ testingURL });
       return ok;
     }
 
@@ -296,37 +305,36 @@ var MyQOnly = {
   async _hasPhabricatorCookie() {
     let phabCookie = await browser.cookies.get({
       url: PHABRICATOR_ROOT,
-      name: "phsid",
+      name: "phsid"
     });
     return !!phabCookie;
   },
 
-  async _phabricatorDocumentBody({ testingURL = null, } = {}) {
-    let url = testingURL ||
-              [PHABRICATOR_ROOT, PHABRICATOR_DASHBOARD,].join("/");
+  async _phabricatorDocumentBody({ testingURL = null } = {}) {
+    let url = testingURL || [PHABRICATOR_ROOT, PHABRICATOR_DASHBOARD].join("/");
 
     let req = new Request(url, {
       method: "GET",
       headers: {
-        "Content-Type": "text/html",
+        "Content-Type": "text/html"
       },
-      redirect: "follow",
+      redirect: "follow"
     });
 
     let resp = await window.fetch(req);
     let ok = resp.ok;
     let pageBody = await resp.text();
-    return { ok, pageBody, };
+    return { ok, pageBody };
   },
 
-  async phabricatorReviewRequests({ testingURL = null, } = {}) {
-    let { ok, pageBody, } =
-      await this._phabricatorDocumentBody({ testingURL, });
+  async phabricatorReviewRequests({ testingURL = null } = {}) {
+    let { ok, pageBody } = await this._phabricatorDocumentBody({ testingURL });
     let parser = new DOMParser();
     let doc = parser.parseFromString(pageBody, "text/html");
 
-    let userMenu =
-      doc.querySelector("a.phabricator-core-user-menu[href^='/p/']");
+    let userMenu = doc.querySelector(
+      "a.phabricator-core-user-menu[href^='/p/']"
+    );
     let userId = userMenu.href;
 
     let headers = doc.querySelectorAll(".phui-header-header");
@@ -356,13 +364,13 @@ var MyQOnly = {
 
     let reviewTotal = userReviewTotal;
 
-    return { ok, reviewTotal, userReviewTotal, groupReviewTotal, };
+    return { ok, reviewTotal, userReviewTotal, groupReviewTotal };
   },
 
   async updateBugzilla(settings) {
     let apiKey = settings.apiKey;
     if (!apiKey) {
-      return { reviewTotal: 0, needinfoTotal: 0, };
+      return { reviewTotal: 0, needinfoTotal: 0 };
     }
 
     // I'm not sure how much of this is necessary - I just looked at what
@@ -373,20 +381,20 @@ var MyQOnly = {
       method: "MyDashboard.run_flag_query",
       params: {
         Bugzilla_api_key: apiKey,
-        type: "requestee",
+        type: "requestee"
       },
-      version: "1.1",
+      version: "1.1"
     });
 
     let req = new Request(BUGZILLA_API, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
       body,
       credentials: "omit",
       redirect: "follow",
-      referrer: "client",
+      referrer: "client"
     });
 
     let resp = await window.fetch(req);
@@ -394,19 +402,18 @@ var MyQOnly = {
     if (bugzillaData.error) {
       throw new Error(`Bugzilla request failed: ${bugzillaData.error.message}`);
     }
-    let reviewTotal =
-      bugzillaData.result.result.requestee.filter(f => {
-        return f.type == "review";
-      }).length;
+    let reviewTotal = bugzillaData.result.result.requestee.filter((f) => {
+      return f.type == "review";
+    }).length;
 
     let needinfoTotal = 0;
     if (settings.needinfos) {
-      needinfoTotal =bugzillaData.result.result.requestee.filter(f => {
+      needinfoTotal = bugzillaData.result.result.requestee.filter((f) => {
         return f.type == "needinfo";
       }).length;
     }
 
-    return { reviewTotal, needinfoTotal, };
+    return { reviewTotal, needinfoTotal };
   },
 
   async updateGitHub(settings) {
@@ -414,13 +421,13 @@ var MyQOnly = {
     let reviewUrl = new URL("https://github.com/pulls/review-requested");
 
     if (!username) {
-      return { reviewTotal: 0, reviewUrl: reviewUrl.toString(), };
+      return { reviewTotal: 0, reviewUrl: reviewUrl.toString() };
     }
     let token = settings.token;
 
     let ignoredRepos = (settings.ignoredRepos || "")
       .split(",")
-      .map(s => s.trim())
+      .map((s) => s.trim())
       .filter(Boolean);
 
     // We don't seem to need authentication for this request, for whatever
@@ -430,21 +437,29 @@ var MyQOnly = {
     if (settings.ignoreOwnPrs) {
       query += ` -author:${username}`;
     }
-    let ignoredUsers = [...new Set(
-      (settings.ignoredUsers || "")
-        .split(",")
-        .map(s => s.trim())
-        .filter(Boolean))];
+    let ignoredUsers = [
+      ...new Set(
+        (settings.ignoredUsers || "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      )
+    ];
     if (ignoredUsers.length > 0) {
-      query += ignoredUsers.map(u => ` -author:${u}`).join(" ");
+      query += ignoredUsers.map((u) => ` -author:${u}`).join(" ");
     }
-    let ignoredTeams = [...new Set(
-      (settings.ignoredTeams || "")
-        .split(",")
-        .map(s => s.trim())
-        .filter(Boolean))];
+    let ignoredTeams = [
+      ...new Set(
+        (settings.ignoredTeams || "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      )
+    ];
     if (ignoredTeams.length > 0) {
-      query += ignoredTeams.map(u => ` -team-review-requested:${u}`).join(" ");
+      query += ignoredTeams
+        .map((u) => ` -team-review-requested:${u}`)
+        .join(" ");
     }
     if (settings.ignoreDraftPrs) {
       query += " draft:false";
@@ -457,7 +472,7 @@ var MyQOnly = {
     reviewUrl = reviewUrl.toString();
 
     let headers = {
-      Accept: "application/vnd.github.v3+json",
+      Accept: "application/vnd.github.v3+json"
     };
     if (token) {
       headers["Authorization"] = `token ${token}`;
@@ -466,32 +481,35 @@ var MyQOnly = {
       method: "GET",
       headers: headers,
       // Probably doesn't matter.
-      credentials: "omit",
+      credentials: "omit"
     };
     // Note: we might need to paginate if we care about fetching more than the
     // first 100.
     let response = await window.fetch(url, apiRequestOptions);
     if (!response.ok) {
       console.error("Failed to request from github", response);
-      throw new Error(`Github request failed (${response.status}): ` +
-                      `${await response.text()}`);
+      throw new Error(
+        `Github request failed (${response.status}): ` +
+          `${await response.text()}`
+      );
     }
     const data = await response.json();
 
     if (ignoredRepos.length === 0) {
-      return { reviewTotal: data.total_count, reviewUrl, };
+      return { reviewTotal: data.total_count, reviewUrl };
     }
 
     // `items` may be a partial list. Ideally we'd paginate, but for now we just
     // assume everything in total_count that isn't part of items is important.
     let validPrs = data.total_count - data.items.length;
     for (let pr of data.items) {
-      let prUrl = pr.pull_request.url;
-      if (ignoredRepos.every(repo => !pr.repository_url.endsWith(`/${repo}`))) {
+      if (
+        ignoredRepos.every((repo) => !pr.repository_url.endsWith(`/${repo}`))
+      ) {
         validPrs++;
       }
     }
-    return { reviewTotal: validPrs, reviewUrl, };
+    return { reviewTotal: validPrs, reviewUrl };
   },
 
   /**
@@ -500,7 +518,7 @@ var MyQOnly = {
   async isWorkingHours() {
     console.log("Checking working hours.");
 
-    let { workingHours, } = await browser.storage.local.get("workingHours");
+    let { workingHours } = await browser.storage.local.get("workingHours");
 
     if (typeof workingHours === "undefined" || !workingHours.enabled) {
       console.log("Working hours are not enabled");
@@ -518,12 +536,14 @@ var MyQOnly = {
       console.log("Start time not set. Skipping start time check.");
     } else {
       let startTime = new Date();
-      let [startHours, startMinutes,] = workingHours.startTime.split(":");
+      let [startHours, startMinutes] = workingHours.startTime.split(":");
       startTime.setHours(startHours, startMinutes);
       if (currentTime < startTime) {
-        console.log(`Current time (${currentTime.toLocaleTimeString()}) is ` +
-                    "earlier than start time " +
-                    `(${startTime.toLocaleTimeString()})`);
+        console.log(
+          `Current time (${currentTime.toLocaleTimeString()}) is ` +
+            "earlier than start time " +
+            `(${startTime.toLocaleTimeString()})`
+        );
         return false;
       }
     }
@@ -532,12 +552,14 @@ var MyQOnly = {
       console.log("End time not set. Skipping end time check.");
     } else {
       let endTime = new Date();
-      let [endHours, endMinutes,] = workingHours.endTime.split(":");
+      let [endHours, endMinutes] = workingHours.endTime.split(":");
       endTime.setHours(endHours, endMinutes);
       if (currentTime > endTime) {
-        console.log(`Current time (${currentTime.toLocaleTimeString()}) is ` +
-                    "later than end time " +
-                    `(${endTime.toLocaleTimeString()})`);
+        console.log(
+          `Current time (${currentTime.toLocaleTimeString()}) is ` +
+            "later than end time " +
+            `(${endTime.toLocaleTimeString()})`
+        );
         return false;
       }
     }
@@ -552,12 +574,14 @@ var MyQOnly = {
       3: "wednesday",
       4: "thursday",
       5: "friday",
-      6: "saturday",
+      6: "saturday"
     };
     let currentDay = days[currentTime.getDay()];
     if (!workingHours.days.includes(currentDay)) {
-      console.log(`Current day (${currentDay}) is not one of the working ` +
-                  `days (${workingHours.days.join(", ")})`);
+      console.log(
+        `Current day (${currentDay}) is not one of the working ` +
+          `days (${workingHours.days.join(", ")})`
+      );
       return false;
     }
 
@@ -567,7 +591,7 @@ var MyQOnly = {
 
   _calculateBadgeTotal(states) {
     let total = 0;
-    for (let [, state,] of states) {
+    for (let [, state] of states) {
       total += state.data.reviewTotal || 0;
 
       if (state.type == "bugzilla") {
@@ -589,29 +613,33 @@ var MyQOnly = {
 
       try {
         switch (service.type) {
-        case "phabricator": {
-          data = await this.updatePhabricator(service.settings);
-          console.log(`Found ${data.reviewTotal} user reviews, ` +
-                      `${data.groupReviewTotal} group reviews ` +
-                      "to do in Phabricator.");
-          if (service.settings.inclReviewerGroups) {
-            data.reviewTotal += data.groupReviewTotal;
+          case "phabricator": {
+            data = await this.updatePhabricator(service.settings);
+            console.log(
+              `Found ${data.reviewTotal} user reviews, ` +
+                `${data.groupReviewTotal} group reviews ` +
+                "to do in Phabricator."
+            );
+            if (service.settings.inclReviewerGroups) {
+              data.reviewTotal += data.groupReviewTotal;
+            }
+            break;
           }
-          break;
-        }
-        case "bugzilla": {
-          data = await this.updateBugzilla(service.settings);
-          console.log(`Found ${data.reviewTotal} Bugzilla reviews ` +
-                      "to do");
-          console.log(`Found ${data.needinfoTotal} Bugzilla needinfos ` +
-                      "to do");
-          break;
-        }
-        case "github": {
-          data = await this.updateGitHub(service.settings);
-          console.log(`Found ${data.reviewTotal} GitHub reviews to do`);
-          break;
-        }
+          case "bugzilla": {
+            data = await this.updateBugzilla(service.settings);
+            console.log(
+              `Found ${data.reviewTotal} Bugzilla reviews ` + "to do"
+            );
+            console.log(
+              `Found ${data.needinfoTotal} Bugzilla needinfos ` + "to do"
+            );
+            break;
+          }
+          case "github": {
+            data = await this.updateGitHub(service.settings);
+            console.log(`Found ${data.reviewTotal} GitHub reviews to do`);
+            break;
+          }
         }
       } catch (e) {
         console.error(`Error when updating ${service.type}: `, e.toString());
@@ -623,7 +651,7 @@ var MyQOnly = {
     let workingHours = await this.isWorkingHours();
     if (!workingHours) {
       console.log("Current time is outside working hours. Hiding reviews.");
-      browser.browserAction.setBadgeText({ text: null, });
+      browser.browserAction.setBadgeText({ text: null });
       return;
     }
 
@@ -635,21 +663,21 @@ var MyQOnly = {
       // We intentionally only do this if there are new reviews to do.
       if (this.featureRev < FEATURE_ALERT_REV) {
         browser.browserAction.setBadgeBackgroundColor({
-          color: FEATURE_ALERT_BG_COLOR,
+          color: FEATURE_ALERT_BG_COLOR
         });
-        browser.browserAction.setBadgeText({ text: FEATURE_ALERT_STRING, });
+        browser.browserAction.setBadgeText({ text: FEATURE_ALERT_STRING });
       } else {
-        browser.browserAction.setBadgeText({ text: null, });
+        browser.browserAction.setBadgeText({ text: null });
       }
     } else {
       // If we happened to set the background colour when alerting about
       // new features, clear that out now.
       browser.browserAction.setBadgeBackgroundColor({
-        color: null,
+        color: null
       });
-      browser.browserAction.setBadgeText({ text: String(thingsToDo), });
+      browser.browserAction.setBadgeText({ text: String(thingsToDo) });
     }
-  },
+  }
 };
 
 // Hackily detect the sinon-chrome test framework. If we're inside it,

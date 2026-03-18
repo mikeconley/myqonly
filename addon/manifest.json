@@ -4,10 +4,7 @@
   "name": "MyQOnly",
   "version": "0.11.0",
   "background": {
-    "scripts": [
-      "constants.js",
-      "background.js"
-    ]
+    "scripts": ["constants.js", "background.js"]
   },
   "browser_action": {
     "default_popup": "content/popup/popup.html",
@@ -17,15 +14,18 @@
       "16": "icons/myqonly-dark.svg",
       "32": "icons/myqonly-dark.svg"
     },
-    "theme_icons": [{
-      "light": "icons/myqonly-light.svg",
-      "dark": "icons/myqonly-dark.svg",
-      "size": 16
-    }, {
-      "light": "icons/myqonly-light.svg",
-      "dark": "icons/myqonly-dark.svg",
-      "size": 32
-    }]
+    "theme_icons": [
+      {
+        "light": "icons/myqonly-light.svg",
+        "dark": "icons/myqonly-dark.svg",
+        "size": 16
+      },
+      {
+        "light": "icons/myqonly-light.svg",
+        "dark": "icons/myqonly-dark.svg",
+        "size": 32
+      }
+    ]
   },
   "applications": {
     "gecko": {

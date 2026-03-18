@@ -12,7 +12,8 @@ input[type="text"] {
   width: 50ch;
 }
 
-label, .form-rows {
+label,
+.form-rows {
   margin-top: 5px;
 }
 
