@@ -22,6 +22,7 @@
     "karma-firefox-launcher": "^2.1.2",
     "karma-mocha": "^2.0.1",
     "mocha": "^10.3.0",
+    "sinon": "^21.0.3",
     "sinon-chrome": "^3.0.1",
     "web-ext": "^7.11.0"
   },

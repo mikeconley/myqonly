@@ -84,6 +84,11 @@ var MyQOnly = {
       phabService.settings.inclReviewerGroups = true;
       await browser.storage.local.set({ services: this.services, });
     }
+
+    let githubService = this._getService("github");
+    if (githubService) {
+      await this._checkGitHubMigration(githubService);
+    }
   },
 
   /**
@@ -125,6 +130,28 @@ var MyQOnly = {
           data: {},
         });
       }
+    }
+  },
+
+  async _checkGitHubMigration(service) {
+    let { needsGitHubMigration } = await browser.storage.local.get("needsGitHubMigration");
+    if (needsGitHubMigration) {
+      return;
+    }
+
+    let repos = (service.settings.ignoredRepos || "")
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    // Check if any repos don't match owner/repo format (e.g., "mozilla/gecko-dev")
+    let hasOldFormat = repos.some(repo => !repo.match(/^[^\/]+\/[^\/]+$/));
+
+    if (hasOldFormat) {
+      await browser.storage.local.set({
+        needsGitHubMigration: true,
+        oldIgnoredRepos: service.settings.ignoredRepos
+      });
     }
   },
 

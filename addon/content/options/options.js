@@ -39,6 +39,7 @@ const Options = {
     window.addEventListener("click", this);
 
     this.initWorkingHours();
+    await this.checkMigrationNeeded();
     let initted = new CustomEvent("initted", { bubbles: true, });
     document.dispatchEvent(initted);
   },
@@ -158,6 +159,112 @@ const Options = {
     return settings;
   },
 
+  async checkMigrationNeeded() {
+    let { needsGitHubMigration, oldIgnoredRepos } =
+      await browser.storage.local.get(["needsGitHubMigration", "oldIgnoredRepos"]);
+
+    if (needsGitHubMigration) {
+      let warningDiv = document.getElementById("github-migration-warning");
+      warningDiv.classList.remove("hidden");
+      document.getElementById("old-repos").textContent = oldIgnoredRepos;
+    }
+  },
+
+  async showMigrationHelper() {
+    let githubService = this.services.find(s => s.type === "github");
+
+    if (!githubService || !githubService.settings.username) {
+      alert("Please configure your GitHub username first.");
+      return;
+    }
+
+    let username = githubService.settings.username;
+    let token = githubService.settings.token;
+
+    let query = `is:pr is:open review-requested:${username}`;
+    let url = new URL("https://api.github.com/search/issues");
+    url.searchParams.set("q", query);
+    url.searchParams.set("per_page", "100");
+
+    let headers = {
+      Accept: "application/vnd.github.v3+json",
+    };
+    if (token) {
+      headers["Authorization"] = `token ${token}`;
+    }
+
+    try {
+      let response = await fetch(url, {
+        method: "GET",
+        headers: headers,
+      });
+
+      if (!response.ok) {
+        throw new Error(`GitHub request failed: ${response.status}`);
+      }
+
+      let data = await response.json();
+
+      let repos = new Set();
+      for (let item of data.items) {
+        let match = item.repository_url.match(/\/repos\/([^/]+\/[^/]+)/);
+        if (match) {
+          repos.add(match[1]);
+        }
+      }
+
+      this.showRepoSelectionDialog(Array.from(repos));
+    } catch (error) {
+      console.error("Failed to fetch GitHub repositories:", error);
+      alert(`Failed to fetch your GitHub review requests: ${error.message}`);
+    }
+  },
+
+  showRepoSelectionDialog(repos) {
+    let template = document.getElementById("migration-dialog-template");
+    let dialogNode = template.content.cloneNode(true);
+    let dialog = dialogNode.querySelector("dialog");
+
+    let repoList = dialog.querySelector("#repo-list");
+    repoList.innerHTML = "";
+    for (let repo of repos) {
+      let label = document.createElement("label");
+      label.className = "repo-item";
+      let checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.value = repo;
+      label.appendChild(checkbox);
+      label.appendChild(document.createTextNode(" " + repo));
+      repoList.appendChild(label);
+    }
+
+    document.body.appendChild(dialog);
+    dialog.showModal();
+  },
+
+  async onSaveMigration(event) {
+    let dialog = event.target.closest("dialog");
+    let selected = Array.from(dialog.querySelectorAll("input:checked"))
+      .map(cb => cb.value);
+
+    document.getElementById("github-ignored-repos").value = selected.join(", ");
+
+    let changeEvent = new Event("change", { bubbles: true, });
+    document.getElementById("github-ignored-repos").dispatchEvent(changeEvent);
+
+    await browser.storage.local.remove(["needsGitHubMigration", "oldIgnoredRepos"]);
+
+    dialog.close();
+    document.body.removeChild(dialog);
+    document.getElementById("github-migration-warning").classList.add("hidden");
+  },
+
+  onCancelMigration(event) {
+    let dialog = event.target.closest("dialog");
+    dialog.close();
+    document.body.removeChild(dialog);
+  },
+
   async initWorkingHours() {
     // Specify reasonable defaults for the first-run case.
     let { workingHours, } = await browser.storage.local.get({workingHours: {
@@ -209,6 +316,18 @@ const Options = {
     }
     case "working-hours-checkbox": {
       this.onWorkingHoursChanged();
+      break;
+    }
+    case "help-migrate": {
+      this.showMigrationHelper();
+      break;
+    }
+    case "save-migration": {
+      this.onSaveMigration(event);
+      break;
+    }
+    case "cancel-migration": {
+      this.onCancelMigration(event);
       break;
     }
     }

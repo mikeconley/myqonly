@@ -13,5 +13,6 @@ module.exports = {
     "browser": true,
     "chrome": true,
     "MyQOnly": true,
+    "sinon": true,
   },
 };

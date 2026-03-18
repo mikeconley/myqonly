@@ -55,3 +55,23 @@ section:not(:first-child) {
 #debug:not(:hover) {
   opacity: 0;
 }
+
+.warning {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.hidden {
+  display: none;
+}
+
+.dialog-buttons {
+  margin-top: 16px;
+}
+
+.repo-item {
+  display: block;
+}

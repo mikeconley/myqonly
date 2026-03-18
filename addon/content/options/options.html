@@ -10,6 +10,13 @@
 
 <h1>MyQOnly Options</h1>
 
+<div id="github-migration-warning" class="warning hidden">
+  <strong>⚠️ Configuration Update Required</strong>
+  <p>Your GitHub ignored repositories are in an old format. Please update them to use the <code>owner/repo</code> format.</p>
+  <p>Old value: <code id="old-repos"></code></p>
+  <button id="help-migrate">Help me migrate</button>
+</div>
+
 <section id="general">
   <h2>General</h2>
   <label for="update-interval">Check for updates every</label>
@@ -118,6 +125,18 @@
 </section>
 
 <a id="debug" href="/content/debug/debug.html">Debug</a>
+
+<template id="migration-dialog-template">
+  <dialog id="migration-dialog">
+    <h2>Select Repositories to Ignore</h2>
+    <p>Based on your current review queue, which repositories should be ignored?</p>
+    <div id="repo-list"></div>
+    <div class="dialog-buttons">
+      <button id="save-migration">Save Selection</button>
+      <button id="cancel-migration">Cancel</button>
+    </div>
+  </dialog>
+</template>
 
 <script src="options.js"></script>
 </html>

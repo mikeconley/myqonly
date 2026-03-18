@@ -22,6 +22,9 @@ async function setupBlank(browser) {
   browser.storage.local.get.withArgs({ workingHours: {}, }).returns(
     Promise.resolve({})
   );
+  browser.storage.local.get.withArgs(["needsGitHubMigration", "oldIgnoredRepos"]).returns(
+    Promise.resolve({})
+  );
   browser.runtime.sendMessage.withArgs({
     name: "check-for-phabricator-session",
   }).returns(
@@ -58,6 +61,9 @@ async function setupWithServices(browser) {
     })
   );
   browser.storage.local.get.withArgs({ workingHours: {}, }).returns(
+    Promise.resolve({})
+  );
+  browser.storage.local.get.withArgs(["needsGitHubMigration", "oldIgnoredRepos"]).returns(
     Promise.resolve({})
   );
   browser.runtime.sendMessage.withArgs({
@@ -278,6 +284,235 @@ describe("Options page", function() {
             endTime: "17:00",
           },
         }));
+      },
+    });
+  });
+});
+
+describe("GitHub migration", function() {
+  let sandbox;
+
+  beforeEach(function() {
+    sandbox = sinon.createSandbox();
+  });
+
+  afterEach(function() {
+    sandbox.restore();
+  });
+
+  it("should show migration warning when needsGitHubMigration is set", async () => {
+    await loadPage({
+      url: "/addon/content/options/options.html",
+      setup: async(browser) => {
+        await setupWithServices(browser);
+        browser.storage.local.get.withArgs(["needsGitHubMigration", "oldIgnoredRepos"]).returns(
+          Promise.resolve({
+            needsGitHubMigration: true,
+            oldIgnoredRepos: "mozilla, taskcluster"
+          })
+        );
+      },
+      test: async(content, document) => {
+        let warning = document.getElementById("github-migration-warning");
+        assert.ok(!warning.classList.contains("hidden"));
+
+        let oldReposSpan = document.getElementById("old-repos");
+        assert.equal(oldReposSpan.textContent, "mozilla, taskcluster");
+      },
+    });
+  });
+
+  it("should keep warning hidden when migration is not needed", async () => {
+    browser.storage.local.get.withArgs(["needsGitHubMigration", "oldIgnoredRepos"]).returns(
+      Promise.resolve({})
+    );
+
+    await loadPage({
+      url: "/addon/content/options/options.html",
+      setup: setupWithServices,
+      test: async(content, document) => {
+        let warning = document.getElementById("github-migration-warning");
+        assert.ok(warning.classList.contains("hidden"));
+      },
+    });
+  });
+
+  it("should show dialog with repos when migration helper is clicked", async () => {
+    await loadPage({
+      url: "/addon/content/options/options.html",
+      setup: async(browser) => {
+        await setupWithServices(browser);
+        browser.storage.local.get.withArgs(["needsGitHubMigration", "oldIgnoredRepos"]).returns(
+          Promise.resolve({
+            needsGitHubMigration: true,
+            oldIgnoredRepos: "mozilla"
+          })
+        );
+      },
+      test: async(content, document) => {
+        sandbox.stub(content, "fetch").resolves({
+          ok: true,
+          json: async () => ({
+            items: [
+              { repository_url: "https://api.github.com/repos/mozilla/gecko-dev" },
+              { repository_url: "https://api.github.com/repos/rust-lang/rust" },
+            ]
+          })
+        });
+
+        let helpButton = document.getElementById("help-migrate");
+        helpButton.click();
+
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        let dialog = document.querySelector("#migration-dialog");
+        assert.ok(dialog);
+        assert.ok(dialog.open);
+
+        let checkboxes = dialog.querySelectorAll("input[type='checkbox']");
+        assert.equal(checkboxes.length, 2);
+        assert.equal(checkboxes[0].value, "mozilla/gecko-dev");
+        assert.equal(checkboxes[1].value, "rust-lang/rust");
+      },
+    });
+  });
+
+  it("should save selected repos when save button is clicked", async () => {
+    browser.storage.local.remove.returns(Promise.resolve());
+
+    await loadPage({
+      url: "/addon/content/options/options.html",
+      setup: async(browser) => {
+        await setupWithServices(browser);
+        browser.storage.local.get.withArgs(["needsGitHubMigration", "oldIgnoredRepos"]).returns(
+          Promise.resolve({
+            needsGitHubMigration: true,
+            oldIgnoredRepos: "mozilla"
+          })
+        );
+      },
+      test: async(content, document) => {
+        sandbox.stub(content, "fetch").resolves({
+          ok: true,
+          json: async () => ({
+            items: [
+              { repository_url: "https://api.github.com/repos/mozilla/gecko-dev" },
+              { repository_url: "https://api.github.com/repos/rust-lang/rust" },
+            ]
+          })
+        });
+
+        let helpButton = document.getElementById("help-migrate");
+        helpButton.click();
+
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        let dialog = document.querySelector("#migration-dialog");
+        let checkboxes = dialog.querySelectorAll("input[type='checkbox']");
+        checkboxes[0].checked = true;
+        checkboxes[1].checked = true;
+
+        let saveButton = document.getElementById("save-migration");
+        saveButton.click();
+
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        let ignoredReposField = document.getElementById("github-ignored-repos");
+        assert.equal(ignoredReposField.value, "mozilla/gecko-dev, rust-lang/rust");
+
+        assert.ok(browser.storage.local.remove.calledWith(
+          ["needsGitHubMigration", "oldIgnoredRepos"]
+        ));
+
+        let warning = document.getElementById("github-migration-warning");
+        assert.ok(warning.classList.contains("hidden"));
+
+        assert.ok(!dialog.open);
+      },
+    });
+  });
+
+  it("should close dialog when cancel button is clicked", async () => {
+    await loadPage({
+      url: "/addon/content/options/options.html",
+      setup: async(browser) => {
+        await setupWithServices(browser);
+        browser.storage.local.get.withArgs(["needsGitHubMigration", "oldIgnoredRepos"]).returns(
+          Promise.resolve({
+            needsGitHubMigration: true,
+            oldIgnoredRepos: "mozilla"
+          })
+        );
+      },
+      test: async(content, document) => {
+        sandbox.stub(content, "fetch").resolves({
+          ok: true,
+          json: async () => ({
+            items: [
+              { repository_url: "https://api.github.com/repos/mozilla/gecko-dev" },
+            ]
+          })
+        });
+
+        let helpButton = document.getElementById("help-migrate");
+        helpButton.click();
+
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        let dialog = document.querySelector("#migration-dialog");
+        assert.ok(dialog.open);
+
+        let cancelButton = document.getElementById("cancel-migration");
+        cancelButton.click();
+
+        assert.ok(!dialog.open);
+      },
+    });
+  });
+
+  it("should alert if no GitHub username configured", async () => {
+    await loadPage({
+      url: "/addon/content/options/options.html",
+      setup: async(browser) => {
+        browser.storage.local.get.withArgs("updateInterval").returns(
+          Promise.resolve({ updateInterval: DEFAULT_UPDATE_INTERVAL, })
+        );
+        browser.storage.local.get.withArgs("services").returns(
+          Promise.resolve({
+            services: [{
+              id: 2,
+              type: "github",
+              settings: {},
+            },],
+          })
+        );
+        browser.storage.local.get.withArgs({ workingHours: {}, }).returns(
+          Promise.resolve({})
+        );
+        browser.storage.local.get.withArgs(["needsGitHubMigration", "oldIgnoredRepos"]).returns(
+          Promise.resolve({
+            needsGitHubMigration: true,
+            oldIgnoredRepos: "mozilla"
+          })
+        );
+        browser.runtime.sendMessage.withArgs({
+          name: "check-for-phabricator-session",
+        }).returns(
+          Promise.resolve(false)
+        );
+      },
+      test: async(content, document) => {
+        let alertStub = sandbox.stub(content, "alert");
+
+        let helpButton = document.getElementById("help-migrate");
+        helpButton.click();
+
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        assert.ok(alertStub.calledOnce);
+
+        let dialog = document.querySelector("#migration-dialog");
+        assert.ok(!dialog);
       },
     });
   });

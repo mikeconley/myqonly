@@ -12,6 +12,7 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
       // Test dependencies
+      "node_modules/sinon/pkg/sinon.js",
       "node_modules/expect.js/index.js",
       "node_modules/sinon-chrome/bundle/sinon-chrome-webextensions.min.js",
 

@@ -1,5 +1,15 @@
 describe("MyQOnly initting fresh", function() {
+  let sandbox;
+
   beforeEach(async function() {
+    sandbox = sinon.createSandbox();
+
+    sandbox.stub(window, "fetch").resolves({
+      ok: false,
+      status: 500,
+      text: async () => "Mocked fetch - tests should not make real network calls"
+    });
+
     browser.storage.local.get.withArgs("featureRev").returns(
       Promise.resolve({})
     );
@@ -15,11 +25,15 @@ describe("MyQOnly initting fresh", function() {
     browser.storage.local.get.withArgs("workingHours").returns(
       Promise.resolve({})
     );
+    browser.storage.local.get.withArgs("needsGitHubMigration").returns(
+      Promise.resolve({})
+    );
   });
 
   afterEach(async function() {
     MyQOnly.uninit();
     browser.flush();
+    sandbox.restore();
   });
 
   it("should exist, and be able to init with defaults", async () => {
@@ -200,5 +214,196 @@ describe("MyQOnly initting fresh", function() {
 
     let service = MyQOnly._getService("phabricator");
     assert(!service.settings.inclReviewerGroups);
+  });
+});
+
+describe("GitHub migration detection", function() {
+  let sandbox;
+
+  beforeEach(async function() {
+    sandbox = sinon.createSandbox();
+
+    sandbox.stub(window, "fetch").resolves({
+      ok: false,
+      status: 500,
+      text: async () => "Mocked fetch - tests should not make real network calls"
+    });
+
+    browser.storage.local.get.withArgs("featureRev").returns(
+      Promise.resolve({})
+    );
+    browser.storage.local.set.returns(
+      Promise.resolve({})
+    );
+    browser.storage.local.get.withArgs("updateInterval").returns(
+      Promise.resolve({})
+    );
+    browser.storage.local.get.withArgs("workingHours").returns(
+      Promise.resolve({})
+    );
+    browser.storage.local.get.withArgs("needsGitHubMigration").returns(
+      Promise.resolve({})
+    );
+  });
+
+  afterEach(async function() {
+    MyQOnly.uninit();
+    browser.flush();
+    sandbox.restore();
+  });
+
+  it("should detect repos in old format without slash", async () => {
+    browser.storage.local.get.withArgs("services").returns(
+      Promise.resolve({
+        services: [{
+          id: 1,
+          type: "github",
+          settings: {
+            username: "testuser",
+            ignoredRepos: "mozilla, taskcluster",
+          },
+        },],
+      })
+    );
+
+    await MyQOnly.init();
+
+    assert.ok(browser.storage.local.set.calledWith({
+      needsGitHubMigration: true,
+      oldIgnoredRepos: "mozilla, taskcluster"
+    }));
+  });
+
+  it("should not flag repos already in owner/repo format", async () => {
+    browser.storage.local.get.withArgs("services").returns(
+      Promise.resolve({
+        services: [{
+          id: 1,
+          type: "github",
+          settings: {
+            username: "testuser",
+            ignoredRepos: "mozilla/gecko-dev, rust-lang/rust",
+          },
+        },],
+      })
+    );
+
+    await MyQOnly.init();
+
+    assert.ok(!browser.storage.local.set.calledWith({
+      needsGitHubMigration: true,
+      oldIgnoredRepos: "mozilla/gecko-dev, rust-lang/rust"
+    }));
+  });
+
+  it("should detect mixed format with at least one old format repo", async () => {
+    browser.storage.local.get.withArgs("services").returns(
+      Promise.resolve({
+        services: [{
+          id: 1,
+          type: "github",
+          settings: {
+            username: "testuser",
+            ignoredRepos: "mozilla/gecko-dev, taskcluster",
+          },
+        },],
+      })
+    );
+
+    await MyQOnly.init();
+
+    assert.ok(browser.storage.local.set.calledWith({
+      needsGitHubMigration: true,
+      oldIgnoredRepos: "mozilla/gecko-dev, taskcluster"
+    }));
+  });
+
+  it("should not flag if ignoredRepos is empty", async () => {
+    browser.storage.local.get.withArgs("services").returns(
+      Promise.resolve({
+        services: [{
+          id: 1,
+          type: "github",
+          settings: {
+            username: "testuser",
+            ignoredRepos: "",
+          },
+        },],
+      })
+    );
+
+    await MyQOnly.init();
+
+    assert.ok(!browser.storage.local.set.calledWith({
+      needsGitHubMigration: true,
+      oldIgnoredRepos: ""
+    }));
+  });
+
+  it("should not flag if ignoredRepos is not set", async () => {
+    browser.storage.local.get.withArgs("services").returns(
+      Promise.resolve({
+        services: [{
+          id: 1,
+          type: "github",
+          settings: {
+            username: "testuser",
+          },
+        },],
+      })
+    );
+
+    await MyQOnly.init();
+
+    let setCallsWithMigrationFlag = browser.storage.local.set.getCalls()
+      .filter(call => call.args[0] && call.args[0].needsGitHubMigration);
+
+    assert.equal(setCallsWithMigrationFlag.length, 0);
+  });
+
+  it("should not re-flag if already flagged", async () => {
+    browser.storage.local.get.withArgs("needsGitHubMigration").returns(
+      Promise.resolve({ needsGitHubMigration: true })
+    );
+    browser.storage.local.get.withArgs("services").returns(
+      Promise.resolve({
+        services: [{
+          id: 1,
+          type: "github",
+          settings: {
+            username: "testuser",
+            ignoredRepos: "mozilla",
+          },
+        },],
+      })
+    );
+
+    await MyQOnly.init();
+
+    let setCallsWithMigrationFlag = browser.storage.local.set.getCalls()
+      .filter(call => call.args[0].needsGitHubMigration);
+
+    assert.equal(setCallsWithMigrationFlag.length, 0);
+  });
+
+  it("should not error if GitHub service does not exist", async () => {
+    browser.storage.local.get.withArgs("services").returns(
+      Promise.resolve({
+        services: [{
+          id: 1,
+          type: "bugzilla",
+          settings: {
+            apiKey: "abc123",
+          },
+        },],
+      })
+    );
+
+    await MyQOnly.init();
+
+    let setCallsWithMigrationFlag = browser.storage.local.set.getCalls()
+      .filter(call => call.args[0] && call.args[0].needsGitHubMigration);
+
+    assert.equal(setCallsWithMigrationFlag.length, 0);
   });
 });
