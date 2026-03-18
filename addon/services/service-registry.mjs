@@ -1,10 +1,13 @@
-/* eslint-disable no-unused-vars, no-redeclare */
+import { SERVICE_TYPES } from "../constants.mjs";
+import { PhabricatorService } from "./phabricator-service.mjs";
+import { BugzillaService } from "./bugzilla-service.mjs";
+import { GitHubService } from "./github-service.mjs";
 
 /**
  * Service registry for managing review service instances.
  * Provides a factory method to create service instances based on type.
  */
-class ServiceRegistry {
+export class ServiceRegistry {
   constructor() {
     this.#services = new Map();
     this.#registerDefaultServices();

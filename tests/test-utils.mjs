@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-
 /**
  * Runs some optional setup script to prepare sinon-chrome with
  * some values, and then loads a url in an iframe in the main document
@@ -64,3 +62,5 @@ function changeFieldValue(field, value) {
     })
   );
 }
+
+export { loadPage, changeFieldValue };

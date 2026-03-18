@@ -1,11 +1,17 @@
-/* eslint-disable no-unused-vars, no-redeclare */
+import { BaseService } from "./base-service.mjs";
+import {
+  GITHUB_API,
+  GITHUB_REVIEW_URL,
+  SERVICE_TYPES,
+  HTTP_METHODS
+} from "../constants.mjs";
 
 /**
  * Service for fetching GitHub pull request review counts.
  * Uses the GitHub Search API to find PRs requesting review from the user,
  * with extensive filtering options.
  */
-class GitHubService extends BaseService {
+export class GitHubService extends BaseService {
   /**
    * Updates GitHub pull request review counts using the GitHub Search API.
    * Filters by various criteria including ignored repos, users, teams, and PR types.

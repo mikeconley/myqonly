@@ -1,10 +1,20 @@
-/* eslint-disable no-unused-vars, no-redeclare */
+import { BaseService } from "./base-service.mjs";
+import {
+  BUGZILLA_API,
+  BUGZILLA_DASHBOARD,
+  BUGZILLA_METHOD,
+  BUGZILLA_REQUEST_ID,
+  BUGZILLA_VERSION,
+  SERVICE_TYPES,
+  HTTP_METHODS,
+  HTTP_HEADERS
+} from "../constants.mjs";
 
 /**
  * Service for fetching Bugzilla review and needinfo counts.
  * Uses the Bugzilla JSON-RPC API to fetch flags requested from the user.
  */
-class BugzillaService extends BaseService {
+export class BugzillaService extends BaseService {
   /**
    * Updates Bugzilla review and needinfo counts using the Bugzilla API.
    *

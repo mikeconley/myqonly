@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars, no-redeclare */
-
 /**
  * Base class for all review services. Each service fetches review counts
  * from an external system (Phabricator, Bugzilla, GitHub, etc.) and returns
@@ -7,7 +5,7 @@
  *
  * Services should extend this class and implement the abstract methods.
  */
-class BaseService {
+export class BaseService {
   /**
    * Updates the review count by fetching data from the service.
    *

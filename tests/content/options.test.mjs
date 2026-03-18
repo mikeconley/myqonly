@@ -1,4 +1,7 @@
-/* globals loadPage, changeFieldValue */
+import { DEFAULT_UPDATE_INTERVAL } from "../../addon/constants.mjs";
+import { loadPage, changeFieldValue } from "../test-utils.mjs";
+
+const browser = window.chrome;
 
 /**
  * Prepares the Options UI so that it's in the default empty state.

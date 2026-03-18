@@ -1,3 +1,12 @@
+import { MyQOnly } from "../addon/background.mjs";
+import {
+  FEATURE_ALERT_REV,
+  DEFAULT_UPDATE_INTERVAL,
+  ALARM_NAME
+} from "../addon/constants.mjs";
+
+const browser = window.chrome;
+
 describe("MyQOnly initting fresh", function () {
   let sandbox;
 
@@ -25,6 +34,13 @@ describe("MyQOnly initting fresh", function () {
     browser.storage.local.get
       .withArgs("needsGitHubMigration")
       .returns(Promise.resolve({}));
+
+    if (!browser.action) {
+      browser.action = {
+        setBadgeText: sinon.stub().returns(Promise.resolve()),
+        setBadgeBackgroundColor: sinon.stub().returns(Promise.resolve())
+      };
+    }
   });
 
   afterEach(async function () {
@@ -281,6 +297,13 @@ describe("GitHub migration detection", function () {
     browser.storage.local.get
       .withArgs("needsGitHubMigration")
       .returns(Promise.resolve({}));
+
+    if (!browser.action) {
+      browser.action = {
+        setBadgeText: sinon.stub().returns(Promise.resolve()),
+        setBadgeBackgroundColor: sinon.stub().returns(Promise.resolve())
+      };
+    }
   });
 
   afterEach(async function () {

@@ -16,19 +16,19 @@ module.exports = function (config) {
       "node_modules/sinon-chrome/bundle/sinon-chrome-webextensions.min.js",
 
       // Source to test
-      "addon/constants.js",
-      "addon/services/base-service.js",
-      "addon/services/phabricator-service.js",
-      "addon/services/bugzilla-service.js",
-      "addon/services/github-service.js",
-      "addon/services/service-registry.js",
-      "addon/background.js",
+      { pattern: "addon/constants.mjs", type: "module" },
+      { pattern: "addon/services/base-service.mjs", type: "module" },
+      { pattern: "addon/services/phabricator-service.mjs", type: "module" },
+      { pattern: "addon/services/bugzilla-service.mjs", type: "module" },
+      { pattern: "addon/services/github-service.mjs", type: "module" },
+      { pattern: "addon/services/service-registry.mjs", type: "module" },
+      { pattern: "addon/background.mjs", type: "module" },
       { pattern: "addon/content/*/*.*", served: true, included: false },
 
       // Tests
-      "tests/*.js",
-      "tests/content/*.js",
-      "tests/services/**/*.js",
+      { pattern: "tests/*.mjs", type: "module" },
+      { pattern: "tests/content/*.mjs", type: "module" },
+      { pattern: "tests/services/**/*.mjs", type: "module" },
 
       // Service test files
       { pattern: "tests/services/**/*.html", served: true, included: false }

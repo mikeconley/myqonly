@@ -1,11 +1,21 @@
-/* eslint-disable no-unused-vars, no-redeclare */
+import { BaseService } from "./base-service.mjs";
+import {
+  PHABRICATOR_ROOT,
+  PHABRICATOR_DASHBOARD,
+  PHABRICATOR_COOKIE_NAME,
+  PHABRICATOR_SELECTORS,
+  PHABRICATOR_REVIEW_HEADERS,
+  SERVICE_TYPES,
+  HTTP_METHODS,
+  HTTP_HEADERS
+} from "../constants.mjs";
 
 /**
  * Service for fetching Phabricator review counts.
  * Parses the Phabricator dashboard HTML to extract reviews assigned to
  * the user and optionally to groups the user belongs to.
  */
-class PhabricatorService extends BaseService {
+export class PhabricatorService extends BaseService {
   /**
    * Updates Phabricator review counts for the logged-in user.
    *

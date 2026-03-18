@@ -1,20 +1,13 @@
 {
   "description": "A tool for Mozillians who want to know how many reviews are in their queue in their browser.",
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "MyQOnly",
   "version": "0.11.0",
   "background": {
-    "scripts": [
-      "constants.js",
-      "services/base-service.js",
-      "services/phabricator-service.js",
-      "services/bugzilla-service.js",
-      "services/github-service.js",
-      "services/service-registry.js",
-      "background.js"
-    ]
+    "scripts": ["background.mjs"],
+    "type": "module"
   },
-  "browser_action": {
+  "action": {
     "default_popup": "content/popup/popup.html",
     "browser_style": true,
     "default_title": "MyQOnly",
@@ -35,20 +28,18 @@
       }
     ]
   },
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "myqonly@mikeconley.ca",
-      "strict_min_version": "62.0"
+      "strict_min_version": "109.0"
     }
   },
   "options_ui": {
     "open_in_tab": true,
     "page": "content/options/options.html"
   },
-  "permissions": [
-    "alarms",
-    "cookies",
-    "storage",
+  "permissions": ["alarms", "cookies", "storage"],
+  "host_permissions": [
     "https://phabricator.services.mozilla.com/*",
     "https://bugzilla.mozilla.org/*"
   ]
