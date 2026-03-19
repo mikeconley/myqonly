@@ -1,7 +1,7 @@
 import { PhabricatorService } from "../../../addon/services/phabricator-service.mjs";
 
 describe("Phabricator", function () {
-  const TEST_URL_PREFIX = "base/tests/services/phabricator";
+  const TEST_URL_PREFIX = "/tests/services/phabricator";
   let phabService;
 
   beforeEach(function () {

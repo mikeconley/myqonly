@@ -28,9 +28,7 @@
  */
 async function loadPage({ url, setup, waitForInitted = true, test } = {}) {
   let iframe = document.createElement("iframe");
-  // Karma hosts these files at http://localhost/base/ + file path.
-  // See http://karma-runner.github.io/3.0/config/files.html
-  iframe.src = "base" + url;
+  iframe.src = url;
   document.body.appendChild(iframe);
   let browser = chrome;
 
