@@ -1,5 +1,7 @@
 # MyQOnly
 
+![Tests](https://github.com/mikeconley/myqonly/actions/workflows/test.yml/badge.svg)
+
 [Install from AMO here.](https://addons.mozilla.org/en-US/firefox/addon/myqonly/)
 
 Suggestions for a better name welcome!
