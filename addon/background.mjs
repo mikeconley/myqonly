@@ -191,15 +191,23 @@ const MyQOnly = {
     let { needsGitHubMigration } = await browser.storage.local.get(
       "needsGitHubMigration"
     );
-    if (needsGitHubMigration) {
-      return;
-    }
 
-    if (GitHubService.hasOldFormatRepos(service.settings.ignoredRepos)) {
-      await browser.storage.local.set({
-        needsGitHubMigration: true,
-        oldIgnoredRepos: service.settings.ignoredRepos
-      });
+    let hasOldFormat = GitHubService.hasOldFormatRepos(
+      service.settings.ignoredRepos
+    );
+
+    if (hasOldFormat) {
+      if (!needsGitHubMigration) {
+        await browser.storage.local.set({
+          needsGitHubMigration: true,
+          oldIgnoredRepos: service.settings.ignoredRepos
+        });
+      }
+    } else if (needsGitHubMigration) {
+      await browser.storage.local.remove([
+        "needsGitHubMigration",
+        "oldIgnoredRepos"
+      ]);
     }
   },
 
