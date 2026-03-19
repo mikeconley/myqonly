@@ -9,6 +9,13 @@ const Panel = {
       link.href = link.href + "#featureRev-" + featureRev;
     }
 
+    let { needsGitHubMigration } = await browser.storage.local.get(
+      "needsGitHubMigration"
+    );
+    if (needsGitHubMigration) {
+      document.getElementById("github-migration-needed").classList.remove("hidden");
+    }
+
     window.addEventListener("click", this);
     await this.updatePanel();
   },
@@ -38,6 +45,12 @@ const Panel = {
         return false;
       }
       case "options": {
+        browser.runtime.openOptionsPage();
+        event.preventDefault();
+        window.close();
+        return false;
+      }
+      case "github-migration-needed": {
         browser.runtime.openOptionsPage();
         event.preventDefault();
         window.close();

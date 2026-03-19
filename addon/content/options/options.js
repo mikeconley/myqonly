@@ -1,3 +1,5 @@
+import { GitHubService } from "../../services/github-service.mjs";
+
 const Options = {
   _nextID: 0,
 
@@ -117,9 +119,11 @@ const Options = {
       "[data-setting='ignoredRepos']"
     );
     ignoredRepos.value = service.settings.ignoredRepos || "";
+
+    this.validateGitHubRepos(service.settings.ignoredRepos);
   },
 
-  onUpdateService(event, serviceType) {
+  async onUpdateService(event, serviceType) {
     let changedSetting = event.target.dataset.setting;
     let newValue;
     switch (event.target.type) {
@@ -140,6 +144,11 @@ const Options = {
         break;
     }
 
+    // Validate GitHub ignoredRepos format
+    if (serviceType === "github" && changedSetting === "ignoredRepos") {
+      this.validateGitHubRepos(newValue);
+    }
+
     // For now, there's only a single service instance per type.
     let settings = this.getServiceSettings(serviceType);
     if (newValue !== undefined) {
@@ -148,9 +157,13 @@ const Options = {
       delete settings[changedSetting];
     }
 
-    browser.storage.local.set({ services: this.services }).then(() => {
-      console.log(`Saved update to ${serviceType} setting ${changedSetting}`);
-    });
+    await browser.storage.local.set({ services: this.services });
+    console.log(`Saved update to ${serviceType} setting ${changedSetting}`);
+
+    // If GitHub ignoredRepos changed, check if we can clear migration warning
+    if (serviceType === "github" && changedSetting === "ignoredRepos") {
+      await this.checkGitHubMigrationStatus();
+    }
   },
 
   getServiceSettings(serviceType) {
@@ -185,11 +198,76 @@ const Options = {
     }
   },
 
+  async checkGitHubMigrationStatus() {
+    let { needsGitHubMigration } = await browser.storage.local.get(
+      "needsGitHubMigration"
+    );
+
+    if (!needsGitHubMigration) {
+      document.dispatchEvent(
+        new CustomEvent("migration-check-complete", { bubbles: true })
+      );
+      return;
+    }
+
+    let githubService = this.services.find((s) => s.type === "github");
+    if (!githubService) {
+      document.dispatchEvent(
+        new CustomEvent("migration-check-complete", { bubbles: true })
+      );
+      return;
+    }
+
+    if (!GitHubService.hasOldFormatRepos(githubService.settings.ignoredRepos)) {
+      await this.clearMigrationWarning();
+    }
+
+    document.dispatchEvent(
+      new CustomEvent("migration-check-complete", { bubbles: true })
+    );
+  },
+
+  async clearMigrationWarning() {
+    await browser.storage.local.remove([
+      "needsGitHubMigration",
+      "oldIgnoredRepos"
+    ]);
+
+    let warningDiv = document.getElementById("github-migration-warning");
+    warningDiv.classList.add("hidden");
+
+    document.dispatchEvent(
+      new CustomEvent("migration-warning-cleared", { bubbles: true })
+    );
+  },
+
+  validateGitHubRepos(reposString) {
+    let errorDiv = document.getElementById("github-repos-validation-error");
+
+    if (!reposString || reposString.trim() === "") {
+      errorDiv.classList.add("hidden");
+      return true;
+    }
+
+    let hasOldFormat = GitHubService.hasOldFormatRepos(reposString);
+
+    if (hasOldFormat) {
+      errorDiv.classList.remove("hidden");
+      return false;
+    } else {
+      errorDiv.classList.add("hidden");
+      return true;
+    }
+  },
+
   async showMigrationHelper() {
     let githubService = this.services.find((s) => s.type === "github");
 
     if (!githubService || !githubService.settings.username) {
       alert("Please configure your GitHub username first.");
+      document.dispatchEvent(
+        new CustomEvent("migration-helper-complete", { bubbles: true })
+      );
       return;
     }
 
@@ -229,9 +307,15 @@ const Options = {
       }
 
       this.showRepoSelectionDialog(Array.from(repos));
+      document.dispatchEvent(
+        new CustomEvent("migration-helper-complete", { bubbles: true })
+      );
     } catch (error) {
       console.error("Failed to fetch GitHub repositories:", error);
       alert(`Failed to fetch your GitHub review requests: ${error.message}`);
+      document.dispatchEvent(
+        new CustomEvent("migration-helper-complete", { bubbles: true })
+      );
     }
   },
 
@@ -273,9 +357,15 @@ const Options = {
       "oldIgnoredRepos"
     ]);
 
+    let warningDiv = document.getElementById("github-migration-warning");
+    warningDiv.classList.add("hidden");
+
     dialog.close();
     document.body.removeChild(dialog);
-    document.getElementById("github-migration-warning").classList.add("hidden");
+
+    document.dispatchEvent(
+      new CustomEvent("migration-warning-cleared", { bubbles: true })
+    );
   },
 
   onCancelMigration(event) {

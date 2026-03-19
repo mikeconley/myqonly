@@ -8,6 +8,7 @@ import {
   FEATURE_ALERT_STRING
 } from "./constants.mjs";
 import { ServiceRegistry } from "./services/service-registry.mjs";
+import { GitHubService } from "./services/github-service.mjs";
 
 // If we're running in the sinon-chrome test framework, we need to alias
 // the chrome namespace to browser.
@@ -194,16 +195,7 @@ const MyQOnly = {
       return;
     }
 
-    let repos = (service.settings.ignoredRepos || "")
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-
-    // Check if any repos don't match owner/repo format
-    // (e.g., "mozilla/gecko-dev")
-    let hasOldFormat = repos.some((repo) => !repo.match(/^[^/]+\/[^/]+$/));
-
-    if (hasOldFormat) {
+    if (GitHubService.hasOldFormatRepos(service.settings.ignoredRepos)) {
       await browser.storage.local.set({
         needsGitHubMigration: true,
         oldIgnoredRepos: service.settings.ignoredRepos

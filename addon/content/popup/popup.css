@@ -15,11 +15,27 @@ header {
 }
 
 #phabricator-disconnected {
-  height: 15px;
   background-color: #4a5f88;
   color: #f9ffff;
   border-bottom: 1px solid #444444;
   text-align: center;
+  display: block;
+  padding: 5px;
+}
+
+.warning-banner {
+  background-color: #4a5f88;
+  color: #f9ffff;
+  border-bottom: 1px solid #444444;
+  text-align: center;
+  display: block;
+  padding: 5px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.warning-banner:hover {
+  background-color: #5a6f98;
 }
 
 .icon {

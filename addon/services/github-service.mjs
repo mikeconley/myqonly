@@ -13,6 +13,22 @@ import {
  */
 export class GitHubService extends BaseService {
   /**
+   * Checks if an ignoredRepos string contains any repos in the old format.
+   * Old format is substring matching (e.g., "mozilla"), new format is
+   * owner/repo (e.g., "mozilla/gecko-dev").
+   *
+   * @param {string} ignoredRepos - Comma-separated list of repos
+   * @returns {boolean} True if any repos are in old format
+   */
+  static hasOldFormatRepos(ignoredRepos) {
+    let repos = (ignoredRepos || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    return repos.some((repo) => !repo.match(/^[^/]+\/[^/]+$/));
+  }
+  /**
    * Updates GitHub pull request review counts using the GitHub Search API.
    * Filters by various criteria including ignored repos, users, teams, and PR types.
    *

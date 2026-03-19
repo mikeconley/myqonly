@@ -387,10 +387,16 @@ describe("GitHub migration", function () {
           })
         });
 
+        let eventPromise = new Promise((resolve) => {
+          document.addEventListener("migration-helper-complete", resolve, {
+            once: true
+          });
+        });
+
         let helpButton = document.getElementById("help-migrate");
         helpButton.click();
 
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        await eventPromise;
 
         let dialog = document.querySelector("#migration-dialog");
         assert.ok(dialog);
@@ -433,20 +439,32 @@ describe("GitHub migration", function () {
           })
         });
 
+        let helperEventPromise = new Promise((resolve) => {
+          document.addEventListener("migration-helper-complete", resolve, {
+            once: true
+          });
+        });
+
         let helpButton = document.getElementById("help-migrate");
         helpButton.click();
 
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        await helperEventPromise;
 
         let dialog = document.querySelector("#migration-dialog");
         let checkboxes = dialog.querySelectorAll("input[type='checkbox']");
         checkboxes[0].checked = true;
         checkboxes[1].checked = true;
 
+        let warningEventPromise = new Promise((resolve) => {
+          document.addEventListener("migration-warning-cleared", resolve, {
+            once: true
+          });
+        });
+
         let saveButton = document.getElementById("save-migration");
         saveButton.click();
 
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        await warningEventPromise;
 
         let ignoredReposField = document.getElementById("github-ignored-repos");
         assert.equal(
@@ -495,10 +513,16 @@ describe("GitHub migration", function () {
           })
         });
 
+        let eventPromise = new Promise((resolve) => {
+          document.addEventListener("migration-helper-complete", resolve, {
+            once: true
+          });
+        });
+
         let helpButton = document.getElementById("help-migrate");
         helpButton.click();
 
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        await eventPromise;
 
         let dialog = document.querySelector("#migration-dialog");
         assert.ok(dialog.open);
@@ -551,15 +575,233 @@ describe("GitHub migration", function () {
       test: async (content, document) => {
         let alertStub = sandbox.stub(content, "alert");
 
+        let eventPromise = new Promise((resolve) => {
+          document.addEventListener("migration-helper-complete", resolve, {
+            once: true
+          });
+        });
+
         let helpButton = document.getElementById("help-migrate");
         helpButton.click();
 
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await eventPromise;
 
         assert.ok(alertStub.calledOnce);
 
         let dialog = document.querySelector("#migration-dialog");
         assert.ok(!dialog);
+      }
+    });
+  });
+
+  it("should clear migration warning when ignoredRepos is cleared", async () => {
+    browser.storage.local.remove.returns(Promise.resolve());
+
+    await loadPage({
+      url: "/addon/content/options/options.html",
+      setup: async (browser) => {
+        browser.storage.local.get
+          .withArgs("updateInterval")
+          .returns(
+            Promise.resolve({ updateInterval: DEFAULT_UPDATE_INTERVAL })
+          );
+        browser.storage.local.get.withArgs("services").returns(
+          Promise.resolve({
+            services: [
+              {
+                id: 2,
+                type: "github",
+                settings: {
+                  username: "testuser",
+                  ignoredRepos: "mozilla"
+                }
+              }
+            ]
+          })
+        );
+        browser.storage.local.get
+          .withArgs({ workingHours: {} })
+          .returns(Promise.resolve({}));
+        browser.storage.local.get
+          .withArgs(["needsGitHubMigration", "oldIgnoredRepos"])
+          .returns(
+            Promise.resolve({
+              needsGitHubMigration: true,
+              oldIgnoredRepos: "mozilla"
+            })
+          );
+        browser.storage.local.get
+          .withArgs("needsGitHubMigration")
+          .returns(Promise.resolve({ needsGitHubMigration: true }));
+        browser.runtime.sendMessage
+          .withArgs({
+            name: "check-for-phabricator-session"
+          })
+          .returns(Promise.resolve(false));
+      },
+      test: async (content, document) => {
+        let warning = document.getElementById("github-migration-warning");
+        assert.ok(!warning.classList.contains("hidden"));
+
+        let field = document.getElementById("github-ignored-repos");
+        assert.equal(field.value, "mozilla");
+
+        let eventPromise = new Promise((resolve) => {
+          document.addEventListener("migration-check-complete", resolve, {
+            once: true
+          });
+        });
+
+        changeFieldValue(field, "");
+
+        await eventPromise;
+
+        assert.ok(
+          browser.storage.local.remove.calledWith([
+            "needsGitHubMigration",
+            "oldIgnoredRepos"
+          ])
+        );
+        assert.ok(warning.classList.contains("hidden"));
+      }
+    });
+  });
+
+  it("should clear migration warning when changed to new format", async () => {
+    browser.storage.local.remove.returns(Promise.resolve());
+
+    await loadPage({
+      url: "/addon/content/options/options.html",
+      setup: async (browser) => {
+        browser.storage.local.get
+          .withArgs("updateInterval")
+          .returns(
+            Promise.resolve({ updateInterval: DEFAULT_UPDATE_INTERVAL })
+          );
+        browser.storage.local.get.withArgs("services").returns(
+          Promise.resolve({
+            services: [
+              {
+                id: 2,
+                type: "github",
+                settings: {
+                  username: "testuser",
+                  ignoredRepos: "mozilla"
+                }
+              }
+            ]
+          })
+        );
+        browser.storage.local.get
+          .withArgs({ workingHours: {} })
+          .returns(Promise.resolve({}));
+        browser.storage.local.get
+          .withArgs(["needsGitHubMigration", "oldIgnoredRepos"])
+          .returns(
+            Promise.resolve({
+              needsGitHubMigration: true,
+              oldIgnoredRepos: "mozilla"
+            })
+          );
+        browser.storage.local.get
+          .withArgs("needsGitHubMigration")
+          .returns(Promise.resolve({ needsGitHubMigration: true }));
+        browser.runtime.sendMessage
+          .withArgs({
+            name: "check-for-phabricator-session"
+          })
+          .returns(Promise.resolve(false));
+      },
+      test: async (content, document) => {
+        let warning = document.getElementById("github-migration-warning");
+        assert.ok(!warning.classList.contains("hidden"));
+
+        let field = document.getElementById("github-ignored-repos");
+
+        let eventPromise = new Promise((resolve) => {
+          document.addEventListener("migration-check-complete", resolve, {
+            once: true
+          });
+        });
+
+        changeFieldValue(field, "mozilla/gecko-dev");
+
+        await eventPromise;
+
+        assert.ok(
+          browser.storage.local.remove.calledWith([
+            "needsGitHubMigration",
+            "oldIgnoredRepos"
+          ])
+        );
+        assert.ok(warning.classList.contains("hidden"));
+      }
+    });
+  });
+
+  it("should not clear migration warning if still has old format repos", async () => {
+    browser.storage.local.remove.returns(Promise.resolve());
+
+    await loadPage({
+      url: "/addon/content/options/options.html",
+      setup: async (browser) => {
+        browser.storage.local.get
+          .withArgs("updateInterval")
+          .returns(
+            Promise.resolve({ updateInterval: DEFAULT_UPDATE_INTERVAL })
+          );
+        browser.storage.local.get.withArgs("services").returns(
+          Promise.resolve({
+            services: [
+              {
+                id: 2,
+                type: "github",
+                settings: {
+                  username: "testuser",
+                  ignoredRepos: "mozilla"
+                }
+              }
+            ]
+          })
+        );
+        browser.storage.local.get
+          .withArgs({ workingHours: {} })
+          .returns(Promise.resolve({}));
+        browser.storage.local.get
+          .withArgs(["needsGitHubMigration", "oldIgnoredRepos"])
+          .returns(
+            Promise.resolve({
+              needsGitHubMigration: true,
+              oldIgnoredRepos: "mozilla"
+            })
+          );
+        browser.storage.local.get
+          .withArgs("needsGitHubMigration")
+          .returns(Promise.resolve({ needsGitHubMigration: true }));
+        browser.runtime.sendMessage
+          .withArgs({
+            name: "check-for-phabricator-session"
+          })
+          .returns(Promise.resolve(false));
+      },
+      test: async (content, document) => {
+        let warning = document.getElementById("github-migration-warning");
+        assert.ok(!warning.classList.contains("hidden"));
+
+        let field = document.getElementById("github-ignored-repos");
+
+        let eventPromise = new Promise((resolve) => {
+          document.addEventListener("migration-check-complete", resolve, {
+            once: true
+          });
+        });
+
+        changeFieldValue(field, "taskcluster");
+
+        await eventPromise;
+
+        assert.ok(!browser.storage.local.remove.called);
+        assert.ok(!warning.classList.contains("hidden"));
       }
     });
   });

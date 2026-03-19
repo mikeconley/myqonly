@@ -65,6 +65,16 @@ section:not(:first-child) {
   margin-bottom: 16px;
 }
 
+.error {
+  background: #f8d7da;
+  border: 1px solid #dc3545;
+  border-radius: 4px;
+  padding: 8px;
+  margin-top: 8px;
+  color: #721c24;
+  font-size: 0.9em;
+}
+
 .hidden {
   display: none;
 }

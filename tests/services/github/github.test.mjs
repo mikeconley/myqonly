@@ -24,6 +24,40 @@ describe("GitHub Service", function () {
     sandbox.restore();
   });
 
+  describe("hasOldFormatRepos()", function () {
+    it("should return true for repos without slashes", function () {
+      assert.ok(GitHubService.hasOldFormatRepos("mozilla"));
+    });
+
+    it("should return true for multiple repos with at least one old format", function () {
+      assert.ok(GitHubService.hasOldFormatRepos("mozilla/gecko-dev, taskcluster"));
+    });
+
+    it("should return false for repos in owner/repo format", function () {
+      assert.ok(!GitHubService.hasOldFormatRepos("mozilla/gecko-dev"));
+    });
+
+    it("should return false for multiple repos all in new format", function () {
+      assert.ok(!GitHubService.hasOldFormatRepos("mozilla/gecko-dev, rust-lang/rust"));
+    });
+
+    it("should return false for empty string", function () {
+      assert.ok(!GitHubService.hasOldFormatRepos(""));
+    });
+
+    it("should return false for undefined", function () {
+      assert.ok(!GitHubService.hasOldFormatRepos(undefined));
+    });
+
+    it("should handle whitespace correctly", function () {
+      assert.ok(GitHubService.hasOldFormatRepos("  mozilla  ,  taskcluster  "));
+    });
+
+    it("should ignore empty entries after splitting", function () {
+      assert.ok(!GitHubService.hasOldFormatRepos("mozilla/gecko-dev, , rust-lang/rust"));
+    });
+  });
+
   describe("update()", function () {
     it("should return zero count when username is missing", async function () {
       let settings = { username: "" };
