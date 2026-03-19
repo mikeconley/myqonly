@@ -57,6 +57,6 @@ export const HTTP_METHODS = {
 export const DEFAULT_UPDATE_INTERVAL = 5; // minutes
 export const ALARM_NAME = "check-for-updates";
 
-export const FEATURE_ALERT_REV = 3;
+export const FEATURE_ALERT_REV = 4;
 export const FEATURE_ALERT_BG_COLOR = "#EC9329";
 export const FEATURE_ALERT_STRING = "New";

@@ -9,6 +9,61 @@
   <body>
     <h1>MyQOnly Release Notes</h1>
 
+    <section id="featureRev-4" data-version="0.12.0">
+      <h2>0.12.0</h2>
+      <h3>New features</h3>
+      <ul>
+        <li>
+          You can now ignore specific GitHub teams using the "Ignored teams" field.
+          This filters out pull requests where only a team you're on has been
+          requested for review.
+        </li>
+        <li>
+          If you have GitHub repositories in the old format (e.g., "mozilla"
+          instead of "mozilla/gecko-dev"), MyQOnly will now show a warning in
+          the popup panel and offer a migration helper tool to convert them to
+          the new format automatically.
+        </li>
+        <li>
+          The options page now validates GitHub repository format in real-time,
+          showing an error if you enter repositories that aren't in the
+          owner/repo format.
+        </li>
+      </ul>
+      <h3>Changes</h3>
+      <ul>
+        <li>
+          <strong>BREAKING:</strong> GitHub ignored repositories now require
+          exact <code>owner/repo</code> format (e.g.,
+          <code>mozilla/gecko-dev</code>) instead of substring matching. This
+          ensures the count in the badge matches what you see on GitHub. If
+          you have old-format repositories configured, you'll see a migration
+          warning with a helper tool to update them automatically.
+        </li>
+        <li>
+          MyQOnly now uses Manifest V3 and requires Firefox 109 or later. This
+          modernizes the extension architecture for better performance and
+          future compatibility.
+        </li>
+      </ul>
+      <h3>Bug fixes</h3>
+      <ul>
+        <li>
+          Fixed an issue where the GitHub review count could be incorrect when
+          using ignored repositories. The count now properly reflects what the
+          GitHub API returns after filtering.
+        </li>
+      </ul>
+      <h3>Known issues</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a>
+          <a href="https://github.com/mikeconley/myqonly/issues/18">support</a>
+          for Containers
+        </li>
+      </ul>
+    </section>
+
     <section data-version="0.11.0">
       <h2>0.11.0</h2>
       <h3>New features</h3>
