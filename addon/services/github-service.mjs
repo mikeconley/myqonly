@@ -121,21 +121,7 @@ export class GitHubService extends BaseService {
     }
     const data = await response.json();
 
-    if (ignoredRepos.length === 0) {
-      return { reviewTotal: data.total_count, reviewUrl };
-    }
-
-    // `items` may be a partial list. Ideally we'd paginate, but for now we just
-    // assume everything in total_count that isn't part of items is important.
-    let validPrs = data.total_count - data.items.length;
-    for (let pr of data.items) {
-      if (
-        ignoredRepos.every((repo) => !pr.repository_url.endsWith(`/${repo}`))
-      ) {
-        validPrs++;
-      }
-    }
-    return { reviewTotal: validPrs, reviewUrl };
+    return { reviewTotal: data.total_count, reviewUrl };
   }
 
   /**
