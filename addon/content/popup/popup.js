@@ -110,7 +110,7 @@ const Panel = {
           let phabDisconnected = document.getElementById(
             "phabricator-disconnected"
           );
-          if (!state.data.connected) {
+          if (state.data.connected === false) {
             phabDisconnected.classList.remove("hidden");
           } else {
             phabDisconnected.classList.add("hidden");
