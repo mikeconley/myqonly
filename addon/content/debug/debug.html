@@ -4,35 +4,10 @@
   <meta charset="utf-8">
   <link rel="icon" type="image/svg" href="/icons/myqonly-dark.svg" />
   <title>MyQOnly Debug Tools</title>
+
+  <script type="module" src="debug-page.mjs"></script>
 </head>
 <body>
-
-<h1>MyQOnly Debug Tools</h1>
-
-<ul>
-  <li>
-    <button id="update">Check for updates now</button>
-  </li>
-  <li>
-    <button id="generate-phabricator-testcase">Generate Phabricator test case for current user state</button>
-    <br/>
-    <textarea id="phabricator-testcase" cols="80" rows="6">
-    </textarea>
-  </li>
-  <li>
-    <button id="show-services">Retrieve and show services (sanitized)</button>
-    <br/>
-    <textarea id="services" cols="80" rows="6">
-    </textarea>
-  </li>
-  <li>
-    <button id="show-old-userKeys">Retrieve and show old userKeys (sanitized)</button>
-    <br/>
-    <textarea id="old-userKeys" cols="80" rows="6">
-    </textarea>
-  </li>
-</ul>
-
-
-<script src="debug.js"></script>
+  <debug-page></debug-page>
+</body>
 </html>
