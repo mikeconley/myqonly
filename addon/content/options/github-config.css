@@ -1,0 +1,34 @@
+:host {
+  color-scheme: light dark;
+}
+
+section {
+  display: grid;
+}
+
+section:not(:first-child) {
+  margin-block-start: 2em;
+}
+
+label {
+  margin-top: 5px;
+}
+
+input[type="password"],
+input[type="text"] {
+  width: 50ch;
+}
+
+.error {
+  background: light-dark(#f8d7da, #5a2328);
+  border: 1px solid light-dark(#dc3545, #a02632);
+  border-radius: 4px;
+  padding: 8px;
+  margin-top: 8px;
+  color: light-dark(#721c24, #f5c2c7);
+  font-size: 0.9em;
+}
+
+.hidden {
+  display: none;
+}

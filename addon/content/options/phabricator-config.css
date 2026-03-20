@@ -1,0 +1,15 @@
+:host {
+  color-scheme: light dark;
+}
+
+section {
+  display: grid;
+}
+
+section:not(:first-child) {
+  margin-block-start: 2em;
+}
+
+label {
+  margin-top: 5px;
+}

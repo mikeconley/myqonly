@@ -1,0 +1,26 @@
+:host {
+  color-scheme: light dark;
+}
+
+section:not(:first-child) {
+  margin-block-start: 2em;
+}
+
+label {
+  margin-top: 5px;
+}
+
+fieldset[disabled] {
+  opacity: 0.6;
+}
+
+.field-rows {
+  display: grid;
+  column-gap: 0.5em;
+  row-gap: 0.5em;
+  grid-template-columns: max-content max-content;
+}
+
+.days label {
+  display: block;
+}

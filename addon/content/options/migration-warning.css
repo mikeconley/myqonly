@@ -1,0 +1,16 @@
+:host {
+  color-scheme: light dark;
+}
+
+.warning {
+  background: light-dark(#fff3cd, #5a4a1f);
+  border: 1px solid light-dark(#ffc107, #997404);
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 16px;
+  color: light-dark(#000, #e6e6e6);
+}
+
+.hidden {
+  display: none;
+}

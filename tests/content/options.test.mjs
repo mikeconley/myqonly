@@ -4,6 +4,13 @@ import { loadPage, changeFieldValue } from "../test-utils.mjs";
 const browser = window.chrome;
 
 /**
+ * Gets the options-page element's shadow root.
+ */
+function getOptionsPage(document) {
+  return document.querySelector("options-page");
+}
+
+/**
  * Prepares the Options UI so that it's in the default empty state.
  */
 async function setupBlank(browser) {
@@ -25,8 +32,24 @@ async function setupBlank(browser) {
     })
   );
   browser.storage.local.get
-    .withArgs({ workingHours: {} })
-    .returns(Promise.resolve({}));
+    .withArgs({
+      workingHours: {
+        enabled: false,
+        startTime: "09:00",
+        endTime: "17:00",
+        days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+      }
+    })
+    .returns(
+      Promise.resolve({
+        workingHours: {
+          enabled: false,
+          startTime: "09:00",
+          endTime: "17:00",
+          days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+        }
+      })
+    );
   browser.storage.local.get
     .withArgs(["needsGitHubMigration", "oldIgnoredRepos"])
     .returns(Promise.resolve({}));
@@ -70,8 +93,24 @@ async function setupWithServices(browser) {
     })
   );
   browser.storage.local.get
-    .withArgs({ workingHours: {} })
-    .returns(Promise.resolve({}));
+    .withArgs({
+      workingHours: {
+        enabled: false,
+        startTime: "09:00",
+        endTime: "17:00",
+        days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+      }
+    })
+    .returns(
+      Promise.resolve({
+        workingHours: {
+          enabled: false,
+          startTime: "09:00",
+          endTime: "17:00",
+          days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+        }
+      })
+    );
   browser.storage.local.get
     .withArgs(["needsGitHubMigration", "oldIgnoredRepos"])
     .returns(Promise.resolve({}));
@@ -88,7 +127,10 @@ describe("Options page", function () {
       url: "/addon/content/options/options.html",
       setup: setupBlank,
       test: async (content, document) => {
-        let field = document.getElementById("update-interval");
+        let optionsPage = getOptionsPage(document);
+        let field = optionsPage.shadowRoot.querySelector(
+          'input[type="number"]'
+        );
         parseInt(field.value, 10).should.equal(DEFAULT_UPDATE_INTERVAL);
 
         // Now update the value
@@ -117,7 +159,11 @@ describe("Options page", function () {
       setup: setupWithServices,
       test: async (content, document) => {
         const NEW_KEY = "xyz54321";
-        let field = document.getElementById("bugzilla-apiKey");
+        let optionsPage = getOptionsPage(document);
+        let bugzillaConfig = optionsPage.shadowRoot.querySelector("bugzilla-config");
+        let field = bugzillaConfig.shadowRoot.querySelector(
+          'input[type="password"]'
+        );
         field.value.should.equal("abc123");
 
         // Now update the value
@@ -164,7 +210,10 @@ describe("Options page", function () {
       url: "/addon/content/options/options.html",
       setup: setupWithServices,
       test: async (content, document) => {
-        let field = document.getElementById("bugzilla-needinfos");
+        let optionsPage = getOptionsPage(document);
+        let bugzillaConfig = optionsPage.shadowRoot.querySelector("bugzilla-config");
+        let checkboxes = bugzillaConfig.shadowRoot.querySelectorAll('input[type="checkbox"]');
+        let field = checkboxes[0];
         field.checked.should.equal(false);
 
         browser.storage.local.set
@@ -214,7 +263,10 @@ describe("Options page", function () {
       setup: setupWithServices,
       test: async (content, document) => {
         const NEW_USERNAME = "hoobastank";
-        let field = document.getElementById("github-username");
+        let optionsPage = getOptionsPage(document);
+        let githubConfig = optionsPage.shadowRoot.querySelector("github-config");
+        let textInputs = githubConfig.shadowRoot.querySelectorAll('input[type="text"]');
+        let field = textInputs[0];
         field.value.should.equal("mikeconley");
 
         // Now update the value
@@ -267,31 +319,39 @@ describe("Options page", function () {
       url: "/addon/content/options/options.html",
       setup: setupBlank,
       test: async (content, document) => {
+        let optionsPage = getOptionsPage(document);
+        let workingHoursConfig = optionsPage.shadowRoot.querySelector("working-hours-config");
+
         // By default, the working hours fields should be disabled.
-        let fieldset = document.getElementById("working-hours-fields");
+        let fieldset = workingHoursConfig.shadowRoot.querySelector("fieldset");
         assert.ok(fieldset.disabled);
 
         // Default workday is 9-5, in HH:MM.
-        let startTime = document.getElementById("start-time").value;
+        let timeInputs = workingHoursConfig.shadowRoot.querySelectorAll('input[type="time"]');
+        let startTime = timeInputs[0].value;
         assert.equal(startTime, "09:00");
-        let endTime = document.getElementById("end-time").value;
+        let endTime = timeInputs[1].value;
         assert.equal(endTime, "17:00");
 
         // Monday-Friday should be checked by default, weekends not checked.
         let boxes = fieldset.querySelectorAll("input[type='checkbox']");
         assert.equal(boxes.length, WEEKDAYS.length + WEEKENDS.length);
         for (let box of boxes) {
-          if (WEEKDAYS.includes(box.id)) {
+          let day = box.dataset.day;
+          if (WEEKDAYS.includes(day)) {
             assert.ok(box.checked);
-          } else if (WEEKENDS.includes(box.id)) {
+          } else if (WEEKENDS.includes(day)) {
             assert.ok(!box.checked);
           } else {
-            assert.ok(false, "Did not expect a checkbox with id: " + box.id);
+            assert.ok(false, "Did not expect a checkbox with day: " + day);
           }
         }
 
-        let checkbox = document.getElementById("working-hours-checkbox");
+        let checkbox = workingHoursConfig.shadowRoot.querySelector('input[type="checkbox"]');
         checkbox.click();
+        await workingHoursConfig.updateComplete;
+
+        fieldset = workingHoursConfig.shadowRoot.querySelector("fieldset");
         assert.ok(!fieldset.hasAttribute("disabled"));
 
         assert.ok(browser.storage.local.set.calledOnce);
@@ -336,11 +396,13 @@ describe("GitHub migration", function () {
           );
       },
       test: async (content, document) => {
-        let warning = document.getElementById("github-migration-warning");
+        let optionsPage = getOptionsPage(document);
+        let migrationWarning = optionsPage.shadowRoot.querySelector("migration-warning");
+        let warning = migrationWarning.shadowRoot.querySelector(".warning");
         assert.ok(!warning.classList.contains("hidden"));
 
-        let oldReposSpan = document.getElementById("old-repos");
-        assert.equal(oldReposSpan.textContent, "mozilla, taskcluster");
+        let oldReposCode = migrationWarning.shadowRoot.querySelectorAll("code")[1];
+        assert.equal(oldReposCode.textContent, "mozilla, taskcluster");
       }
     });
   });
@@ -354,7 +416,9 @@ describe("GitHub migration", function () {
       url: "/addon/content/options/options.html",
       setup: setupWithServices,
       test: async (content, document) => {
-        let warning = document.getElementById("github-migration-warning");
+        let optionsPage = getOptionsPage(document);
+        let migrationWarning = optionsPage.shadowRoot.querySelector("migration-warning");
+        let warning = migrationWarning.shadowRoot.querySelector(".warning");
         assert.ok(warning.classList.contains("hidden"));
       }
     });
@@ -387,18 +451,24 @@ describe("GitHub migration", function () {
           })
         });
 
-        let eventPromise = new Promise((resolve) => {
-          document.addEventListener("migration-helper-complete", resolve, {
-            once: true
+        let optionsPage = getOptionsPage(document);
+        let migrationWarning = optionsPage.shadowRoot.querySelector("migration-warning");
+        let helpButton = migrationWarning.shadowRoot.querySelector("button");
+
+        let dialogShownPromise = new Promise((resolve) => {
+          let observer = new MutationObserver(() => {
+            let dialog = optionsPage.shadowRoot.querySelector("dialog");
+            if (dialog) {
+              observer.disconnect();
+              resolve(dialog);
+            }
           });
+          observer.observe(optionsPage.shadowRoot, { childList: true, subtree: true });
         });
 
-        let helpButton = document.getElementById("help-migrate");
         helpButton.click();
 
-        await eventPromise;
-
-        let dialog = document.querySelector("#migration-dialog");
+        let dialog = await dialogShownPromise;
         assert.ok(dialog);
         assert.ok(dialog.open);
 
@@ -439,34 +509,37 @@ describe("GitHub migration", function () {
           })
         });
 
-        let helperEventPromise = new Promise((resolve) => {
-          document.addEventListener("migration-helper-complete", resolve, {
-            once: true
+        let optionsPage = getOptionsPage(document);
+        let migrationWarning = optionsPage.shadowRoot.querySelector("migration-warning");
+        let helpButton = migrationWarning.shadowRoot.querySelector("button");
+
+        let dialogShownPromise = new Promise((resolve) => {
+          let observer = new MutationObserver(() => {
+            let dialog = optionsPage.shadowRoot.querySelector("dialog");
+            if (dialog) {
+              observer.disconnect();
+              resolve(dialog);
+            }
           });
+          observer.observe(optionsPage.shadowRoot, { childList: true, subtree: true });
         });
 
-        let helpButton = document.getElementById("help-migrate");
         helpButton.click();
 
-        await helperEventPromise;
-
-        let dialog = document.querySelector("#migration-dialog");
+        let dialog = await dialogShownPromise;
         let checkboxes = dialog.querySelectorAll("input[type='checkbox']");
         checkboxes[0].checked = true;
         checkboxes[1].checked = true;
 
-        let warningEventPromise = new Promise((resolve) => {
-          document.addEventListener("migration-warning-cleared", resolve, {
-            once: true
-          });
-        });
-
-        let saveButton = document.getElementById("save-migration");
+        let saveButton = dialog.querySelector("#save-migration");
         saveButton.click();
 
-        await warningEventPromise;
+        await optionsPage.updateComplete;
+        let githubConfig = optionsPage.shadowRoot.querySelector("github-config");
+        await githubConfig.updateComplete;
 
-        let ignoredReposField = document.getElementById("github-ignored-repos");
+        let textInputs = githubConfig.shadowRoot.querySelectorAll('input[type="text"]');
+        let ignoredReposField = textInputs[textInputs.length - 1];
         assert.equal(
           ignoredReposField.value,
           "mozilla/gecko-dev, rust-lang/rust"
@@ -479,7 +552,7 @@ describe("GitHub migration", function () {
           ])
         );
 
-        let warning = document.getElementById("github-migration-warning");
+        let warning = migrationWarning.shadowRoot.querySelector(".warning");
         assert.ok(warning.classList.contains("hidden"));
 
         assert.ok(!dialog.open);
@@ -513,21 +586,27 @@ describe("GitHub migration", function () {
           })
         });
 
-        let eventPromise = new Promise((resolve) => {
-          document.addEventListener("migration-helper-complete", resolve, {
-            once: true
+        let optionsPage = getOptionsPage(document);
+        let migrationWarning = optionsPage.shadowRoot.querySelector("migration-warning");
+        let helpButton = migrationWarning.shadowRoot.querySelector("button");
+
+        let dialogShownPromise = new Promise((resolve) => {
+          let observer = new MutationObserver(() => {
+            let dialog = optionsPage.shadowRoot.querySelector("dialog");
+            if (dialog) {
+              observer.disconnect();
+              resolve(dialog);
+            }
           });
+          observer.observe(optionsPage.shadowRoot, { childList: true, subtree: true });
         });
 
-        let helpButton = document.getElementById("help-migrate");
         helpButton.click();
 
-        await eventPromise;
-
-        let dialog = document.querySelector("#migration-dialog");
+        let dialog = await dialogShownPromise;
         assert.ok(dialog.open);
 
-        let cancelButton = document.getElementById("cancel-migration");
+        let cancelButton = dialog.querySelector("#cancel-migration");
         cancelButton.click();
 
         assert.ok(!dialog.open);
@@ -556,8 +635,24 @@ describe("GitHub migration", function () {
           })
         );
         browser.storage.local.get
-          .withArgs({ workingHours: {} })
-          .returns(Promise.resolve({}));
+          .withArgs({
+            workingHours: {
+              enabled: false,
+              startTime: "09:00",
+              endTime: "17:00",
+              days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+            }
+          })
+          .returns(
+            Promise.resolve({
+              workingHours: {
+                enabled: false,
+                startTime: "09:00",
+                endTime: "17:00",
+                days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+              }
+            })
+          );
         browser.storage.local.get
           .withArgs(["needsGitHubMigration", "oldIgnoredRepos"])
           .returns(
@@ -575,20 +670,17 @@ describe("GitHub migration", function () {
       test: async (content, document) => {
         let alertStub = sandbox.stub(content, "alert");
 
-        let eventPromise = new Promise((resolve) => {
-          document.addEventListener("migration-helper-complete", resolve, {
-            once: true
-          });
-        });
+        let optionsPage = getOptionsPage(document);
+        let migrationWarning = optionsPage.shadowRoot.querySelector("migration-warning");
+        let helpButton = migrationWarning.shadowRoot.querySelector("button");
 
-        let helpButton = document.getElementById("help-migrate");
         helpButton.click();
 
-        await eventPromise;
+        await optionsPage.updateComplete;
 
         assert.ok(alertStub.calledOnce);
 
-        let dialog = document.querySelector("#migration-dialog");
+        let dialog = optionsPage.shadowRoot.querySelector("dialog");
         assert.ok(!dialog);
       }
     });
@@ -620,8 +712,24 @@ describe("GitHub migration", function () {
           })
         );
         browser.storage.local.get
-          .withArgs({ workingHours: {} })
-          .returns(Promise.resolve({}));
+          .withArgs({
+            workingHours: {
+              enabled: false,
+              startTime: "09:00",
+              endTime: "17:00",
+              days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+            }
+          })
+          .returns(
+            Promise.resolve({
+              workingHours: {
+                enabled: false,
+                startTime: "09:00",
+                endTime: "17:00",
+                days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+              }
+            })
+          );
         browser.storage.local.get
           .withArgs(["needsGitHubMigration", "oldIgnoredRepos"])
           .returns(
@@ -640,10 +748,14 @@ describe("GitHub migration", function () {
           .returns(Promise.resolve(false));
       },
       test: async (content, document) => {
-        let warning = document.getElementById("github-migration-warning");
+        let optionsPage = getOptionsPage(document);
+        let migrationWarning = optionsPage.shadowRoot.querySelector("migration-warning");
+        let warning = migrationWarning.shadowRoot.querySelector(".warning");
         assert.ok(!warning.classList.contains("hidden"));
 
-        let field = document.getElementById("github-ignored-repos");
+        let githubConfig = optionsPage.shadowRoot.querySelector("github-config");
+        let textInputs = githubConfig.shadowRoot.querySelectorAll('input[type="text"]');
+        let field = textInputs[textInputs.length - 1];
         assert.equal(field.value, "mozilla");
 
         let eventPromise = new Promise((resolve) => {
@@ -655,7 +767,9 @@ describe("GitHub migration", function () {
         changeFieldValue(field, "");
 
         await eventPromise;
+        await migrationWarning.updateComplete;
 
+        warning = migrationWarning.shadowRoot.querySelector(".warning");
         assert.ok(
           browser.storage.local.remove.calledWith([
             "needsGitHubMigration",
@@ -693,8 +807,24 @@ describe("GitHub migration", function () {
           })
         );
         browser.storage.local.get
-          .withArgs({ workingHours: {} })
-          .returns(Promise.resolve({}));
+          .withArgs({
+            workingHours: {
+              enabled: false,
+              startTime: "09:00",
+              endTime: "17:00",
+              days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+            }
+          })
+          .returns(
+            Promise.resolve({
+              workingHours: {
+                enabled: false,
+                startTime: "09:00",
+                endTime: "17:00",
+                days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+              }
+            })
+          );
         browser.storage.local.get
           .withArgs(["needsGitHubMigration", "oldIgnoredRepos"])
           .returns(
@@ -713,10 +843,14 @@ describe("GitHub migration", function () {
           .returns(Promise.resolve(false));
       },
       test: async (content, document) => {
-        let warning = document.getElementById("github-migration-warning");
+        let optionsPage = getOptionsPage(document);
+        let migrationWarning = optionsPage.shadowRoot.querySelector("migration-warning");
+        let warning = migrationWarning.shadowRoot.querySelector(".warning");
         assert.ok(!warning.classList.contains("hidden"));
 
-        let field = document.getElementById("github-ignored-repos");
+        let githubConfig = optionsPage.shadowRoot.querySelector("github-config");
+        let textInputs = githubConfig.shadowRoot.querySelectorAll('input[type="text"]');
+        let field = textInputs[textInputs.length - 1];
 
         let eventPromise = new Promise((resolve) => {
           document.addEventListener("migration-check-complete", resolve, {
@@ -727,7 +861,9 @@ describe("GitHub migration", function () {
         changeFieldValue(field, "mozilla/gecko-dev");
 
         await eventPromise;
+        await migrationWarning.updateComplete;
 
+        warning = migrationWarning.shadowRoot.querySelector(".warning");
         assert.ok(
           browser.storage.local.remove.calledWith([
             "needsGitHubMigration",
@@ -765,8 +901,24 @@ describe("GitHub migration", function () {
           })
         );
         browser.storage.local.get
-          .withArgs({ workingHours: {} })
-          .returns(Promise.resolve({}));
+          .withArgs({
+            workingHours: {
+              enabled: false,
+              startTime: "09:00",
+              endTime: "17:00",
+              days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+            }
+          })
+          .returns(
+            Promise.resolve({
+              workingHours: {
+                enabled: false,
+                startTime: "09:00",
+                endTime: "17:00",
+                days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+              }
+            })
+          );
         browser.storage.local.get
           .withArgs(["needsGitHubMigration", "oldIgnoredRepos"])
           .returns(
@@ -785,20 +937,18 @@ describe("GitHub migration", function () {
           .returns(Promise.resolve(false));
       },
       test: async (content, document) => {
-        let warning = document.getElementById("github-migration-warning");
+        let optionsPage = getOptionsPage(document);
+        let migrationWarning = optionsPage.shadowRoot.querySelector("migration-warning");
+        let warning = migrationWarning.shadowRoot.querySelector(".warning");
         assert.ok(!warning.classList.contains("hidden"));
 
-        let field = document.getElementById("github-ignored-repos");
-
-        let eventPromise = new Promise((resolve) => {
-          document.addEventListener("migration-check-complete", resolve, {
-            once: true
-          });
-        });
+        let githubConfig = optionsPage.shadowRoot.querySelector("github-config");
+        let textInputs = githubConfig.shadowRoot.querySelectorAll('input[type="text"]');
+        let field = textInputs[textInputs.length - 1];
 
         changeFieldValue(field, "taskcluster");
 
-        await eventPromise;
+        await optionsPage.updateComplete;
 
         assert.ok(!browser.storage.local.remove.called);
         assert.ok(!warning.classList.contains("hidden"));
