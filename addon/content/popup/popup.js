@@ -72,7 +72,8 @@ const Panel = {
 
   async updatePanel() {
     let status = document.getElementById("status");
-    let states = await browser.runtime.sendMessage({ name: "get-states" });
+    let { reviewStates } = await browser.storage.local.get("reviewStates");
+    let states = new Map(reviewStates || []);
     let total = 0;
     for (let [, state] of states) {
       switch (state.type) {

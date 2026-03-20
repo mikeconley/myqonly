@@ -273,15 +273,8 @@ const MyQOnly = {
    */
   onMessage(message, sender, sendReply) {
     switch (message.name) {
-      case "get-states": {
-        // The popup wants to know how many things there are to do.
-        sendReply(this.states);
-        break;
-      }
-
       case "refresh": {
-        this.updateBadge();
-        break;
+        return this.updateBadge();
       }
 
       case "get-feature-rev": {
@@ -473,6 +466,11 @@ const MyQOnly = {
 
       state.data = data;
     }
+
+    // Persist states to storage for popup to read
+    await browser.storage.local.set({
+      [STORAGE_KEYS.REVIEW_STATES]: Array.from(this.states.entries())
+    });
 
     let workingHours = await this.isWorkingHours();
     if (!workingHours) {

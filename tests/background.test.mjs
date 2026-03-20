@@ -492,3 +492,156 @@ describe("GitHub migration detection", function () {
     assert.equal(setCallsWithMigrationFlag.length, 0);
   });
 });
+
+describe("State persistence", function () {
+  let sandbox;
+
+  beforeEach(async function () {
+    sandbox = sinon.createSandbox();
+
+    sandbox.stub(window, "fetch").resolves({
+      ok: false,
+      status: 500,
+      text: async () =>
+        "Mocked fetch - tests should not make real network calls"
+    });
+
+    browser.storage.local.get
+      .withArgs("featureRev")
+      .returns(Promise.resolve({}));
+    browser.storage.local.set.returns(Promise.resolve({}));
+    browser.storage.local.get
+      .withArgs("updateInterval")
+      .returns(Promise.resolve({}));
+    browser.storage.local.get
+      .withArgs("workingHours")
+      .returns(Promise.resolve({}));
+    browser.storage.local.get
+      .withArgs("needsGitHubMigration")
+      .returns(Promise.resolve({}));
+
+    if (!browser.action) {
+      browser.action = {
+        setBadgeText: sinon.stub().returns(Promise.resolve()),
+        setBadgeBackgroundColor: sinon.stub().returns(Promise.resolve())
+      };
+    }
+  });
+
+  afterEach(async function () {
+    MyQOnly.uninit();
+    browser.flush();
+    sandbox.restore();
+  });
+
+  it("should persist states to storage after updateBadge()", async () => {
+    browser.storage.local.get.withArgs("services").returns(
+      Promise.resolve({
+        services: [
+          {
+            id: 1,
+            type: "phabricator",
+            settings: {
+              container: 0,
+              inclReviewerGroups: true
+            }
+          },
+          {
+            id: 2,
+            type: "github",
+            settings: {
+              username: "testuser"
+            }
+          }
+        ]
+      })
+    );
+
+    await MyQOnly.init();
+
+    // Verify that storage.set was called with reviewStates
+    const setCall = browser.storage.local.set
+      .getCalls()
+      .find((call) => call.args[0].hasOwnProperty("reviewStates"));
+
+    assert.ok(setCall, "reviewStates should be saved to storage");
+
+    // Verify the format is correct (array of entries)
+    const reviewStates = setCall.args[0].reviewStates;
+    assert.ok(Array.isArray(reviewStates), "reviewStates should be an array");
+
+    // Should have entries for both services
+    assert.equal(reviewStates.length, 2, "Should have 2 state entries");
+
+    // Each entry should be [id, state] format
+    for (let entry of reviewStates) {
+      assert.ok(Array.isArray(entry), "Each state entry should be an array");
+      assert.equal(entry.length, 2, "Each entry should have [id, state]");
+      assert.ok(
+        typeof entry[0] === "number",
+        "First element should be service ID"
+      );
+      assert.ok(
+        typeof entry[1] === "object",
+        "Second element should be state object"
+      );
+      assert.ok(entry[1].hasOwnProperty("type"), "State should have type");
+      assert.ok(entry[1].hasOwnProperty("data"), "State should have data");
+    }
+
+    // Verify specific service types
+    const phabState = reviewStates.find((entry) => entry[1].type === "phabricator");
+    const githubState = reviewStates.find((entry) => entry[1].type === "github");
+
+    assert.ok(phabState, "Should have Phabricator state");
+    assert.ok(githubState, "Should have GitHub state");
+    assert.equal(phabState[0], 1, "Phabricator should have ID 1");
+    assert.equal(githubState[0], 2, "GitHub should have ID 2");
+  });
+
+  it("should return a promise from refresh message handler", async () => {
+    browser.storage.local.get.withArgs("services").returns(Promise.resolve({}));
+
+    await MyQOnly.init();
+
+    const refreshPromise = MyQOnly.onMessage({ name: "refresh" }, {}, () => {});
+
+    assert.ok(
+      refreshPromise instanceof Promise,
+      "refresh should return a promise"
+    );
+    await refreshPromise; // Should not throw
+  });
+
+  it("should persist updated states after each updateBadge call", async () => {
+    browser.storage.local.get.withArgs("services").returns(
+      Promise.resolve({
+        services: [
+          {
+            id: 1,
+            type: "phabricator",
+            settings: {
+              container: 0,
+              inclReviewerGroups: true
+            }
+          }
+        ]
+      })
+    );
+
+    await MyQOnly.init();
+
+    // Clear previous calls
+    browser.storage.local.set.resetHistory();
+
+    // Call updateBadge again
+    await MyQOnly.updateBadge();
+
+    // Verify storage was updated again
+    const setCall = browser.storage.local.set
+      .getCalls()
+      .find((call) => call.args[0].hasOwnProperty("reviewStates"));
+
+    assert.ok(setCall, "reviewStates should be saved after second update");
+  });
+});

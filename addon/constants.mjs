@@ -32,11 +32,11 @@ export const STORAGE_KEYS = {
   SERVICES: "services",
   WORKING_HOURS: "workingHours",
   NEEDS_GITHUB_MIGRATION: "needsGitHubMigration",
-  OLD_IGNORED_REPOS: "oldIgnoredRepos"
+  OLD_IGNORED_REPOS: "oldIgnoredRepos",
+  REVIEW_STATES: "reviewStates"
 };
 
 export const MESSAGE_TYPES = {
-  GET_STATES: "get-states",
   REFRESH: "refresh",
   GET_FEATURE_REV: "get-feature-rev",
   OPENED_RELEASE_NOTES: "opened-release-notes",
