@@ -67,3 +67,12 @@ button {
   cursor: pointer;
   margin-right: 8px;
 }
+
+a {
+  color: light-dark(#0066cc, #99ccff);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
