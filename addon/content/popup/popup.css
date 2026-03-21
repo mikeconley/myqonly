@@ -1,8 +1,12 @@
 html,
 body {
+  color-scheme: light dark;
+  background: light-dark(#fff, #1a1a1a);
+  color: light-dark(#000, #e6e6e6);
   font: message-box;
   width: 250px;
   margin: 0;
+  padding: 0;
 }
 
 header {

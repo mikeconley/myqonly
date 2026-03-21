@@ -39,7 +39,6 @@ describe("Popup", function () {
 
     await loadPage({
       url: "/addon/content/popup/popup.html",
-      waitForInitted: false,
       setup: async (browser) => {
         browser.storage.local.get
           .withArgs("reviewStates")
@@ -65,9 +64,12 @@ describe("Popup", function () {
         );
 
         // Verify the counts are displayed
-        const phabCount = doc.getElementById("phabricator-user-review-num")
-          .textContent;
-        const githubCount = doc.getElementById("github-review-num").textContent;
+        let popupPage = doc.querySelector("popup-page");
+        const phabCount = popupPage.shadowRoot.getElementById(
+          "phabricator-user-review-num"
+        ).textContent;
+        const githubCount =
+          popupPage.shadowRoot.getElementById("github-review-num").textContent;
 
         assert.equal(phabCount, "3", "Should display Phabricator count");
         assert.equal(githubCount, "2", "Should display GitHub count");
@@ -78,7 +80,6 @@ describe("Popup", function () {
   it("should handle missing reviewStates in storage gracefully", async () => {
     await loadPage({
       url: "/addon/content/popup/popup.html",
-      waitForInitted: false,
       setup: async (browser) => {
         browser.storage.local.get
           .withArgs("reviewStates")
@@ -91,7 +92,8 @@ describe("Popup", function () {
           .returns(Promise.resolve({ newFeatures: false, featureRev: 4 }));
       },
       test: async (win, doc) => {
-        const status = doc.getElementById("status").textContent;
+        let popupPage = doc.querySelector("popup-page");
+        const status = popupPage.shadowRoot.getElementById("status").textContent;
         assert.equal(status, "Nothing to do! \\o/", "Should show nothing to do");
       }
     });
@@ -100,7 +102,6 @@ describe("Popup", function () {
   it("should send refresh message when refresh button clicked", async () => {
     await loadPage({
       url: "/addon/content/popup/popup.html",
-      waitForInitted: false,
       setup: async (browser) => {
         browser.storage.local.get
           .withArgs("reviewStates")
@@ -117,7 +118,8 @@ describe("Popup", function () {
       },
       test: async (win, doc) => {
         // Click refresh button
-        const refreshButton = doc.getElementById("refresh");
+        let popupPage = doc.querySelector("popup-page");
+        const refreshButton = popupPage.shadowRoot.getElementById("refresh");
         refreshButton.click();
 
         // Verify refresh message was sent to background script
