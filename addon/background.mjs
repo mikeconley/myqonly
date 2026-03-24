@@ -18,6 +18,9 @@ if (typeof browser == "undefined") {
 }
 
 const MyQOnly = {
+  // Promise that resolves when initialization is complete
+  _initPromise: null,
+
   /**
    * Initializes the MyQOnly extension by setting up listeners, loading stored
    * settings, and performing the initial badge update.
@@ -27,13 +30,39 @@ const MyQOnly = {
    * @returns {Promise<void>}
    */
   async init({ alertRev = FEATURE_ALERT_REV } = {}) {
+    // If already initializing or initialized, return the existing promise
+    if (this._initPromise) {
+      return this._initPromise;
+    }
+
+    // Store the initialization promise so other code can wait for it
+    this._initPromise = this._doInit({ alertRev });
+    return this._initPromise;
+  },
+
+  /**
+   * Ensures initialization has completed. Safe to call from event handlers.
+   * If init() hasn't been called yet, this will trigger it.
+   *
+   * @returns {Promise<void>}
+   */
+  async _ensureInitialized() {
+    await this.init();
+  },
+
+  /**
+   * Internal initialization method. Called by init().
+   *
+   * @param {Object} options - Initialization options
+   * @param {number} options.alertRev - Feature alert revision number to check
+   * @returns {Promise<void>}
+   */
+  async _doInit({ alertRev = FEATURE_ALERT_REV } = {}) {
     // Initialize service registry
     this.serviceRegistry = new ServiceRegistry();
 
     // Add a listener so that if our options change, we react to it.
     browser.storage.onChanged.addListener(this.onStorageChanged.bind(this));
-    // Hook up our timer
-    browser.alarms.onAlarm.addListener(this.onAlarm.bind(this));
     // Add a listener for the popup if it asks for review totals.
     browser.runtime.onMessage.addListener(this.onMessage.bind(this));
 
@@ -81,6 +110,7 @@ const MyQOnly = {
     delete this.updateInterval;
     delete this.featureRev;
     this._nextServiceID = 0;
+    this._initPromise = null;
   },
 
   /**
@@ -312,13 +342,15 @@ const MyQOnly = {
 
   /**
    * Handles browser alarm events. Triggers a badge update when the periodic
-   * alarm fires.
+   * alarm fires. Ensures initialization is complete before running.
    *
    * @param {Object} alarmInfo - Alarm information from browser.alarms.onAlarm
    */
-  onAlarm(alarmInfo) {
-    if (alarmInfo.name == ALARM_NAME) {
-      console.log("Updating the badge now...");
+  async onAlarm(alarmInfo) {
+    if (alarmInfo.name === ALARM_NAME) {
+      console.log("Alarm fired, ensuring initialization...");
+      await this._ensureInitialized();
+      console.log("Initialization complete, updating badge...");
       this.updateBadge();
     }
   },
@@ -504,8 +536,15 @@ const MyQOnly = {
   }
 };
 
+// Register alarm listener at module level (not inside async init())
+// to ensure it's registered synchronously when the background script wakes up.
+// The listener will call #ensureInitialized() before processing events.
+browser.alarms.onAlarm.addListener(MyQOnly.onAlarm.bind(MyQOnly));
+
 // Hackily detect the sinon-chrome test framework. If we're inside it,
 // don't run init automatically.
+// Note: We don't await init() here - we want the listener registered immediately.
+// The listener itself will ensure initialization is complete before running.
 if (!browser.flush) {
   MyQOnly.init();
 }

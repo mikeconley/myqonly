@@ -52,9 +52,8 @@ describe("MyQOnly initting fresh", function () {
   it("should exist, and be able to init with defaults", async () => {
     should.exist(MyQOnly);
     await MyQOnly.init();
-    // Should have set up listeners and alarms
+    // Should have set up listeners (note: alarm listener is registered at module level, not in init)
     assert.ok(browser.storage.onChanged.addListener.calledOnce);
-    assert.ok(browser.alarms.onAlarm.addListener.calledOnce);
     assert.ok(browser.runtime.onMessage.addListener.calledOnce);
 
     assert.equal(MyQOnly.featureRev, FEATURE_ALERT_REV);
@@ -83,6 +82,42 @@ describe("MyQOnly initting fresh", function () {
         periodInMinutes: DEFAULT_UPDATE_INTERVAL
       })
     );
+  });
+
+  it("should update badge when alarm fires", async () => {
+    // Stub updateBadge BEFORE init to prevent it from being called during init
+    let updateBadgeStub = sinon.stub(MyQOnly, "updateBadge").resolves();
+
+    await MyQOnly.init();
+
+    // Reset call history from init
+    updateBadgeStub.resetHistory();
+
+    // Call onAlarm directly with the correct alarm name (now async)
+    await MyQOnly.onAlarm({ name: ALARM_NAME });
+
+    // Verify updateBadge was called
+    assert.ok(updateBadgeStub.calledOnce, "updateBadge should be called when alarm fires");
+
+    updateBadgeStub.restore();
+  });
+
+  it("should not update badge when alarm fires with wrong name", async () => {
+    // Stub updateBadge BEFORE init
+    let updateBadgeStub = sinon.stub(MyQOnly, "updateBadge").resolves();
+
+    await MyQOnly.init();
+
+    // Reset the stub call count to avoid interference from init
+    updateBadgeStub.resetHistory();
+
+    // Call onAlarm with a different alarm name (now async)
+    await MyQOnly.onAlarm({ name: "some-other-alarm" });
+
+    // Verify updateBadge was NOT called
+    assert.ok(updateBadgeStub.notCalled, "updateBadge should not be called for other alarms");
+
+    updateBadgeStub.restore();
   });
 
   it("should give unique IDs when adding the Phabricator service", async () => {
