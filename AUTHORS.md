@@ -7,3 +7,4 @@ Contributors:
 - [Aaron Klotz](https://github.com/dblohm7/)
 - [Andrew Halberstadt](https://github.com/ahal/)
 - [Olivier Mehani](https://github.com/shtrom/)
+- [Daniel Thorn](https://github.com/relud)

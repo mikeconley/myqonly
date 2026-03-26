@@ -9,6 +9,24 @@
   <body>
     <h1>MyQOnly Release Notes</h1>
 
+    <section data-version="0.12.3">
+      <h2>0.12.3</h2>
+      <h3>Bug fixes</h3>
+      <ul>
+        <li>
+          Fixed <a href="https://github.com/mikeconley/myqonly/issues/97">an issue</a> where the badge would not get updated after re-entering working hours after the background script had been shut down.
+        </li>
+      </ul>
+      <h3>Known issues</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a>
+          <a href="https://github.com/mikeconley/myqonly/issues/18">support</a>
+          for Containers
+        </li>
+      </ul>
+    </section>
+
     <section data-version="0.12.2">
       <h2>0.12.2</h2>
       <h3>Bug fixes</h3>
@@ -55,7 +73,7 @@
         <li>
           You can now ignore specific GitHub teams using the "Ignored teams" field.
           This filters out pull requests where only a team you're on has been
-          requested for review.
+          requested for review. Thanks to <a href="https://github.com/relud">Daniel Thorn (:relud)</a> for this fix!
         </li>
         <li>
           If you have GitHub repositories in the old format (e.g., "mozilla"
@@ -90,7 +108,7 @@
         <li>
           Fixed an issue where the GitHub review count could be incorrect when
           using ignored repositories. The count now properly reflects what the
-          GitHub API returns after filtering.
+          GitHub API returns after filtering.  Thanks to <a href="https://github.com/ahal/">Andrew Halberstadt (:ahal)</a> for the patch!
         </li>
       </ul>
       <h3>Known issues</h3>
