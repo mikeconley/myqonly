@@ -1,4 +1,5 @@
-import { LitElement, html } from "../../vendor/lit/lit-all.min.js";
+import { LitElement, html, adoptStyles } from "../../vendor/lit/lit-all.min.js";
+import styles from "./bugzilla-config.css" with { type: "css" };
 
 class BugzillaConfig extends LitElement {
   static properties = {
@@ -12,9 +13,13 @@ class BugzillaConfig extends LitElement {
     this.needinfos = false;
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+    adoptStyles(this.renderRoot, [styles]);
+  }
+
   render() {
     return html`
-      <link rel="stylesheet" href="bugzilla-config.css" />
       <section>
         <h2>Bugzilla</h2>
         <label for="bugzilla-apiKey">API Key</label>

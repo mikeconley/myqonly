@@ -1,4 +1,5 @@
-import { LitElement, html } from "../../vendor/lit/lit-all.min.js";
+import { LitElement, html, adoptStyles } from "../../vendor/lit/lit-all.min.js";
+import styles from "./options-page.css" with { type: "css" };
 import { GitHubService } from "../../services/github-service.mjs";
 import "./migration-warning.mjs";
 import "./phabricator-config.mjs";
@@ -32,9 +33,10 @@ class OptionsPage extends LitElement {
     this._nextID = 0;
   }
 
-  async connectedCallback() {
+  connectedCallback() {
     super.connectedCallback();
-    await this.#loadSettings();
+    adoptStyles(this.renderRoot, [styles]);
+    this.#loadSettings();
     this.addEventListener("setting-change", this.#onSettingChange);
     this.addEventListener("working-hours-change", this.#onWorkingHoursChange);
     this.addEventListener("help-migrate", this.#showMigrationHelper);
@@ -101,8 +103,6 @@ class OptionsPage extends LitElement {
     let githubSettings = this.#getServiceSettings("github");
 
     return html`
-      <link rel="stylesheet" href="options-page.css" />
-
       <h1>MyQOnly Options</h1>
 
       <migration-warning

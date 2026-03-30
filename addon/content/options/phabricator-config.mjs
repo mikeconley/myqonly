@@ -1,4 +1,5 @@
-import { LitElement, html } from "../../vendor/lit/lit-all.min.js";
+import { LitElement, html, adoptStyles } from "../../vendor/lit/lit-all.min.js";
+import styles from "./phabricator-config.css" with { type: "css" };
 
 class PhabricatorConfig extends LitElement {
   static properties = {
@@ -14,9 +15,13 @@ class PhabricatorConfig extends LitElement {
     this.hasSession = false;
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+    adoptStyles(this.renderRoot, [styles]);
+  }
+
   render() {
     return html`
-      <link rel="stylesheet" href="phabricator-config.css" />
       <section>
         <h2>Phabricator</h2>
         <div class="form-rows">

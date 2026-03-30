@@ -1,4 +1,5 @@
-import { LitElement, html } from "../../vendor/lit/lit-all.min.js";
+import { LitElement, html, adoptStyles } from "../../vendor/lit/lit-all.min.js";
+import styles from "./working-hours-config.css" with { type: "css" };
 
 class WorkingHoursConfig extends LitElement {
   static properties = {
@@ -16,9 +17,13 @@ class WorkingHoursConfig extends LitElement {
     this.days = ["monday", "tuesday", "wednesday", "thursday", "friday"];
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+    adoptStyles(this.renderRoot, [styles]);
+  }
+
   render() {
     return html`
-      <link rel="stylesheet" href="working-hours-config.css" />
       <section id="working-hours">
         <h2>Working hours</h2>
         <input

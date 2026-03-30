@@ -1,4 +1,5 @@
-import { LitElement, html } from "../../vendor/lit/lit-all.min.js";
+import { LitElement, html, adoptStyles } from "../../vendor/lit/lit-all.min.js";
+import styles from "./migration-warning.css" with { type: "css" };
 
 /**
  * Warning banner component for GitHub repository migration.
@@ -17,16 +18,19 @@ class MigrationWarning extends LitElement {
     this.oldRepos = "";
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+    adoptStyles(this.renderRoot, [styles]);
+  }
+
   render() {
     if (!this.visible) {
       return html`
-        <link rel="stylesheet" href="migration-warning.css" />
         <div class="warning hidden"></div>
       `;
     }
 
     return html`
-      <link rel="stylesheet" href="migration-warning.css" />
       <div id="github-migration-warning" class="warning">
         <strong>⚠️ Configuration Update Required</strong>
         <p>

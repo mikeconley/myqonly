@@ -1,4 +1,5 @@
-import { LitElement, html } from "../../vendor/lit/lit-all.min.js";
+import { LitElement, html, adoptStyles } from "../../vendor/lit/lit-all.min.js";
+import styles from "./debug.css" with { type: "css" };
 
 class DebugPage extends LitElement {
   static properties = {
@@ -15,10 +16,13 @@ class DebugPage extends LitElement {
     this.oldUserKeys = "";
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+    adoptStyles(this.renderRoot, [ styles ])
+  }
+
   render() {
     return html`
-      <link rel="stylesheet" href="debug.css" />
-
       <h1>MyQOnly Debug Tools</h1>
 
       <ul>

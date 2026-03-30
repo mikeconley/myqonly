@@ -1,4 +1,5 @@
-import { LitElement, html } from "../../vendor/lit/lit-all.min.js";
+import { LitElement, html, adoptStyles } from "../../vendor/lit/lit-all.min.js";
+import styles from "./github-config.css" with { type: "css" };
 import { GitHubService } from "../../services/github-service.mjs";
 
 class GitHubConfig extends LitElement {
@@ -25,9 +26,13 @@ class GitHubConfig extends LitElement {
     this.validationError = false;
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+    adoptStyles(this.renderRoot, [styles]);
+  }
+
   render() {
     return html`
-      <link rel="stylesheet" href="github-config.css" />
       <section>
         <h2>GitHub</h2>
         <label for="github-username">Username</label>

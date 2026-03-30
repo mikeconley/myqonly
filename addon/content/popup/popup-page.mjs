@@ -1,6 +1,8 @@
-import { LitElement, html } from "../../vendor/lit/lit-all.min.js";
+import { LitElement, html, adoptStyles } from "../../vendor/lit/lit-all.min.js";
+import sheet from "./popup-page.css" with { type: "css" };
 
 class PopupPage extends LitElement {
+  static styles = sheet;
   static properties = {
     status: { type: String },
     hasNewFeatures: { type: Boolean },
@@ -30,9 +32,10 @@ class PopupPage extends LitElement {
     this.githubReviewUrl = "https://github.com/pulls/review-requested";
   }
 
-  async connectedCallback() {
+  connectedCallback() {
     super.connectedCallback();
-    await this.#loadState();
+    adoptStyles(this.renderRoot, [sheet]);
+    this.#loadState();
   }
 
   async #loadState() {
@@ -111,8 +114,6 @@ class PopupPage extends LitElement {
 
   render() {
     return html`
-      <link rel="stylesheet" href="popup-page.css" />
-
       <header>
         <a class="icon" @click=${this.#onOptionsClick}></a>
         <span id="status">${this.status}</span>
