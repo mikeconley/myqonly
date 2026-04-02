@@ -98,7 +98,6 @@ const MyQOnly = {
     this.services = services || [];
     await this._initServices();
     await this.resetAlarm();
-    await this.updateBadge();
   },
 
   /**
@@ -298,21 +297,19 @@ const MyQOnly = {
    *
    * @param {Object} message - Message object with a 'name' property
    * @param {Object} sender - Sender information from browser.runtime
-   * @param {Function} sendReply - Callback to send a response
-   * @returns {Promise|undefined} Promise for async responses, undefined otherwise
+   * @returns {Promise|Object|undefined} Promise for async responses, plain object for synchronous responses, undefined otherwise
    */
-  onMessage(message, sender, sendReply) {
+  onMessage(message, sender) {
     switch (message.name) {
       case "refresh": {
         return this.updateBadge();
       }
 
       case "get-feature-rev": {
-        sendReply({
+        return Promise.resolve({
           newFeatures: this.featureRev < FEATURE_ALERT_REV,
           featureRev: this.featureRev + 1
         });
-        break;
       }
 
       case "opened-release-notes": {
@@ -351,7 +348,7 @@ const MyQOnly = {
       console.log("Alarm fired, ensuring initialization...");
       await this._ensureInitialized();
       console.log("Initialization complete, updating badge...");
-      this.updateBadge();
+      await this.updateBadge();
     }
   },
 
@@ -536,10 +533,19 @@ const MyQOnly = {
   }
 };
 
-// Register alarm listener at module level (not inside async init())
-// to ensure it's registered synchronously when the background script wakes up.
-// The listener will call #ensureInitialized() before processing events.
+// Register all event listeners synchronously at module level so they're
+// in place the moment the event page wakes up for any reason.
+// Each listener returns a Promise so Firefox keeps the event page alive
+// until the async work (including updateBadge) completes.
 browser.alarms.onAlarm.addListener(MyQOnly.onAlarm.bind(MyQOnly));
+browser.runtime.onStartup.addListener(async () => {
+  await MyQOnly.init();
+  await MyQOnly.updateBadge();
+});
+browser.runtime.onInstalled.addListener(async () => {
+  await MyQOnly.init();
+  await MyQOnly.updateBadge();
+});
 
 // Hackily detect the sinon-chrome test framework. If we're inside it,
 // don't run init automatically.

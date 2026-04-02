@@ -85,15 +85,10 @@ describe("MyQOnly initting fresh", function () {
   });
 
   it("should update badge when alarm fires", async () => {
-    // Stub updateBadge BEFORE init to prevent it from being called during init
-    let updateBadgeStub = sinon.stub(MyQOnly, "updateBadge").resolves();
-
     await MyQOnly.init();
 
-    // Reset call history from init
-    updateBadgeStub.resetHistory();
+    let updateBadgeStub = sinon.stub(MyQOnly, "updateBadge").resolves();
 
-    // Call onAlarm directly with the correct alarm name (now async)
     await MyQOnly.onAlarm({ name: ALARM_NAME });
 
     // Verify updateBadge was called
@@ -102,16 +97,32 @@ describe("MyQOnly initting fresh", function () {
     updateBadgeStub.restore();
   });
 
-  it("should not update badge when alarm fires with wrong name", async () => {
-    // Stub updateBadge BEFORE init
-    let updateBadgeStub = sinon.stub(MyQOnly, "updateBadge").resolves();
-
+  it("should not resolve onAlarm until updateBadge completes", async () => {
     await MyQOnly.init();
 
-    // Reset the stub call count to avoid interference from init
-    updateBadgeStub.resetHistory();
+    let resolveBadge;
+    let updateBadgeStub = sinon.stub(MyQOnly, "updateBadge").returns(
+      new Promise(resolve => { resolveBadge = resolve; })
+    );
 
-    // Call onAlarm with a different alarm name (now async)
+    let alarmResolved = false;
+    let alarmPromise = MyQOnly.onAlarm({ name: ALARM_NAME }).then(() => {
+      alarmResolved = true;
+    });
+
+    assert.ok(!alarmResolved, "onAlarm should not have resolved yet");
+    resolveBadge();
+    await alarmPromise;
+    assert.ok(alarmResolved, "onAlarm should resolve after updateBadge completes");
+
+    updateBadgeStub.restore();
+  });
+
+  it("should not update badge when alarm fires with wrong name", async () => {
+    await MyQOnly.init();
+
+    let updateBadgeStub = sinon.stub(MyQOnly, "updateBadge").resolves();
+
     await MyQOnly.onAlarm({ name: "some-other-alarm" });
 
     // Verify updateBadge was NOT called
@@ -593,6 +604,7 @@ describe("State persistence", function () {
     );
 
     await MyQOnly.init();
+    await MyQOnly.updateBadge();
 
     // Verify that storage.set was called with reviewStates
     const setCall = browser.storage.local.set
@@ -632,6 +644,29 @@ describe("State persistence", function () {
     assert.ok(githubState, "Should have GitHub state");
     assert.equal(phabState[0], 1, "Phabricator should have ID 1");
     assert.equal(githubState[0], 2, "GitHub should have ID 2");
+  });
+
+  it("should return a Promise from get-feature-rev message handler", async () => {
+    browser.storage.local.get.withArgs("services").returns(Promise.resolve({}));
+
+    await MyQOnly.init();
+
+    const result = MyQOnly.onMessage({ name: "get-feature-rev" }, {});
+
+    assert.ok(result instanceof Promise, "get-feature-rev should return a Promise");
+  });
+
+  it("should resolve get-feature-rev with newFeatures and featureRev", async () => {
+    browser.storage.local.get.withArgs("services").returns(Promise.resolve({}));
+
+    await MyQOnly.init();
+
+    const result = await MyQOnly.onMessage({ name: "get-feature-rev" }, {});
+
+    assert.ok(result.hasOwnProperty("newFeatures"), "should have newFeatures");
+    assert.ok(result.hasOwnProperty("featureRev"), "should have featureRev");
+    assert.equal(typeof result.newFeatures, "boolean");
+    assert.equal(typeof result.featureRev, "number");
   });
 
   it("should return a promise from refresh message handler", async () => {
