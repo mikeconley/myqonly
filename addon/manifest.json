@@ -9,7 +9,6 @@
   },
   "action": {
     "default_popup": "content/popup/popup.html",
-    "browser_style": true,
     "default_title": "MyQOnly",
     "default_icon": {
       "16": "icons/myqonly-dark.svg",
