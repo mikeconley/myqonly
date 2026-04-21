@@ -30,7 +30,7 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "myqonly@mikeconley.ca",
-      "strict_min_version": "150.0a1"
+      "strict_min_version": "150.0"
     }
   },
   "options_ui": {
