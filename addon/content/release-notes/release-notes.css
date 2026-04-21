@@ -1,12 +1,19 @@
 html,
 body {
+  color-scheme: light dark;
   font: message-box;
   font-size: 1em;
+  background: light-dark(#ffffff, #1a1a1a);
+  color: light-dark(#000000, #e6e6e6);
+}
+
+a {
+  color: light-dark(#0066cc, #99ccff);
 }
 
 img {
   display: block;
-  box-shadow: 2px 2px 2px 1px #aaaaaa;
+  box-shadow: 2px 2px 2px 1px light-dark(#aaaaaa, #000000);
   margin: 20px 0px;
 }
 
