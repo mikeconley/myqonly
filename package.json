@@ -37,5 +37,9 @@
   "resolutions": {
     "playwright": "1.60.0",
     "playwright-core": "1.60.0"
+  },
+  "overrides": {
+    "playwright": "1.60.0",
+    "playwright-core": "1.60.0"
   }
 }
