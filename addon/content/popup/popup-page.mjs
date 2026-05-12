@@ -35,7 +35,17 @@ class PopupPage extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     adoptStyles(this.renderRoot, [sheet]);
-    this.#loadState();
+  }
+
+  async firstUpdated() {
+    await this.#loadState();
+    await this.updateComplete;
+    this.dispatchEvent(
+      new CustomEvent("initted", {
+        bubbles: true,
+        composed: true
+      })
+    );
   }
 
   async #loadState() {
@@ -53,13 +63,6 @@ class PopupPage extends LitElement {
     this.needsGitHubMigration = !!needsGitHubMigration;
 
     await this.#updatePanel();
-
-    this.dispatchEvent(
-      new CustomEvent("initted", {
-        bubbles: true,
-        composed: true
-      })
-    );
   }
 
   async #updatePanel() {

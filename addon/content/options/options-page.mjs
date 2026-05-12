@@ -36,11 +36,14 @@ class OptionsPage extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     adoptStyles(this.renderRoot, [styles]);
-    this.#loadSettings();
     this.addEventListener("setting-change", this.#onSettingChange);
     this.addEventListener("working-hours-change", this.#onWorkingHoursChange);
     this.addEventListener("help-migrate", this.#showMigrationHelper);
+  }
 
+  async firstUpdated() {
+    await this.#loadSettings();
+    await this.updateComplete;
     document.dispatchEvent(new CustomEvent("initted", { bubbles: true }));
   }
 
