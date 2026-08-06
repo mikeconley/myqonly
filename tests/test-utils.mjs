@@ -95,45 +95,40 @@ const fixtures = {
   bugzilla: {
     apiSuccessResponse: {
       result: {
-        result: {
-          requestee: [
-            {
-              id: 1,
-              bug_id: 123456,
-              type: "review",
-              status: "?",
-              requestee: "reviewer@example.com"
-            },
-            {
-              id: 2,
-              bug_id: 123456,
-              type: "needinfo",
-              status: "?",
-              requestee: "reviewer@example.com"
-            },
-            {
-              id: 3,
-              bug_id: 789012,
-              type: "review",
-              status: "?",
-              requestee: "reviewer@example.com"
-            }
-          ]
-        }
+        requestee: [
+          {
+            id: 1,
+            bug_id: 123456,
+            type: "review",
+            status: "?",
+            requestee: "reviewer@example.com"
+          },
+          {
+            id: 2,
+            bug_id: 123456,
+            type: "needinfo",
+            status: "?",
+            requestee: "reviewer@example.com"
+          },
+          {
+            id: 3,
+            bug_id: 789012,
+            type: "review",
+            status: "?",
+            requestee: "reviewer@example.com"
+          }
+        ]
       }
     },
     apiEmptyResponse: {
       result: {
-        result: {
-          requestee: []
-        }
+        requestee: []
       }
     },
     apiErrorResponse: {
-      error: {
-        code: 32000,
-        message: "Invalid API key"
-      }
+      error: true,
+      code: 306,
+      message: "The API key you specified is invalid."
     }
   },
   github: {

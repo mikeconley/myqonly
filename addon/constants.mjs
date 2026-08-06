@@ -10,12 +10,10 @@ export const PHABRICATOR_SELECTORS = {
   LINK_PERSON: ".phui-link-person"
 };
 
-export const BUGZILLA_API = "https://bugzilla.mozilla.org/jsonrpc.cgi";
+export const BUGZILLA_API =
+  "https://bugzilla.mozilla.org/rest/mydashboard/run_flag_query";
 export const BUGZILLA_DASHBOARD =
   "https://bugzilla.mozilla.org/page.cgi?id=mydashboard.html";
-export const BUGZILLA_METHOD = "MyDashboard.run_flag_query";
-export const BUGZILLA_REQUEST_ID = 4;
-export const BUGZILLA_VERSION = "1.1";
 
 export const GITHUB_API = "https://api.github.com/search/issues";
 export const GITHUB_REVIEW_URL = "https://github.com/pulls/review-requested";
@@ -45,8 +43,7 @@ export const MESSAGE_TYPES = {
 };
 
 export const HTTP_HEADERS = {
-  CONTENT_TYPE_HTML: "text/html",
-  CONTENT_TYPE_JSON: "application/json"
+  CONTENT_TYPE_HTML: "text/html"
 };
 
 export const HTTP_METHODS = {
