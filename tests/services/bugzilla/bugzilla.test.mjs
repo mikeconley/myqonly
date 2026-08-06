@@ -2,9 +2,7 @@ import { BugzillaService } from "../../../addon/services/bugzilla-service.mjs";
 import {
   BUGZILLA_API,
   BUGZILLA_DASHBOARD,
-  BUGZILLA_METHOD,
-  BUGZILLA_REQUEST_ID,
-  BUGZILLA_VERSION,
+  HTTP_METHODS,
   SERVICE_TYPES
 } from "../../../addon/constants.mjs";
 import {
@@ -91,18 +89,21 @@ describe("Bugzilla Service", function () {
         await bugzillaService.update(settings);
         assert.fail("Should have thrown an error");
       } catch (error) {
-        assert.ok(error.message.includes("Invalid API key"));
+        assert.ok(
+          error.message.includes("The API key you specified is invalid")
+        );
       }
     });
 
-    it("should use correct JSON-RPC request format", async function () {
-      let capturedBody;
+    it("should use correct REST request format", async function () {
+      let capturedRequest;
 
       sandbox.stub(window, "fetch").callsFake(async (request) => {
-        capturedBody = await request.text();
+        capturedRequest = request;
 
         return {
           ok: true,
+          status: 200,
           json: async () => fixtures.bugzilla.apiEmptyResponse
         };
       });
@@ -110,12 +111,33 @@ describe("Bugzilla Service", function () {
       let settings = { apiKey: "test-key", needinfos: false };
       await bugzillaService.update(settings);
 
-      let body = JSON.parse(capturedBody);
-      assert.equal(body.method, BUGZILLA_METHOD);
-      assert.equal(body.params.Bugzilla_api_key, "test-key");
-      assert.equal(body.params.type, "requestee");
-      assert.equal(body.version, BUGZILLA_VERSION);
-      assert.equal(body.id, BUGZILLA_REQUEST_ID);
+      let url = new URL(capturedRequest.url);
+      assert.equal(capturedRequest.method, HTTP_METHODS.GET);
+      assert.equal(`${url.origin}${url.pathname}`, BUGZILLA_API);
+      assert.equal(url.searchParams.get("type"), "requestee");
+      assert.equal(
+        capturedRequest.headers.get("X-BUGZILLA-API-KEY"),
+        "test-key"
+      );
+      assert.equal(url.searchParams.get("Bugzilla_api_key"), null);
+    });
+
+    it("should throw when the endpoint returns a non-2xx response", async function () {
+      sandbox.stub(window, "fetch").resolves({
+        ok: false,
+        status: 404,
+        text: async () => "<!DOCTYPE html><title>Page Not Found</title>"
+      });
+
+      let settings = { apiKey: "test-key", needinfos: true };
+
+      try {
+        await bugzillaService.update(settings);
+        assert.fail("Should have thrown an error");
+      } catch (error) {
+        assert.ok(error.message.includes("404"));
+        assert.ok(error.message.includes("Page Not Found"));
+      }
     });
   });
 

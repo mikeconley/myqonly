@@ -2,17 +2,13 @@ import { BaseService } from "./base-service.mjs";
 import {
   BUGZILLA_API,
   BUGZILLA_DASHBOARD,
-  BUGZILLA_METHOD,
-  BUGZILLA_REQUEST_ID,
-  BUGZILLA_VERSION,
   SERVICE_TYPES,
-  HTTP_METHODS,
-  HTTP_HEADERS
+  HTTP_METHODS
 } from "../constants.mjs";
 
 /**
  * Service for fetching Bugzilla review and needinfo counts.
- * Uses the Bugzilla JSON-RPC API to fetch flags requested from the user.
+ * Uses the Bugzilla REST API to fetch flags requested from the user.
  */
 export class BugzillaService extends BaseService {
   /**
@@ -29,42 +25,39 @@ export class BugzillaService extends BaseService {
       return { reviewTotal: 0, needinfoTotal: 0 };
     }
 
-    // I'm not sure how much of this is necessary - I just looked at what
-    // the Bugzilla My Dashboard thing does in the network inspector, and
-    // I'm more or less mimicking that here.
-    let body = JSON.stringify({
-      id: BUGZILLA_REQUEST_ID,
-      method: BUGZILLA_METHOD,
-      params: {
-        Bugzilla_api_key: apiKey,
-        type: "requestee"
-      },
-      version: BUGZILLA_VERSION
-    });
+    // "requestee" returns the flags awaiting a response from this user.
+    let url = new URL(BUGZILLA_API);
+    url.searchParams.set("type", "requestee");
 
-    let req = new Request(BUGZILLA_API, {
-      method: HTTP_METHODS.POST,
+    let req = new Request(url, {
+      method: HTTP_METHODS.GET,
       headers: {
-        "Content-Type": HTTP_HEADERS.CONTENT_TYPE_JSON
+        "X-BUGZILLA-API-KEY": apiKey
       },
-      body,
       credentials: "omit",
       redirect: "follow",
       referrer: "client"
     });
 
     let resp = await window.fetch(req);
+    if (!resp.ok) {
+      throw new Error(
+        `Bugzilla request failed (${resp.status}): ${await resp.text()}`
+      );
+    }
+
     let bugzillaData = await resp.json();
     if (bugzillaData.error) {
-      throw new Error(`Bugzilla request failed: ${bugzillaData.error.message}`);
+      throw new Error(`Bugzilla request failed: ${bugzillaData.message}`);
     }
-    let reviewTotal = bugzillaData.result.result.requestee.filter((f) => {
+
+    let reviewTotal = bugzillaData.result.requestee.filter((f) => {
       return f.type == "review";
     }).length;
 
     let needinfoTotal = 0;
     if (settings.needinfos) {
-      needinfoTotal = bugzillaData.result.result.requestee.filter((f) => {
+      needinfoTotal = bugzillaData.result.requestee.filter((f) => {
         return f.type == "needinfo";
       }).length;
     }
