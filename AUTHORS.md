@@ -8,3 +8,4 @@ Contributors:
 - [Andrew Halberstadt](https://github.com/ahal/)
 - [Olivier Mehani](https://github.com/shtrom/)
 - [Daniel Thorn](https://github.com/relud)
+- [kinetiknz](https://github.com/kinetiknz)
