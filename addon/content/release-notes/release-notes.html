@@ -10,6 +10,27 @@
   <body>
     <h1>MyQOnly Release Notes</h1>
 
+    <section data-version="0.12.7">
+      <h2>0.12.7</h2>
+      <h3>Changes</h3>
+      <ul>
+        <li>
+          It is now possible to supply a Phabricator API token in the settings page. Setting this will use the Conduit API to request Phabricator review counts rather than page scraping, which may help address <a href="https://github.com/mikeconley/myqonly/issues/103">this recent issue</a> where the WAF protections on Phabricator are blocking counts from coming through. This is an opt-in change for now as this is tested.
+        </li>
+        <li>
+          Users that use a Phabricator API token can now choose which container to open Phabricator in, if they'd rather not use the default. Helpful for users logged into Phabricator in a non-default container.
+        </li>
+      </ul>
+      <h3>Known issues</h3>
+      <ul>
+        <li>
+          <a href="https://github.com/mikeconley/myqonly/issues/8">Poor</a>
+          <a href="https://github.com/mikeconley/myqonly/issues/18">support</a>
+          for Containers
+        </li>
+      </ul>
+    </section>
+
     <section data-version="0.12.6">
       <h2>0.12.6</h2>
       <h3>Bug fixes</h3>
