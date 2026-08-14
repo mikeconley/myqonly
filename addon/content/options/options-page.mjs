@@ -17,7 +17,9 @@ class OptionsPage extends LitElement {
     oldRepos: { type: String },
     phabricatorHasSession: { type: Boolean },
     phabricatorTokenState: { type: String },
-    phabricatorTokenUserName: { type: String }
+    phabricatorTokenUserName: { type: String },
+    phabricatorContainers: { type: Array },
+    phabricatorContainersAvailable: { type: Boolean }
   };
 
   constructor() {
@@ -35,6 +37,8 @@ class OptionsPage extends LitElement {
     this.phabricatorHasSession = false;
     this.phabricatorTokenState = PHABRICATOR_TOKEN_STATES.UNSET;
     this.phabricatorTokenUserName = "";
+    this.phabricatorContainers = [];
+    this.phabricatorContainersAvailable = false;
     this._nextID = 0;
   }
 
@@ -91,6 +95,26 @@ class OptionsPage extends LitElement {
     // when a token is configured, since the session UI is hidden then.
     if (!this.#getServiceSettings("phabricator").apiToken) {
       await this.#checkPhabricatorSession();
+    }
+
+    await this.#loadContainers();
+  }
+
+  /**
+   * Loads the container list. The query rejects outright, rather than
+   * returning an empty list, when the user has turned containers off via
+   * privacy.userContext.enabled, so treat that as unavailable rather than
+   * letting it break the rest of the page.
+   */
+  async #loadContainers() {
+    try {
+      this.phabricatorContainers =
+        (await browser.contextualIdentities.query({})) || [];
+      this.phabricatorContainersAvailable = true;
+    } catch (e) {
+      console.log("Containers are unavailable: ", e);
+      this.phabricatorContainers = [];
+      this.phabricatorContainersAvailable = false;
     }
   }
 
@@ -175,6 +199,9 @@ class OptionsPage extends LitElement {
           .apiToken=${phabSettings.apiToken || ""}
           .tokenState=${this.phabricatorTokenState}
           .tokenUserName=${this.phabricatorTokenUserName}
+          .dashboardContainer=${phabSettings.dashboardContainer || ""}
+          .containers=${this.phabricatorContainers}
+          .containersAvailable=${this.phabricatorContainersAvailable}
         ></phabricator-config>
 
         <bugzilla-config

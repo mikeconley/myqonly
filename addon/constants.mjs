@@ -20,6 +20,10 @@ export const PHABRICATOR_TOKEN_STATES = {
   INVALID: "invalid"
 };
 
+// The cookieStoreId for "no container", and the value stored when the user
+// has not picked one.
+export const NO_CONTAINER = "";
+
 export const PHABRICATOR_METHODS = {
   WHOAMI: "user.whoami",
   REVISION_SEARCH: "differential.revision.search",

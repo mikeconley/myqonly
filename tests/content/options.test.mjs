@@ -62,6 +62,7 @@ async function setupBlank(browser) {
       name: "check-for-phabricator-session"
     })
     .returns(Promise.resolve(false));
+  browser.contextualIdentities.query.returns(Promise.resolve([]));
 }
 
 async function setupWithServices(browser) {
@@ -123,6 +124,7 @@ async function setupWithServices(browser) {
       name: "check-for-phabricator-session"
     })
     .returns(Promise.resolve(false));
+  browser.contextualIdentities.query.returns(Promise.resolve([]));
 }
 
 describe("Options page", function () {
@@ -264,6 +266,92 @@ describe("Options page Phabricator token", function () {
           }),
           "Should not have asked to validate a token that is not set"
         );
+      }
+    });
+  });
+
+  it("should pass the browser's containers to the picker", async () => {
+    const CONTAINERS = [
+      { cookieStoreId: "firefox-container-1", name: "Work" },
+      { cookieStoreId: "firefox-container-2", name: "Personal" }
+    ];
+
+    await loadPage({
+      url: "/addon/content/options/options.html",
+      setup: async (browser) => {
+        await setupBlank(browser);
+        browser.storage.local.get.withArgs("services").returns(
+          Promise.resolve({
+            services: [
+              {
+                id: 1,
+                type: "phabricator",
+                settings: {
+                  apiToken: "api-token",
+                  dashboardContainer: "firefox-container-2"
+                }
+              }
+            ]
+          })
+        );
+        browser.runtime.sendMessage
+          .withArgs({ name: MESSAGE_TYPES.VALIDATE_PHABRICATOR_TOKEN })
+          .returns(Promise.resolve({ valid: true, userName: "testuser" }));
+        browser.contextualIdentities.query.returns(Promise.resolve(CONTAINERS));
+      },
+      test: async (content, document) => {
+        let phabConfig = getPhabConfig(document);
+        await phabConfig.updateComplete;
+
+        assert.ok(phabConfig.containersAvailable);
+        assert.deepEqual(phabConfig.containers, CONTAINERS);
+
+        let picker = phabConfig.shadowRoot.getElementById(
+          "phabricator-container"
+        );
+        assert.ok(picker, "Should have rendered the picker");
+        assert.equal(picker.value, "firefox-container-2");
+      }
+    });
+  });
+
+  it("should cope with container tabs being turned off", async () => {
+    await loadPage({
+      url: "/addon/content/options/options.html",
+      setup: async (browser) => {
+        await setupBlank(browser);
+        browser.storage.local.get.withArgs("services").returns(
+          Promise.resolve({
+            services: [
+              {
+                id: 1,
+                type: "phabricator",
+                settings: { apiToken: "api-token" }
+              }
+            ]
+          })
+        );
+        browser.runtime.sendMessage
+          .withArgs({ name: MESSAGE_TYPES.VALIDATE_PHABRICATOR_TOKEN })
+          .returns(Promise.resolve({ valid: true, userName: "testuser" }));
+        // This is what Firefox does when privacy.userContext.enabled is off.
+        browser.contextualIdentities.query.returns(
+          Promise.reject(new Error("Contextual identities are disabled"))
+        );
+      },
+      test: async (content, document) => {
+        let phabConfig = getPhabConfig(document);
+        await phabConfig.updateComplete;
+
+        assert.ok(!phabConfig.containersAvailable);
+        assert.ok(
+          phabConfig.shadowRoot.getElementById(
+            "phabricator-containers-unavailable"
+          ),
+          "Should explain that containers are off"
+        );
+        // The rest of the page still has to work.
+        assert.equal(phabConfig.tokenState, PHABRICATOR_TOKEN_STATES.VALID);
       }
     });
   });

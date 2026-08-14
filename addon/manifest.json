@@ -37,7 +37,7 @@
     "open_in_tab": true,
     "page": "content/options/options.html"
   },
-  "permissions": ["alarms", "cookies", "storage"],
+  "permissions": ["alarms", "contextualIdentities", "cookies", "storage"],
   "host_permissions": [
     "https://phabricator.services.mozilla.com/*",
     "https://bugzilla.mozilla.org/*"

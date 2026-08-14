@@ -1,7 +1,8 @@
 import { LitElement, html, adoptStyles } from "../../vendor/lit/lit-all.min.js";
 import {
   PHABRICATOR_TOKEN_SETTINGS_URL,
-  PHABRICATOR_TOKEN_STATES
+  PHABRICATOR_TOKEN_STATES,
+  NO_CONTAINER
 } from "../../constants.mjs";
 import styles from "./phabricator-config.css" with { type: "css" };
 
@@ -12,7 +13,10 @@ class PhabricatorConfig extends LitElement {
     hasSession: { type: Boolean },
     apiToken: { type: String },
     tokenState: { type: String },
-    tokenUserName: { type: String }
+    tokenUserName: { type: String },
+    dashboardContainer: { type: String },
+    containers: { type: Array },
+    containersAvailable: { type: Boolean }
   };
 
   constructor() {
@@ -23,6 +27,9 @@ class PhabricatorConfig extends LitElement {
     this.apiToken = "";
     this.tokenState = PHABRICATOR_TOKEN_STATES.UNSET;
     this.tokenUserName = "";
+    this.dashboardContainer = NO_CONTAINER;
+    this.containers = [];
+    this.containersAvailable = false;
   }
 
   connectedCallback() {
@@ -51,7 +58,9 @@ class PhabricatorConfig extends LitElement {
         </p>
         <p id="phabricator-token-status">${this.#renderTokenStatus()}</p>
 
-        ${this.apiToken ? "" : this.#renderSessionOption()}
+        ${this.apiToken
+          ? this.#renderContainerPicker()
+          : this.#renderSessionOption()}
 
         <div class="form-rows">
           <input
@@ -97,6 +106,45 @@ class PhabricatorConfig extends LitElement {
               >Did not find a Phabricator session cookie. Are you logged in to
               Phabricator in the default container?</span
             >`}
+      </p>
+    `;
+  }
+
+  /**
+   * The container picker only makes sense on the API token path: the scraping
+   * path has to use whichever container holds the Phabricator session.
+   */
+  #renderContainerPicker() {
+    if (!this.containersAvailable) {
+      return html`
+        <p class="container-row" id="phabricator-containers-unavailable">
+          Container tabs are turned off in this browser, so the dashboard link
+          will open without one.
+        </p>
+      `;
+    }
+
+    return html`
+      <p class="container-row">
+        <label for="phabricator-container">Open the dashboard in</label>
+        <select
+          id="phabricator-container"
+          data-setting="dashboardContainer"
+          .value=${this.dashboardContainer}
+          @change=${this.#onChange}
+        >
+          <option value=${NO_CONTAINER}>No container</option>
+          ${this.containers.map(
+            (container) => html`
+              <option
+                value=${container.cookieStoreId}
+                ?selected=${container.cookieStoreId == this.dashboardContainer}
+              >
+                ${container.name}
+              </option>
+            `
+          )}
+        </select>
       </p>
     `;
   }

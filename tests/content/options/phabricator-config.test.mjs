@@ -277,4 +277,91 @@ describe("PhabricatorConfig Component", function () {
       assert.include(link.href, "/settings/panel/apitokens/");
     });
   });
+
+  describe("dashboard container", function () {
+    const CONTAINERS = [
+      { cookieStoreId: "firefox-container-1", name: "Work" },
+      { cookieStoreId: "firefox-container-2", name: "Personal" }
+    ];
+
+    function picker() {
+      return element.shadowRoot.getElementById("phabricator-container");
+    }
+
+    function unavailableNote() {
+      return element.shadowRoot.getElementById(
+        "phabricator-containers-unavailable"
+      );
+    }
+
+    it("should not offer a container without a token", async function () {
+      element.containersAvailable = true;
+      element.containers = CONTAINERS;
+      await element.updateComplete;
+
+      assert.notOk(picker(), "Container picker belongs to the token path");
+      assert.notOk(unavailableNote());
+    });
+
+    it("should explain when container tabs are turned off", async function () {
+      element.apiToken = "api-token";
+      element.containersAvailable = false;
+      await element.updateComplete;
+
+      assert.ok(unavailableNote());
+      assert.notOk(picker());
+    });
+
+    it("should list containers once available", async function () {
+      element.apiToken = "api-token";
+      element.containersAvailable = true;
+      element.containers = CONTAINERS;
+      await element.updateComplete;
+
+      let options = picker().querySelectorAll("option");
+      assert.equal(options.length, 3, "No container, plus the two containers");
+      assert.equal(options[0].value, "");
+      assert.equal(options[1].value, "firefox-container-1");
+      assert.equal(options[1].textContent.trim(), "Work");
+    });
+
+    it("should mark the configured container as selected", async function () {
+      element.apiToken = "api-token";
+      element.containersAvailable = true;
+      element.containers = CONTAINERS;
+      element.dashboardContainer = "firefox-container-2";
+      await element.updateComplete;
+
+      assert.equal(picker().value, "firefox-container-2");
+    });
+
+    it("should emit setting-change when a container is picked", async function () {
+      element.apiToken = "api-token";
+      element.containersAvailable = true;
+      element.containers = CONTAINERS;
+      await element.updateComplete;
+
+      let eventPromise = new Promise((resolve) => {
+        element.addEventListener("setting-change", resolve, { once: true });
+      });
+
+      picker().value = "firefox-container-1";
+      picker().dispatchEvent(new Event("change", { bubbles: true }));
+
+      let event = await eventPromise;
+      assert.equal(event.detail.setting, "dashboardContainer");
+      assert.equal(event.detail.value, "firefox-container-1");
+    });
+
+    it("should offer only 'no container' when the user has none", async function () {
+      element.apiToken = "api-token";
+      element.containersAvailable = true;
+      element.containers = [];
+      await element.updateComplete;
+
+      let options = picker().querySelectorAll("option");
+      assert.equal(options.length, 1);
+      assert.equal(options[0].value, "");
+    });
+  });
 });

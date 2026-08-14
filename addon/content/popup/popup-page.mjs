@@ -1,4 +1,5 @@
 import { LitElement, html, adoptStyles } from "../../vendor/lit/lit-all.min.js";
+import { SERVICE_TYPES, NO_CONTAINER } from "../../constants.mjs";
 import sheet from "./popup-page.css" with { type: "css" };
 
 class PopupPage extends LitElement {
@@ -14,7 +15,8 @@ class PopupPage extends LitElement {
     bugzillaReviews: { type: Number },
     bugzillaNeedinfos: { type: Number },
     githubReviews: { type: Number },
-    githubReviewUrl: { type: String }
+    githubReviewUrl: { type: String },
+    phabricatorContainer: { type: String }
   };
 
   constructor() {
@@ -30,6 +32,7 @@ class PopupPage extends LitElement {
     this.bugzillaNeedinfos = 0;
     this.githubReviews = 0;
     this.githubReviewUrl = "https://github.com/pulls/review-requested";
+    this.phabricatorContainer = NO_CONTAINER;
   }
 
   connectedCallback() {
@@ -62,6 +65,13 @@ class PopupPage extends LitElement {
     );
     this.needsGitHubMigration = !!needsGitHubMigration;
 
+    let { services } = (await browser.storage.local.get("services")) || {};
+    let phabService = (services || []).find(
+      (service) => service.type == SERVICE_TYPES.PHABRICATOR
+    );
+    this.phabricatorContainer =
+      (phabService && phabService.settings.dashboardContainer) || NO_CONTAINER;
+
     await this.#updatePanel();
   }
 
@@ -83,7 +93,8 @@ class PopupPage extends LitElement {
         case "bugzilla": {
           this.bugzillaReviews = state.data.reviewTotal || 0;
           this.bugzillaNeedinfos = state.data.needinfoTotal || 0;
-          total += (state.data.reviewTotal || 0) + (state.data.needinfoTotal || 0);
+          total +=
+            (state.data.reviewTotal || 0) + (state.data.needinfoTotal || 0);
           break;
         }
         case "phabricator": {
@@ -120,10 +131,18 @@ class PopupPage extends LitElement {
       <header>
         <a class="icon" @click=${this.#onOptionsClick}></a>
         <span id="status">${this.status}</span>
-        <button id="refresh" class="icon" @click=${this.#onRefreshClick}></button>
+        <button
+          id="refresh"
+          class="icon"
+          @click=${this.#onRefreshClick}
+        ></button>
       </header>
 
-      <div class="phabricator-disconnected ${this.phabricatorDisconnected ? "" : "hidden"}">
+      <div
+        class="phabricator-disconnected ${this.phabricatorDisconnected
+          ? ""
+          : "hidden"}"
+      >
         Warning: Not logged in to Phabricator
       </div>
 
@@ -135,14 +154,24 @@ class PopupPage extends LitElement {
       </a>
 
       <section>
-        <a href="https://phabricator.services.mozilla.com/differential/query/active/">
-          <span id="phabricator-user-review-num">${this.phabricatorUserReviews}</span> review(s) on Phabricator
+        <a
+          href="https://phabricator.services.mozilla.com/differential/query/active/"
+          @click=${this.#onPhabricatorLinkClick}
+        >
+          <span id="phabricator-user-review-num"
+            >${this.phabricatorUserReviews}</span
+          >
+          review(s) on Phabricator
         </a>
       </section>
 
       <section class="${this.phabricatorGroupReviews === 0 ? "hidden" : ""}">
-        <a href="https://phabricator.services.mozilla.com/differential/query/active/">
-          <span>${this.phabricatorGroupReviews}</span> reviewer group review(s) on Phabricator
+        <a
+          href="https://phabricator.services.mozilla.com/differential/query/active/"
+          @click=${this.#onPhabricatorLinkClick}
+        >
+          <span>${this.phabricatorGroupReviews}</span> reviewer group review(s)
+          on Phabricator
         </a>
       </section>
 
@@ -160,18 +189,17 @@ class PopupPage extends LitElement {
 
       <section class="${this.githubReviews === 0 ? "hidden" : ""}">
         <a href="${this.githubReviewUrl}">
-          <span id="github-review-num">${this.githubReviews}</span> review(s) on Github
+          <span id="github-review-num">${this.githubReviews}</span> review(s) on
+          Github
         </a>
       </section>
 
       <a
         class="new-features ${this.hasNewFeatures ? "" : "hidden"}"
         target="_blank"
-        href="${
-          this.hasNewFeatures
-            ? `/content/release-notes/release-notes.html#featureRev-${this.featureRev}`
-            : "/content/release-notes/release-notes.html"
-        }"
+        href="${this.hasNewFeatures
+          ? `/content/release-notes/release-notes.html#featureRev-${this.featureRev}`
+          : "/content/release-notes/release-notes.html"}"
         @click=${this.#onNewFeaturesClick}
       >
         New features
@@ -187,6 +215,23 @@ class PopupPage extends LitElement {
     await Promise.all([refreshPromise, visualDelayPromise]);
 
     await this.#updatePanel();
+  }
+
+  /**
+   * Opens the dashboard in the configured container. Without one, the link is
+   * left alone so it opens the way it always has.
+   */
+  #onPhabricatorLinkClick(event) {
+    if (!this.phabricatorContainer) {
+      return;
+    }
+
+    browser.tabs.create({
+      url: event.currentTarget.href,
+      cookieStoreId: this.phabricatorContainer
+    });
+    event.preventDefault();
+    window.close();
   }
 
   #onOptionsClick(event) {

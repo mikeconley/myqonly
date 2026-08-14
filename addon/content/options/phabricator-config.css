@@ -18,6 +18,17 @@ input[type="password"] {
   width: 50ch;
 }
 
+.container-row {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+  margin-block: 0.5em 0;
+}
+
+.container-row label {
+  margin-top: 0;
+}
+
 .token-help {
   margin-block: 0.25em 0;
   max-width: 60ch;
