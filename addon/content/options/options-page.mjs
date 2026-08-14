@@ -1,6 +1,7 @@
 import { LitElement, html, adoptStyles } from "../../vendor/lit/lit-all.min.js";
 import styles from "./options-page.css" with { type: "css" };
 import { GitHubService } from "../../services/github-service.mjs";
+import { MESSAGE_TYPES, PHABRICATOR_TOKEN_STATES } from "../../constants.mjs";
 import "./migration-warning.mjs";
 import "./phabricator-config.mjs";
 import "./bugzilla-config.mjs";
@@ -14,7 +15,9 @@ class OptionsPage extends LitElement {
     workingHours: { type: Object },
     migrationVisible: { type: Boolean },
     oldRepos: { type: String },
-    phabricatorHasSession: { type: Boolean }
+    phabricatorHasSession: { type: Boolean },
+    phabricatorTokenState: { type: String },
+    phabricatorTokenUserName: { type: String }
   };
 
   constructor() {
@@ -30,6 +33,8 @@ class OptionsPage extends LitElement {
     this.migrationVisible = false;
     this.oldRepos = "";
     this.phabricatorHasSession = false;
+    this.phabricatorTokenState = PHABRICATOR_TOKEN_STATES.UNSET;
+    this.phabricatorTokenUserName = "";
     this._nextID = 0;
   }
 
@@ -50,7 +55,10 @@ class OptionsPage extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     this.removeEventListener("setting-change", this.#onSettingChange);
-    this.removeEventListener("working-hours-change", this.#onWorkingHoursChange);
+    this.removeEventListener(
+      "working-hours-change",
+      this.#onWorkingHoursChange
+    );
     this.removeEventListener("help-migrate", this.#showMigrationHelper);
   }
 
@@ -77,7 +85,13 @@ class OptionsPage extends LitElement {
     this.workingHours = workingHours;
 
     await this.#checkMigrationNeeded();
-    await this.#checkPhabricatorSession();
+    await this.#checkPhabricatorToken();
+
+    // Checking for a session fetches the dashboard page, which is pointless
+    // when a token is configured, since the session UI is hidden then.
+    if (!this.#getServiceSettings("phabricator").apiToken) {
+      await this.#checkPhabricatorSession();
+    }
   }
 
   async #checkMigrationNeeded() {
@@ -95,9 +109,32 @@ class OptionsPage extends LitElement {
 
   async #checkPhabricatorSession() {
     let hasSession = await browser.runtime.sendMessage({
-      name: "check-for-phabricator-session"
+      name: MESSAGE_TYPES.CHECK_PHABRICATOR_SESSION
     });
     this.phabricatorHasSession = hasSession;
+  }
+
+  async #checkPhabricatorToken() {
+    let settings = this.#getServiceSettings("phabricator");
+    if (!settings.apiToken) {
+      this.phabricatorTokenState = PHABRICATOR_TOKEN_STATES.UNSET;
+      this.phabricatorTokenUserName = "";
+      return;
+    }
+
+    this.phabricatorTokenState = PHABRICATOR_TOKEN_STATES.CHECKING;
+
+    let result = await browser.runtime.sendMessage({
+      name: MESSAGE_TYPES.VALIDATE_PHABRICATOR_TOKEN
+    });
+
+    if (result?.valid) {
+      this.phabricatorTokenState = PHABRICATOR_TOKEN_STATES.VALID;
+      this.phabricatorTokenUserName = result.userName || "";
+    } else {
+      this.phabricatorTokenState = PHABRICATOR_TOKEN_STATES.INVALID;
+      this.phabricatorTokenUserName = "";
+    }
   }
 
   render() {
@@ -135,6 +172,9 @@ class OptionsPage extends LitElement {
           .container=${!!phabSettings.container}
           .inclReviewerGroups=${!!phabSettings.inclReviewerGroups}
           .hasSession=${this.phabricatorHasSession}
+          .apiToken=${phabSettings.apiToken || ""}
+          .tokenState=${this.phabricatorTokenState}
+          .tokenUserName=${this.phabricatorTokenUserName}
         ></phabricator-config>
 
         <bugzilla-config
@@ -214,6 +254,13 @@ class OptionsPage extends LitElement {
     if (type === "github" && setting === "ignoredRepos") {
       await this.#checkGitHubMigrationStatus();
     }
+
+    if (type === "phabricator" && setting === "apiToken") {
+      await this.#checkPhabricatorToken();
+      document.dispatchEvent(
+        new CustomEvent("phabricator-token-checked", { bubbles: true })
+      );
+    }
   }
 
   async #onWorkingHoursChange(event) {
@@ -227,13 +274,17 @@ class OptionsPage extends LitElement {
     );
 
     if (!needsGitHubMigration) {
-      document.dispatchEvent(new CustomEvent("migration-check-complete", { bubbles: true }));
+      document.dispatchEvent(
+        new CustomEvent("migration-check-complete", { bubbles: true })
+      );
       return;
     }
 
     let githubService = this.services.find((s) => s.type === "github");
     if (!githubService) {
-      document.dispatchEvent(new CustomEvent("migration-check-complete", { bubbles: true }));
+      document.dispatchEvent(
+        new CustomEvent("migration-check-complete", { bubbles: true })
+      );
       return;
     }
 
@@ -241,7 +292,9 @@ class OptionsPage extends LitElement {
       await this.#clearMigrationWarning();
     }
 
-    document.dispatchEvent(new CustomEvent("migration-check-complete", { bubbles: true }));
+    document.dispatchEvent(
+      new CustomEvent("migration-check-complete", { bubbles: true })
+    );
   }
 
   async #clearMigrationWarning() {
@@ -320,9 +373,11 @@ class OptionsPage extends LitElement {
       dialog.querySelector("#save-migration").addEventListener("click", () => {
         this.#onSaveMigration();
       });
-      dialog.querySelector("#cancel-migration").addEventListener("click", () => {
-        dialog.close();
-      });
+      dialog
+        .querySelector("#cancel-migration")
+        .addEventListener("click", () => {
+          dialog.close();
+        });
     }
 
     let repoList = dialog.querySelector("#repo-list");

@@ -1,6 +1,7 @@
 import {
   SERVICE_TYPES,
   STORAGE_KEYS,
+  MESSAGE_TYPES,
   DEFAULT_UPDATE_INTERVAL,
   ALARM_NAME,
   FEATURE_ALERT_REV,
@@ -301,33 +302,41 @@ const MyQOnly = {
    */
   onMessage(message, sender) {
     switch (message.name) {
-      case "refresh": {
+      case MESSAGE_TYPES.REFRESH: {
         return this.updateBadge();
       }
 
-      case "get-feature-rev": {
+      case MESSAGE_TYPES.GET_FEATURE_REV: {
         return Promise.resolve({
           newFeatures: this.featureRev < FEATURE_ALERT_REV,
           featureRev: this.featureRev + 1
         });
       }
 
-      case "opened-release-notes": {
+      case MESSAGE_TYPES.OPENED_RELEASE_NOTES: {
         this.featureRev = FEATURE_ALERT_REV;
         browser.storage.local.set({ featureRev: this.featureRev });
         this.updateBadge();
         break;
       }
 
-      case "check-for-phabricator-session": {
+      case MESSAGE_TYPES.CHECK_PHABRICATOR_SESSION: {
         let phabService = this.serviceRegistry.getService(
           SERVICE_TYPES.PHABRICATOR
         );
         return phabService.hasSession();
       }
 
+      case MESSAGE_TYPES.VALIDATE_PHABRICATOR_TOKEN: {
+        let phabService = this.serviceRegistry.getService(
+          SERVICE_TYPES.PHABRICATOR
+        );
+        let service = this._getService(SERVICE_TYPES.PHABRICATOR);
+        return phabService.validateToken(service ? service.settings : {});
+      }
+
       // Debug stuff
-      case "get-phabricator-html": {
+      case MESSAGE_TYPES.GET_PHABRICATOR_HTML: {
         console.debug("Getting Phabricator dashboard body");
         let phabService = this.serviceRegistry.getService(
           SERVICE_TYPES.PHABRICATOR

@@ -13,3 +13,14 @@ section:not(:first-child) {
 label {
   margin-top: 5px;
 }
+
+input[type="password"] {
+  width: 50ch;
+}
+
+.token-help {
+  margin-block: 0.25em 0;
+  max-width: 60ch;
+  font-size: 0.9em;
+  opacity: 0.8;
+}

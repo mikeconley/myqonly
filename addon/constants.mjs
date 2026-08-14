@@ -10,6 +10,58 @@ export const PHABRICATOR_SELECTORS = {
   LINK_PERSON: ".phui-link-person"
 };
 
+export const PHABRICATOR_API = `${PHABRICATOR_ROOT}/api`;
+export const PHABRICATOR_TOKEN_SETTINGS_URL = `${PHABRICATOR_ROOT}/settings/panel/apitokens/`;
+
+export const PHABRICATOR_TOKEN_STATES = {
+  UNSET: "unset",
+  CHECKING: "checking",
+  VALID: "valid",
+  INVALID: "invalid"
+};
+
+export const PHABRICATOR_METHODS = {
+  WHOAMI: "user.whoami",
+  REVISION_SEARCH: "differential.revision.search",
+  PROJECT_SEARCH: "project.search"
+};
+
+export const PHABRICATOR_ACTIVE_QUERY_KEY = "active";
+
+export const PHABRICATOR_MUST_REVIEW_STATUSES = [
+  "blocking",
+  "rejected",
+  "rejected-older"
+];
+
+// Phabricator also counts "accepted" as ready to review, but only once the
+// accept has been voided by the author using "Request Review". Voided state is
+// not exposed over Conduit, and on real data every "accepted" reviewer was
+// instead waiting on some other blocking reviewer, so counting them overstated
+// the total by roughly half.
+export const PHABRICATOR_READY_REVIEW_STATUSES = ["added", "commented"];
+
+export const PHABRICATOR_REVIEWER_STATUSES = {
+  ACCEPTED: "accepted",
+  RESIGNED: "resigned"
+};
+
+export const PHABRICATOR_REVISION_STATUSES = {
+  NEEDS_REVIEW: "needs-review",
+  DRAFT: "draft"
+};
+
+export const PHABRICATOR_AUTH_ERROR_CODES = [
+  "ERR-INVALID-AUTH",
+  "ERR-INVALID-SESSION",
+  "ERR-INVALID-TOKEN",
+  "ERR-PERMISSIONS"
+];
+
+export const PHABRICATOR_MAX_PAGES = 10;
+
+export const PHABRICATOR_GROUP_CACHE_MS = 24 * 60 * 60 * 1000;
+
 export const BUGZILLA_API =
   "https://bugzilla.mozilla.org/rest/mydashboard/run_flag_query";
 export const BUGZILLA_DASHBOARD =
@@ -39,11 +91,13 @@ export const MESSAGE_TYPES = {
   GET_FEATURE_REV: "get-feature-rev",
   OPENED_RELEASE_NOTES: "opened-release-notes",
   CHECK_PHABRICATOR_SESSION: "check-for-phabricator-session",
+  VALIDATE_PHABRICATOR_TOKEN: "validate-phabricator-token",
   GET_PHABRICATOR_HTML: "get-phabricator-html"
 };
 
 export const HTTP_HEADERS = {
-  CONTENT_TYPE_HTML: "text/html"
+  CONTENT_TYPE_HTML: "text/html",
+  CONTENT_TYPE_FORM: "application/x-www-form-urlencoded"
 };
 
 export const HTTP_METHODS = {

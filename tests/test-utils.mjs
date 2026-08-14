@@ -90,6 +90,57 @@ const fixtures = {
       name: "phsid",
       value: "test-session-id",
       domain: "phabricator.services.mozilla.com"
+    },
+
+    // Conduit fixtures. USER is the account being polled, GROUP is a project
+    // it belongs to, and OTHER is anybody else.
+    conduit: {
+      USER_PHID: "PHID-USER-0001",
+      GROUP_PHID: "PHID-PROJ-0001",
+      OTHER_USER_PHID: "PHID-USER-0002",
+      OTHER_GROUP_PHID: "PHID-PROJ-0002",
+
+      whoamiResponse: {
+        result: { phid: "PHID-USER-0001", userName: "testuser" }
+      },
+
+      projectSearchResponse: {
+        result: {
+          data: [{ phid: "PHID-PROJ-0001", type: "PROJ" }],
+          cursor: { after: null }
+        }
+      },
+
+      /**
+       * Builds a revision in the shape differential.revision.search returns
+       * with the reviewers attachment requested.
+       */
+      revision(id, { author = "PHID-USER-0002", status, reviewers = [] } = {}) {
+        return {
+          id,
+          type: "DREV",
+          phid: `PHID-DREV-${id}`,
+          fields: {
+            title: `Revision ${id}`,
+            authorPHID: author,
+            status: { value: status }
+          },
+          attachments: {
+            reviewers: {
+              reviewers: reviewers.map(([reviewerPHID, reviewerStatus]) => ({
+                reviewerPHID,
+                status: reviewerStatus,
+                isBlocking: reviewerStatus == "blocking",
+                actorPHID: null
+              }))
+            }
+          }
+        };
+      },
+
+      searchResponse(data, after = null) {
+        return { result: { data, cursor: { after } } };
+      }
     }
   },
   bugzilla: {

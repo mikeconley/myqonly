@@ -1,4 +1,8 @@
-import { DEFAULT_UPDATE_INTERVAL } from "../../addon/constants.mjs";
+import {
+  DEFAULT_UPDATE_INTERVAL,
+  MESSAGE_TYPES,
+  PHABRICATOR_TOKEN_STATES
+} from "../../addon/constants.mjs";
 import { loadPage, changeFieldValue } from "../test-utils.mjs";
 
 const browser = window.chrome;
@@ -152,6 +156,158 @@ describe("Options page", function () {
   });
 });
 
+describe("Options page Phabricator token", function () {
+  /**
+   * Loads the options page with a Phabricator service carrying apiToken, and
+   * with the token validation message answering `validation`.
+   */
+  async function loadWithToken(apiToken, validation, test) {
+    await loadPage({
+      url: "/addon/content/options/options.html",
+      setup: async (browser) => {
+        await setupBlank(browser);
+        browser.storage.local.get.withArgs("services").returns(
+          Promise.resolve({
+            services: [
+              {
+                id: 1,
+                type: "phabricator",
+                settings: { container: 0, inclReviewerGroups: true, apiToken }
+              }
+            ]
+          })
+        );
+        browser.runtime.sendMessage
+          .withArgs({ name: MESSAGE_TYPES.VALIDATE_PHABRICATOR_TOKEN })
+          .returns(Promise.resolve(validation));
+      },
+      test
+    });
+  }
+
+  function getPhabConfig(document) {
+    return getOptionsPage(document).shadowRoot.querySelector(
+      "phabricator-config"
+    );
+  }
+
+  it("should show a validated token's account name", async () => {
+    await loadWithToken(
+      "api-goodtoken",
+      { valid: true, userName: "testuser" },
+      async (content, document) => {
+        let phabConfig = getPhabConfig(document);
+        await phabConfig.updateComplete;
+
+        assert.equal(phabConfig.apiToken, "api-goodtoken");
+        assert.equal(phabConfig.tokenState, PHABRICATOR_TOKEN_STATES.VALID);
+        assert.equal(phabConfig.tokenUserName, "testuser");
+      }
+    );
+  });
+
+  it("should mark a rejected token invalid", async () => {
+    await loadWithToken(
+      "api-badtoken",
+      { valid: false, error: "ERR-INVALID-AUTH" },
+      async (content, document) => {
+        let phabConfig = getPhabConfig(document);
+        await phabConfig.updateComplete;
+
+        assert.equal(phabConfig.tokenState, PHABRICATOR_TOKEN_STATES.INVALID);
+      }
+    );
+  });
+
+  it("should not fetch the dashboard for a session when a token is set", async () => {
+    await loadWithToken(
+      "api-goodtoken",
+      { valid: true, userName: "testuser" },
+      async () => {
+        assert.ok(
+          !browser.runtime.sendMessage.calledWith({
+            name: MESSAGE_TYPES.CHECK_PHABRICATOR_SESSION
+          }),
+          "Session check is wasted work on the token path"
+        );
+      }
+    );
+  });
+
+  it("should still check for a session with no token", async () => {
+    await loadPage({
+      url: "/addon/content/options/options.html",
+      setup: setupBlank,
+      test: async () => {
+        assert.ok(
+          browser.runtime.sendMessage.calledWith({
+            name: MESSAGE_TYPES.CHECK_PHABRICATOR_SESSION
+          }),
+          "Scraping path still needs the session check"
+        );
+      }
+    });
+  });
+
+  it("should not validate when no token is configured", async () => {
+    await loadPage({
+      url: "/addon/content/options/options.html",
+      setup: setupBlank,
+      test: async (content, document) => {
+        let phabConfig = getPhabConfig(document);
+        await phabConfig.updateComplete;
+
+        assert.equal(phabConfig.tokenState, PHABRICATOR_TOKEN_STATES.UNSET);
+        assert.ok(
+          !browser.runtime.sendMessage.calledWith({
+            name: MESSAGE_TYPES.VALIDATE_PHABRICATOR_TOKEN
+          }),
+          "Should not have asked to validate a token that is not set"
+        );
+      }
+    });
+  });
+
+  it("should persist and re-validate a token entered by the user", async () => {
+    await loadWithToken(
+      "",
+      { valid: true, userName: "testuser" },
+      async (content, document) => {
+        let optionsPage = getOptionsPage(document);
+        let phabConfig = getPhabConfig(document);
+        let field = phabConfig.shadowRoot.getElementById(
+          "phabricator-apiToken"
+        );
+
+        let checked = new Promise((resolve) => {
+          document.addEventListener("phabricator-token-checked", resolve, {
+            once: true
+          });
+        });
+
+        changeFieldValue(field, "api-newtoken");
+        await checked;
+        await optionsPage.updateComplete;
+
+        // The options page also persists empty placeholder services for
+        // bugzilla and github, so assert on the Phabricator entry only.
+        let lastSet = browser.storage.local.set.lastCall.args[0];
+        let stored = lastSet.services.find((s) => s.type == "phabricator");
+        assert.deepEqual(
+          stored.settings,
+          {
+            container: 0,
+            inclReviewerGroups: true,
+            apiToken: "api-newtoken"
+          },
+          "Should have stored the new token"
+        );
+        assert.equal(phabConfig.tokenState, PHABRICATOR_TOKEN_STATES.VALID);
+      }
+    );
+  });
+});
+
 describe("Options page", function () {
   it("should show and be able to update the Bugzilla API token", async () => {
     await loadPage({
@@ -160,7 +316,8 @@ describe("Options page", function () {
       test: async (content, document) => {
         const NEW_KEY = "xyz54321";
         let optionsPage = getOptionsPage(document);
-        let bugzillaConfig = optionsPage.shadowRoot.querySelector("bugzilla-config");
+        let bugzillaConfig =
+          optionsPage.shadowRoot.querySelector("bugzilla-config");
         let field = bugzillaConfig.shadowRoot.querySelector(
           'input[type="password"]'
         );
@@ -211,8 +368,11 @@ describe("Options page", function () {
       setup: setupWithServices,
       test: async (content, document) => {
         let optionsPage = getOptionsPage(document);
-        let bugzillaConfig = optionsPage.shadowRoot.querySelector("bugzilla-config");
-        let checkboxes = bugzillaConfig.shadowRoot.querySelectorAll('input[type="checkbox"]');
+        let bugzillaConfig =
+          optionsPage.shadowRoot.querySelector("bugzilla-config");
+        let checkboxes = bugzillaConfig.shadowRoot.querySelectorAll(
+          'input[type="checkbox"]'
+        );
         let field = checkboxes[0];
         field.checked.should.equal(false);
 
@@ -264,8 +424,10 @@ describe("Options page", function () {
       test: async (content, document) => {
         const NEW_USERNAME = "hoobastank";
         let optionsPage = getOptionsPage(document);
-        let githubConfig = optionsPage.shadowRoot.querySelector("github-config");
-        let textInputs = githubConfig.shadowRoot.querySelectorAll('input[type="text"]');
+        let githubConfig =
+          optionsPage.shadowRoot.querySelector("github-config");
+        let textInputs =
+          githubConfig.shadowRoot.querySelectorAll('input[type="text"]');
         let field = textInputs[0];
         field.value.should.equal("mikeconley");
 
@@ -320,14 +482,17 @@ describe("Options page", function () {
       setup: setupBlank,
       test: async (content, document) => {
         let optionsPage = getOptionsPage(document);
-        let workingHoursConfig = optionsPage.shadowRoot.querySelector("working-hours-config");
+        let workingHoursConfig = optionsPage.shadowRoot.querySelector(
+          "working-hours-config"
+        );
 
         // By default, the working hours fields should be disabled.
         let fieldset = workingHoursConfig.shadowRoot.querySelector("fieldset");
         assert.ok(fieldset.disabled);
 
         // Default workday is 9-5, in HH:MM.
-        let timeInputs = workingHoursConfig.shadowRoot.querySelectorAll('input[type="time"]');
+        let timeInputs =
+          workingHoursConfig.shadowRoot.querySelectorAll('input[type="time"]');
         let startTime = timeInputs[0].value;
         assert.equal(startTime, "09:00");
         let endTime = timeInputs[1].value;
@@ -347,7 +512,9 @@ describe("Options page", function () {
           }
         }
 
-        let checkbox = workingHoursConfig.shadowRoot.querySelector('input[type="checkbox"]');
+        let checkbox = workingHoursConfig.shadowRoot.querySelector(
+          'input[type="checkbox"]'
+        );
         checkbox.click();
         await workingHoursConfig.updateComplete;
 
@@ -397,11 +564,13 @@ describe("GitHub migration", function () {
       },
       test: async (content, document) => {
         let optionsPage = getOptionsPage(document);
-        let migrationWarning = optionsPage.shadowRoot.querySelector("migration-warning");
+        let migrationWarning =
+          optionsPage.shadowRoot.querySelector("migration-warning");
         let warning = migrationWarning.shadowRoot.querySelector(".warning");
         assert.ok(!warning.classList.contains("hidden"));
 
-        let oldReposCode = migrationWarning.shadowRoot.querySelectorAll("code")[1];
+        let oldReposCode =
+          migrationWarning.shadowRoot.querySelectorAll("code")[1];
         assert.equal(oldReposCode.textContent, "mozilla, taskcluster");
       }
     });
@@ -417,7 +586,8 @@ describe("GitHub migration", function () {
       setup: setupWithServices,
       test: async (content, document) => {
         let optionsPage = getOptionsPage(document);
-        let migrationWarning = optionsPage.shadowRoot.querySelector("migration-warning");
+        let migrationWarning =
+          optionsPage.shadowRoot.querySelector("migration-warning");
         let warning = migrationWarning.shadowRoot.querySelector(".warning");
         assert.ok(warning.classList.contains("hidden"));
       }
@@ -452,7 +622,8 @@ describe("GitHub migration", function () {
         });
 
         let optionsPage = getOptionsPage(document);
-        let migrationWarning = optionsPage.shadowRoot.querySelector("migration-warning");
+        let migrationWarning =
+          optionsPage.shadowRoot.querySelector("migration-warning");
         let helpButton = migrationWarning.shadowRoot.querySelector("button");
 
         let dialogShownPromise = new Promise((resolve) => {
@@ -463,7 +634,10 @@ describe("GitHub migration", function () {
               resolve(dialog);
             }
           });
-          observer.observe(optionsPage.shadowRoot, { childList: true, subtree: true });
+          observer.observe(optionsPage.shadowRoot, {
+            childList: true,
+            subtree: true
+          });
         });
 
         helpButton.click();
@@ -510,7 +684,8 @@ describe("GitHub migration", function () {
         });
 
         let optionsPage = getOptionsPage(document);
-        let migrationWarning = optionsPage.shadowRoot.querySelector("migration-warning");
+        let migrationWarning =
+          optionsPage.shadowRoot.querySelector("migration-warning");
         let helpButton = migrationWarning.shadowRoot.querySelector("button");
 
         let dialogShownPromise = new Promise((resolve) => {
@@ -521,7 +696,10 @@ describe("GitHub migration", function () {
               resolve(dialog);
             }
           });
-          observer.observe(optionsPage.shadowRoot, { childList: true, subtree: true });
+          observer.observe(optionsPage.shadowRoot, {
+            childList: true,
+            subtree: true
+          });
         });
 
         helpButton.click();
@@ -535,10 +713,12 @@ describe("GitHub migration", function () {
         saveButton.click();
 
         await optionsPage.updateComplete;
-        let githubConfig = optionsPage.shadowRoot.querySelector("github-config");
+        let githubConfig =
+          optionsPage.shadowRoot.querySelector("github-config");
         await githubConfig.updateComplete;
 
-        let textInputs = githubConfig.shadowRoot.querySelectorAll('input[type="text"]');
+        let textInputs =
+          githubConfig.shadowRoot.querySelectorAll('input[type="text"]');
         let ignoredReposField = textInputs[textInputs.length - 1];
         assert.equal(
           ignoredReposField.value,
@@ -587,7 +767,8 @@ describe("GitHub migration", function () {
         });
 
         let optionsPage = getOptionsPage(document);
-        let migrationWarning = optionsPage.shadowRoot.querySelector("migration-warning");
+        let migrationWarning =
+          optionsPage.shadowRoot.querySelector("migration-warning");
         let helpButton = migrationWarning.shadowRoot.querySelector("button");
 
         let dialogShownPromise = new Promise((resolve) => {
@@ -598,7 +779,10 @@ describe("GitHub migration", function () {
               resolve(dialog);
             }
           });
-          observer.observe(optionsPage.shadowRoot, { childList: true, subtree: true });
+          observer.observe(optionsPage.shadowRoot, {
+            childList: true,
+            subtree: true
+          });
         });
 
         helpButton.click();
@@ -671,7 +855,8 @@ describe("GitHub migration", function () {
         let alertStub = sandbox.stub(content, "alert");
 
         let optionsPage = getOptionsPage(document);
-        let migrationWarning = optionsPage.shadowRoot.querySelector("migration-warning");
+        let migrationWarning =
+          optionsPage.shadowRoot.querySelector("migration-warning");
         let helpButton = migrationWarning.shadowRoot.querySelector("button");
 
         helpButton.click();
@@ -749,12 +934,15 @@ describe("GitHub migration", function () {
       },
       test: async (content, document) => {
         let optionsPage = getOptionsPage(document);
-        let migrationWarning = optionsPage.shadowRoot.querySelector("migration-warning");
+        let migrationWarning =
+          optionsPage.shadowRoot.querySelector("migration-warning");
         let warning = migrationWarning.shadowRoot.querySelector(".warning");
         assert.ok(!warning.classList.contains("hidden"));
 
-        let githubConfig = optionsPage.shadowRoot.querySelector("github-config");
-        let textInputs = githubConfig.shadowRoot.querySelectorAll('input[type="text"]');
+        let githubConfig =
+          optionsPage.shadowRoot.querySelector("github-config");
+        let textInputs =
+          githubConfig.shadowRoot.querySelectorAll('input[type="text"]');
         let field = textInputs[textInputs.length - 1];
         assert.equal(field.value, "mozilla");
 
@@ -844,12 +1032,15 @@ describe("GitHub migration", function () {
       },
       test: async (content, document) => {
         let optionsPage = getOptionsPage(document);
-        let migrationWarning = optionsPage.shadowRoot.querySelector("migration-warning");
+        let migrationWarning =
+          optionsPage.shadowRoot.querySelector("migration-warning");
         let warning = migrationWarning.shadowRoot.querySelector(".warning");
         assert.ok(!warning.classList.contains("hidden"));
 
-        let githubConfig = optionsPage.shadowRoot.querySelector("github-config");
-        let textInputs = githubConfig.shadowRoot.querySelectorAll('input[type="text"]');
+        let githubConfig =
+          optionsPage.shadowRoot.querySelector("github-config");
+        let textInputs =
+          githubConfig.shadowRoot.querySelectorAll('input[type="text"]');
         let field = textInputs[textInputs.length - 1];
 
         let eventPromise = new Promise((resolve) => {
@@ -938,12 +1129,15 @@ describe("GitHub migration", function () {
       },
       test: async (content, document) => {
         let optionsPage = getOptionsPage(document);
-        let migrationWarning = optionsPage.shadowRoot.querySelector("migration-warning");
+        let migrationWarning =
+          optionsPage.shadowRoot.querySelector("migration-warning");
         let warning = migrationWarning.shadowRoot.querySelector(".warning");
         assert.ok(!warning.classList.contains("hidden"));
 
-        let githubConfig = optionsPage.shadowRoot.querySelector("github-config");
-        let textInputs = githubConfig.shadowRoot.querySelectorAll('input[type="text"]');
+        let githubConfig =
+          optionsPage.shadowRoot.querySelector("github-config");
+        let textInputs =
+          githubConfig.shadowRoot.querySelectorAll('input[type="text"]');
         let field = textInputs[textInputs.length - 1];
 
         changeFieldValue(field, "taskcluster");
